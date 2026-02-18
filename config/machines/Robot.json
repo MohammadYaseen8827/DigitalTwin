@@ -1,0 +1,45 @@
+{
+  "machineType": "Robot",
+  "displayName": "Industrial Robot",
+  "degradationModel": {
+    "modelType": "Exponential",
+    "parameters": {
+      "lambda": 0.001
+    },
+    "modelSpecificSettings": {}
+  },
+  "sensorMappings": [
+    {
+      "sensorType": "vibration",
+      "transferFunction": "baseVib * exp(degradationState * vibGrowth)",
+      "transferFunctionParameters": {
+        "baseVib": 0.3,
+        "vibGrowth": 2.5
+      },
+      "noiseLevel": 0.05,
+      "unit": "mm/s"
+    },
+    {
+      "sensorType": "temperature",
+      "transferFunction": "baseTemp + degradationState * tempCoeff",
+      "transferFunctionParameters": {
+        "baseTemp": 45.0,
+        "tempCoeff": 30.0
+      },
+      "noiseLevel": 1.5,
+      "unit": "C"
+    }
+  ],
+  "failureThresholds": {
+    "degradationThreshold": 0.8,
+    "sensorThresholds": {
+      "vibration": 3.5,
+      "temperature": 85.0
+    },
+    "maxOperationalTime": null
+  },
+  "operationalParameters": {
+    "typicalOperatingHours": 20,
+    "maintenanceIntervalDays": 60
+  }
+}

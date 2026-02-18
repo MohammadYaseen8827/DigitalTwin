@@ -1,0 +1,46 @@
+{
+  "machineType": "Conveyor",
+  "displayName": "Conveyor Belt System",
+  "degradationModel": {
+    "modelType": "Wiener",
+    "parameters": {
+      "drift": 0.0008,
+      "volatility": 0.04
+    },
+    "modelSpecificSettings": {}
+  },
+  "sensorMappings": [
+    {
+      "sensorType": "vibration",
+      "transferFunction": "baseVib + degradationState * vibCoeff",
+      "transferFunctionParameters": {
+        "baseVib": 0.2,
+        "vibCoeff": 1.8
+      },
+      "noiseLevel": 0.03,
+      "unit": "mm/s"
+    },
+    {
+      "sensorType": "power_consumption",
+      "transferFunction": "basePower + degradationState * powerCoeff",
+      "transferFunctionParameters": {
+        "basePower": 5.0,
+        "powerCoeff": 15.0
+      },
+      "noiseLevel": 0.5,
+      "unit": "kW"
+    }
+  ],
+  "failureThresholds": {
+    "degradationThreshold": 1.5,
+    "sensorThresholds": {
+      "vibration": 2.5,
+      "power_consumption": 25.0
+    },
+    "maxOperationalTime": null
+  },
+  "operationalParameters": {
+    "typicalOperatingHours": 24,
+    "maintenanceIntervalDays": 180
+  }
+}

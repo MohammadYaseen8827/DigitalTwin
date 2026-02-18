@@ -1,0 +1,73 @@
+# Production Dockerfile for Backend API
+# Multi-stage build with security optimizations
+
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:7.0-alpine AS build
+
+# Install build dependencies
+RUN apk add --no-cache icu-libs
+
+# Set working directory
+WORKDIR /src
+
+# Copy project files
+COPY DigitalTwinPlatform.sln ./
+COPY DigitalTwinPlatform.API/DigitalTwinPlatform.API.csproj ./DigitalTwinPlatform.API/
+COPY DigitalTwinPlatform.Application/DigitalTwinPlatform.Application.csproj ./DigitalTwinPlatform.Application/
+COPY DigitalTwinPlatform.Domain/DigitalTwinPlatform.Domain.csproj ./DigitalTwinPlatform.Domain/
+COPY DigitalTwinPlatform.Infrastructure/DigitalTwinPlatform.Infrastructure.csproj ./DigitalTwinPlatform.Infrastructure/
+
+# Restore dependencies
+RUN dotnet restore DigitalTwinPlatform.API/DigitalTwinPlatform.API.csproj
+
+# Copy source code
+COPY . .
+
+# Build with optimizations
+RUN dotnet publish DigitalTwinPlatform.API/DigitalTwinPlatform.API.csproj \
+    --no-restore \
+    --configuration Release \
+    --output /app/publish \
+    --runtime linux-musl-x64 \
+    --self-contained false \
+    /p:PublishTrimmed=true \
+    /p:PublishSingleFile=false \
+    /p:IncludeNativeLibrariesForSelfExtract=false
+
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine AS runtime
+
+# Install runtime dependencies
+RUN apk add --no-cache icu-libs curl
+
+# Create non-root user
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -S appuser -u 1001 -G appgroup
+
+# Set working directory
+WORKDIR /app
+
+# Copy published application
+COPY --from=build /app/publish .
+
+# Change ownership to non-root user
+RUN chown -R appuser:appgroup /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose ports
+EXPOSE 80
+EXPOSE 443
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost/health || exit 1
+
+# Set environment variables
+ENV ASPNETCORE_URLS=http://+:80 \
+    DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false \
+    COMPlus_EnableDiagnostics=0
+
+# Run the application
+ENTRYPOINT ["dotnet", "DigitalTwinPlatform.API.dll"]

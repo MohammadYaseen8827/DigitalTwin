@@ -1,0 +1,57 @@
+{
+  "machineType": "CNC",
+  "displayName": "CNC Milling Machine",
+  "degradationModel": {
+    "modelType": "Wiener",
+    "parameters": {
+      "drift": 0.001,
+      "volatility": 0.05
+    },
+    "modelSpecificSettings": {}
+  },
+  "sensorMappings": [
+    {
+      "sensorType": "temperature",
+      "transferFunction": "baseTemp + degradationState * tempCoeff",
+      "transferFunctionParameters": {
+        "baseTemp": 60.0,
+        "tempCoeff": 40.0
+      },
+      "noiseLevel": 2.0,
+      "unit": "C"
+    },
+    {
+      "sensorType": "vibration",
+      "transferFunction": "baseVib + degradationState * vibCoeff",
+      "transferFunctionParameters": {
+        "baseVib": 0.5,
+        "vibCoeff": 3.0
+      },
+      "noiseLevel": 0.1,
+      "unit": "mm/s"
+    },
+    {
+      "sensorType": "pressure",
+      "transferFunction": "basePressure + degradationState * pressureCoeff",
+      "transferFunctionParameters": {
+        "basePressure": 40.0,
+        "pressureCoeff": 20.0
+      },
+      "noiseLevel": 1.5,
+      "unit": "bar"
+    }
+  ],
+  "failureThresholds": {
+    "degradationThreshold": 1.0,
+    "sensorThresholds": {
+      "temperature": 100.0,
+      "vibration": 4.0,
+      "pressure": 80.0
+    },
+    "maxOperationalTime": null
+  },
+  "operationalParameters": {
+    "typicalOperatingHours": 16,
+    "maintenanceIntervalDays": 90
+  }
+}

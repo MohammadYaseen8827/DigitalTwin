@@ -1,0 +1,49 @@
+{
+  "runner": "axe",
+  "timeout": 60000,
+  "threshold": 0,
+  "reporter": "cli",
+  "projectType": "custom",
+  "paths": [
+    "http://localhost:5173/",
+    "http://localhost:5173/machines",
+    "http://localhost:5173/maintenance",
+    "http://localhost:5173/telemetry",
+    "http://localhost:5173/analytics",
+    "http://localhost:5173/alerts",
+    "http://localhost:5173/reports"
+  ],
+  "standard": "WCAG2AA",
+  "rules": {
+    "region": { "enabled": false },
+    "landmark-one-main": { "enabled": false }
+  },
+  "ignore": [
+    ".skip-a11y-test",
+    "[aria-hidden=true]"
+  ],
+  "width": 1280,
+  "height": 720,
+  "axeOptions": {
+    "runOnly": {
+      "type": "tag",
+      "values": ["wcag2a", "wcag2aa"]
+    },
+    "rules": {
+      "color-contrast": { "enabled": true },
+      "image-alt": { "enabled": true },
+      "label": { "enabled": true },
+      "link-name": { "enabled": true },
+      "button-name": { "enabled": true },
+      "html-has-lang": { "enabled": true },
+      "document-title": { "enabled": true },
+      "bypass": { "enabled": true },
+      "heading-order": { "enabled": true },
+      "nested-interactive": { "enabled": true },
+      "aria-allowed-attr": { "enabled": true },
+      "aria-required-attr": { "enabled": true },
+      "aria-valid-attr-value": { "enabled": true },
+      "aria-roles": { "enabled": true }
+    }
+  }
+}

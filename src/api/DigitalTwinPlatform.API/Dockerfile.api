@@ -1,0 +1,28 @@
+# syntax=docker/dockerfile:1
+
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+# Copy all project files for restore (build context is now ./src/api)
+COPY ["DigitalTwinPlatform.Domain/DigitalTwinPlatform.Domain.csproj", "DigitalTwinPlatform.Domain/"]
+COPY ["DigitalTwinPlatform.Application/DigitalTwinPlatform.Application.csproj", "DigitalTwinPlatform.Application/"]
+COPY ["DigitalTwinPlatform.Infrastructure/DigitalTwinPlatform.Infrastructure.csproj", "DigitalTwinPlatform.Infrastructure/"]
+COPY ["DigitalTwinPlatform.API/DigitalTwinPlatform.API.csproj", "DigitalTwinPlatform.API/"]
+
+# Restore dependencies
+RUN dotnet restore "DigitalTwinPlatform.API/DigitalTwinPlatform.API.csproj"
+
+# Copy all source files
+COPY . .
+
+# Publish the API project
+RUN dotnet publish "DigitalTwinPlatform.API/DigitalTwinPlatform.API.csproj" -c Release -o /app/publish
+
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+WORKDIR /app
+ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080
+COPY --from=build /app/publish .
+ENTRYPOINT ["dotnet", "DigitalTwinPlatform.API.dll"]

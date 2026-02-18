@@ -1,0 +1,184 @@
+# Prometheus Alerting Rules for Digital Twin Platform
+
+groups:
+  - name: digitaltwin-alerts
+    rules:
+      # API Health Alerts
+      - alert: APIDown
+        expr: up{job="digitaltwin-backend"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Digital Twin API is down"
+          description: "The Digital Twin backend API service has been down for more than 2 minutes"
+
+      - alert: APIHighErrorRate
+        expr: rate(http_requests_total{job="digitaltwin-backend", status=~"5.."}[5m]) / rate(http_requests_total{job="digitaltwin-backend"}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API error rate"
+          description: "API error rate is above 5% for the last 5 minutes"
+
+      - alert: APISlowResponse
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="digitaltwin-backend"}[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow API response time"
+          description: "95th percentile API response time is above 2 seconds"
+
+      # Database Alerts
+      - alert: DatabaseDown
+        expr: pg_up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database is down"
+          description: "PostgreSQL database is not responding"
+
+      - alert: DatabaseHighConnections
+        expr: pg_stat_activity_count > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High database connections"
+          description: "Database connection count is above 80"
+
+      - alert: DatabaseLowDiskSpace
+        expr: pg_stat_database_blks_hit / (pg_stat_database_blks_hit + pg_stat_database_blks_read) < 0.95
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database cache hit ratio low"
+          description: "Database cache hit ratio is below 95%"
+
+      # Redis Alerts
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis is down"
+          description: "Redis cache service is not responding"
+
+      - alert: RedisHighMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis high memory usage"
+          description: "Redis memory usage is above 85%"
+
+      - alert: RedisConnectionSaturation
+        expr: redis_connected_clients > 500
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis connection saturation"
+          description: "Redis connected clients are above 500"
+
+      # Frontend Alerts
+      - alert: FrontendDown
+        expr: up{job="digitaltwin-frontend"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Frontend is down"
+          description: "Digital Twin frontend service is not responding"
+
+      - alert: FrontendHighErrorRate
+        expr: rate(frontend_errors_total[5m]) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Frontend high error rate"
+          description: "Frontend error rate is above 1%"
+
+      # System Resource Alerts
+      - alert: HostHighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Host high CPU usage"
+          description: "CPU usage is above 85% on {{ $labels.instance }}"
+
+      - alert: HostHighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Host high memory usage"
+          description: "Memory usage is above 90% on {{ $labels.instance }}"
+
+      - alert: HostDiskSpaceLow
+        expr: (node_filesystem_size_bytes{fstype!="tmpfs"} - node_filesystem_free_bytes{fstype!="tmpfs"}) / node_filesystem_size_bytes{fstype!="tmpfs"} * 100 > 90
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Host disk space low"
+          description: "Disk usage is above 90% on {{ $labels.instance }}:{{ $labels.mountpoint }}"
+
+      # Business Metric Alerts
+      - alert: LowUserActivity
+        expr: rate(user_actions_total[1h]) < 10
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low user activity"
+          description: "User activity rate has dropped below 10 actions per hour"
+
+      - alert: HighMaintenanceRequests
+        expr: rate(maintenance_requests_created_total[30m]) > 50
+        for: 30m
+        labels:
+          severity: info
+        annotations:
+          summary: "High maintenance requests"
+          description: "Maintenance requests rate is above 50 per 30 minutes"
+
+      - alert: DataProcessingDelay
+        expr: time() - telemetry_last_processed_timestamp > 300
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Data processing delay"
+          description: "Telemetry data processing is delayed by more than 5 minutes"
+
+  - name: digitaltwin-recording-rules
+    rules:
+      # Recording rules for commonly used metrics
+      - record: job:api_request_duration_seconds:95percentile
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (job, le))
+
+      - record: job:api_error_rate:ratio
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m])
+
+      - record: instance:cpu_utilization:ratio
+        expr: 1 - avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m]))
+
+      - record: instance:memory_utilization:ratio
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes
+
+      - record: database:connection_utilization:ratio
+        expr: pg_stat_activity_count / 100
+
+      - record: redis:memory_utilization:ratio
+        expr: redis_memory_used_bytes / redis_memory_max_bytes

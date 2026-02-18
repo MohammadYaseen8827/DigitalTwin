@@ -1,0 +1,114 @@
+{
+  "scan": {
+    "target": "http://localhost:5173",
+    "ports": "80,443,5000",
+    "modules": [
+      "active_scan",
+      "passive_scan",
+      "spider",
+      "ajax_spider"
+    ],
+    "authentication": {
+      "method": "form",
+      "credentials": {
+        "username": "test@example.com",
+        "password": "password123"
+      },
+      "logged_in_indicator": "dashboard",
+      "logged_out_indicator": "login"
+    }
+  },
+  "analysis": {
+    "risk_threshold": "medium",
+    "confidence_threshold": "medium",
+    "max_alerts_per_rule": 10,
+    "max_body_size": 1048576,
+    "max_parse_depth": 5
+  },
+  "rules": {
+    "10001": { "level": "WARN", "threshold": 2 }, 
+    "10003": { "level": "WARN", "threshold": 2 },
+    "10009": { "level": "WARN", "threshold": 2 },
+    "10010": { "level": "WARN", "threshold": 2 },
+    "10011": { "level": "WARN", "threshold": 2 },
+    "10015": { "level": "WARN", "threshold": 2 },
+    "10016": { "level": "WARN", "threshold": 2 },
+    "10017": { "level": "WARN", "threshold": 2 },
+    "10019": { "level": "WARN", "threshold": 2 },
+    "10020": { "level": "WARN", "threshold": 2 },
+    "10021": { "level": "WARN", "threshold": 2 },
+    "10024": { "level": "WARN", "threshold": 2 },
+    "10025": { "level": "WARN", "threshold": 2 },
+    "10026": { "level": "WARN", "threshold": 2 },
+    "10027": { "level": "WARN", "threshold": 2 },
+    "10028": { "level": "WARN", "threshold": 2 },
+    "10029": { "level": "WARN", "threshold": 2 },
+    "10030": { "level": "WARN", "threshold": 2 },
+    "10031": { "level": "WARN", "threshold": 2 },
+    "10032": { "level": "WARN", "threshold": 2 },
+    "10033": { "level": "WARN", "threshold": 2 },
+    "10034": { "level": "WARN", "threshold": 2 },
+    "10035": { "level": "WARN", "threshold": 2 },
+    "10036": { "level": "WARN", "threshold": 2 },
+    "10037": { "level": "WARN", "threshold": 2 },
+    "10038": { "level": "WARN", "threshold": 2 },
+    "10039": { "level": "WARN", "threshold": 2 },
+    "10040": { "level": "WARN", "threshold": 2 },
+    "10041": { "level": "WARN", "threshold": 2 },
+    "10042": { "level": "WARN", "threshold": 2 },
+    "10043": { "level": "WARN", "threshold": 2 },
+    "10044": { "level": "WARN", "threshold": 2 },
+    "10045": { "level": "WARN", "threshold": 2 },
+    "10046": { "level": "WARN", "threshold": 2 },
+    "10047": { "level": "WARN", "threshold": 2 },
+    "10048": { "level": "WARN", "threshold": 2 },
+    "10049": { "level": "WARN", "threshold": 2 },
+    "10050": { "level": "WARN", "threshold": 2 },
+    "10051": { "level": "WARN", "threshold": 2 },
+    "10052": { "level": "WARN", "threshold": 2 },
+    "10053": { "level": "WARN", "threshold": 2 },
+    "10054": { "level": "WARN", "threshold": 2 },
+    "10055": { "level": "WARN", "threshold": 2 },
+    "10056": { "level": "WARN", "threshold": 2 },
+    "10057": { "level": "WARN", "threshold": 2 },
+    "10094": { "level": "WARN", "threshold": 2 },
+    "10095": { "level": "WARN", "threshold": 2 },
+    "10096": { "level": "WARN", "threshold": 2 },
+    "10097": { "level": "WARN", "threshold": 2 },
+    "10098": { "level": "WARN", "threshold": 2 },
+    "10099": { "level": "WARN", "threshold": 2 },
+    "10101": { "level": "WARN", "threshold": 2 },
+    "10102": { "level": "WARN", "threshold": 2 },
+    "10103": { "level": "WARN", "threshold": 2 },
+    "10104": { "level": "WARN", "threshold": 2 },
+    "10105": { "level": "WARN", "threshold": 2 },
+    "10106": { "level": "WARN", "threshold": 2 },
+    "10107": { "level": "WARN", "threshold": 2 },
+    "10108": { "level": "WARN", "threshold": 2 },
+    "10109": { "level": "WARN", "threshold": 2 },
+    "10110": { "level": "WARN", "threshold": 2 },
+    "10111": { "level": "WARN", "threshold": 2 },
+    "10112": { "level": "WARN", "threshold": 2 },
+    "10113": { "level": "WARN", "threshold": 2 }
+  },
+  "output": {
+    "format": "json",
+    "directory": "./security-reports",
+    "filename": "owasp-zap-report.json"
+  },
+  "context": {
+    "name": "digital-twin-dashboard",
+    "included_in_context": [
+      "http://localhost:5173.*",
+      "http://localhost:5000.*"
+    ],
+    "excluded_from_context": [
+      ".*\\.jpg",
+      ".*\\.jpeg",
+      ".*\\.png",
+      ".*\\.gif",
+      ".*\\.css",
+      ".*\\.js"
+    ]
+  }
+}

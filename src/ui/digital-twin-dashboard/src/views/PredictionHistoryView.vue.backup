@@ -1,0 +1,1411 @@
+<template>
+  <main class="prediction-history-page container">
+    <div class="page-header glass-panel">
+      <div>
+        <p class="eyebrow">Historical Analysis</p>
+        <h1>Prediction History</h1>
+        <p class="subtitle">
+          Review historical predictions, track model performance, and analyze prediction accuracy over time
+        </p>
+      </div>
+      <div class="header-actions">
+        <div class="machine-selector">
+          <label for="machine-select">Select Machine:</label>
+          <select 
+            id="machine-select"
+            v-model="selectedMachineId" 
+            @change="loadHistory"
+            class="machine-dropdown"
+          >
+            <option value="">All Machines</option>
+            <option v-for="machine in machines" :key="machine.id" :value="machine.id">
+              {{ machine.name }} ({{ machine.type }})
+            </option>
+          </select>
+        </div>
+        <BaseButton 
+          size="md" 
+          variant="primary" 
+          :disabled="loading" 
+          @click="loadHistory"
+          :loading="loading"
+        >
+          <template #icon>
+            <RefreshCw class="h-4 w-4" />
+          </template>
+          Refresh History
+        </BaseButton>
+      </div>
+    </div>
+
+    <div v-if="loading" class="loading-state glass-panel">
+      <div class="spinner"></div>
+      <p>Loading prediction history...</p>
+    </div>
+
+    <div v-else-if="error" class="error-state glass-panel">
+      <AlertCircle class="error-icon" />
+      <div>
+        <h3>Failed to Load History</h3>
+        <p>{{ error }}</p>
+      </div>
+      <BaseButton size="sm" variant="outline" @click="loadHistory">
+        Try Again
+      </BaseButton>
+    </div>
+
+    <template v-else>
+      <!-- Summary Cards -->
+      <div class="summary-grid">
+        <div class="summary-card glass-panel">
+          <div class="card-icon">
+            <BarChart3 class="icon" />
+          </div>
+          <div class="card-content">
+            <div class="card-value">{{ totalPredictions }}</div>
+            <div class="card-label">Total Predictions</div>
+          </div>
+        </div>
+        
+        <div class="summary-card glass-panel">
+          <div class="card-icon success">
+            <CheckCircle class="icon" />
+          </div>
+          <div class="card-content">
+            <div class="card-value">{{ accuratePredictions }}</div>
+            <div class="card-label">Accurate Predictions</div>
+          </div>
+        </div>
+        
+        <div class="summary-card glass-panel">
+          <div class="card-icon warning">
+            <Clock class="icon" />
+          </div>
+          <div class="card-content">
+            <div class="card-value">{{ averageAge }}d</div>
+            <div class="card-label">Average Age</div>
+          </div>
+        </div>
+        
+        <div class="summary-card glass-panel">
+          <div class="card-icon info">
+            <TrendingUp class="icon" />
+          </div>
+          <div class="card-content">
+            <div class="card-value">{{ accuracyRate }}%</div>
+            <div class="card-label">Accuracy Rate</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- History Table -->
+      <div class="history-section glass-panel">
+        <div class="section-header">
+          <h2>Prediction Records</h2>
+          <div class="table-controls">
+            <div class="filter-controls">
+              <label>Show:</label>
+              <select v-model="itemsPerPage" class="items-per-page">
+                <option :value="10">10 items</option>
+                <option :value="25">25 items</option>
+                <option :value="50">50 items</option>
+                <option :value="100">100 items</option>
+              </select>
+            </div>
+            <div class="search-box">
+              <Search class="search-icon" />
+              <input 
+                v-model="searchQuery" 
+                type="text" 
+                placeholder="Search predictions..."
+                class="search-input"
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th @click="sortBy('createdAt')" class="sortable">
+                  Date
+                  <ChevronUp v-if="sortField === 'createdAt' && sortDirection === 'asc'" class="sort-icon" />
+                  <ChevronDown v-else class="sort-icon" />
+                </th>
+                <th>Machine</th>
+                <th>Predicted RUL</th>
+                <th>Actual RUL</th>
+                <th>Confidence</th>
+                <th>Status</th>
+                <th>Model</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="prediction in paginatedPredictions" :key="prediction.id" class="prediction-row">
+                <td>{{ formatDate(prediction.createdAt) }}</td>
+                <td>
+                  <div class="machine-cell">
+                    <div class="machine-name">{{ getMachineName(prediction.machineId) }}</div>
+                    <div class="machine-id">{{ prediction.machineId }}</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="rul-cell">
+                    <span class="predicted-value">{{ Math.round(prediction.remainingUsefulLifeDays) }} days</span>
+                    <div v-if="prediction.rulLowerBound !== undefined && prediction.rulUpperBound !== undefined" class="confidence-range">
+                      ({{ Math.round(prediction.rulLowerBound) }} - {{ Math.round(prediction.rulUpperBound) }})
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span v-if="prediction.actualRul !== undefined" class="actual-value">
+                    {{ Math.round(prediction.actualRul) }} days
+                  </span>
+                  <span v-else class="no-data">N/A</span>
+                </td>
+                <td>
+                  <div class="confidence-cell">
+                    <div class="confidence-bar">
+                      <div 
+                        class="confidence-fill" 
+                        :style="{ width: `${getConfidence(prediction)}%` }"
+                        :class="getConfidenceClass(getConfidence(prediction))"
+                      ></div>
+                    </div>
+                    <span class="confidence-percent">{{ getConfidence(prediction) }}%</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="status-badge" :class="getStatusClass(prediction.healthStatus)">
+                    {{ prediction.healthStatus }}
+                  </span>
+                </td>
+                <td>
+                  <span class="model-version">v{{ prediction.modelVersion }}</span>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <BaseButton 
+                      size="sm" 
+                      variant="ghost" 
+                      @click="viewDetails(prediction)"
+                      title="View Details"
+                    >
+                      <Eye class="h-4 w-4" />
+                    </BaseButton>
+                    <BaseButton 
+                      size="sm" 
+                      variant="ghost" 
+                      @click="compareWithOthers(prediction)"
+                      title="Compare"
+                    >
+                      <GitCompare class="h-4 w-4" />
+                    </BaseButton>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <div class="pagination-info">
+            Showing {{ startIndex + 1 }} to {{ Math.min(startIndex + itemsPerPage, filteredPredictions.length) }} 
+            of {{ filteredPredictions.length }} predictions
+          </div>
+          <div class="pagination-controls">
+            <BaseButton 
+              size="sm" 
+              variant="outline" 
+              :disabled="currentPage === 1"
+              @click="currentPage--"
+            >
+              Previous
+            </BaseButton>
+            <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+            <BaseButton 
+              size="sm" 
+              variant="outline" 
+              :disabled="currentPage === totalPages"
+              @click="currentPage++"
+      </div>
+    </div>
+    
+    <div class="summary-card glass-panel">
+      <div class="card-icon success">
+        <CheckCircle class="icon" />
+      </div>
+      <div class="card-content">
+        <div class="card-value">{{ accuratePredictions }}</div>
+        <div class="card-label">Accurate Predictions</div>
+      </div>
+    </div>
+    
+    <div class="summary-card glass-panel">
+      <div class="card-icon warning">
+        <Clock class="icon" />
+      </div>
+      <div class="card-content">
+        <div class="card-value">{{ averageAge }}d</div>
+        <div class="card-label">Average Age</div>
+      </div>
+    </div>
+    
+    <div class="summary-card glass-panel">
+      <div class="card-icon info">
+        <TrendingUp class="icon" />
+      </div>
+      <div class="card-content">
+        <div class="card-value">{{ accuracyRate }}%</div>
+        <div class="card-label">Accuracy Rate</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Table -->
+  <div class="history-section glass-panel">
+    <div class="section-header">
+      <h2>Prediction Records</h2>
+      <div class="table-controls">
+        <div class="filter-controls">
+          <label>Show:</label>
+          <select v-model="itemsPerPage" class="items-per-page">
+            <option :value="10">10 items</option>
+            <option :value="25">25 items</option>
+            <option :value="50">50 items</option>
+            <option :value="100">100 items</option>
+          </select>
+        </div>
+        <div class="search-box">
+          <Search class="search-icon" />
+          <input 
+            v-model="searchQuery" 
+            type="text" 
+            placeholder="Search predictions..."
+            class="search-input"
+          >
+        </div>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th @click="sortBy('createdAt')" class="sortable">
+              Date
+              <ChevronUp v-if="sortField === 'createdAt' && sortDirection === 'asc'" class="sort-icon" />
+              <ChevronDown v-else class="sort-icon" />
+            </th>
+            <th>Machine</th>
+            <th>Predicted RUL</th>
+            <th>Actual RUL</th>
+            <th>Confidence</th>
+            <th>Status</th>
+            <th>Model</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="prediction in paginatedPredictions" :key="prediction.id" class="prediction-row">
+            <td>{{ formatDate(prediction.createdAt) }}</td>
+            <td>
+              <div class="machine-cell">
+                <div class="machine-name">{{ getMachineName(prediction.machineId) }}</div>
+                <div class="machine-id">{{ prediction.machineId }}</div>
+              </div>
+            </td>
+            <td>
+              <div class="rul-cell">
+                <span class="predicted-value">{{ Math.round(prediction.remainingUsefulLifeDays) }} days</span>
+                <div v-if="prediction.rulLowerBound !== undefined && prediction.rulUpperBound !== undefined" class="confidence-range">
+                  ({{ Math.round(prediction.rulLowerBound) }} - {{ Math.round(prediction.rulUpperBound) }})
+                </div>
+              </div>
+            </td>
+            <td>
+              <span v-if="prediction.actualRul !== undefined" class="actual-value">
+                {{ Math.round(prediction.actualRul) }} days
+              </span>
+              <span v-else class="no-data">N/A</span>
+            </td>
+            <td>
+              <div class="confidence-cell">
+                <div class="confidence-bar">
+                  <div 
+                    class="confidence-fill" 
+                    :style="{ width: `${getConfidence(prediction)}%` }"
+                    :class="getConfidenceClass(getConfidence(prediction))"
+                  ></div>
+                </div>
+                <span class="confidence-percent">{{ getConfidence(prediction) }}%</span>
+              </div>
+            </td>
+            <td>
+              <span class="status-badge" :class="getStatusClass(prediction.healthStatus)">
+                {{ prediction.healthStatus }}
+              </span>
+            </td>
+            <td>
+              <span class="model-version">v{{ prediction.modelVersion }}</span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <BaseButton 
+                  size="sm" 
+                  variant="ghost" 
+                  @click="viewDetails(prediction)"
+                  title="View Details"
+                >
+                  <Eye class="h-4 w-4" />
+                </BaseButton>
+                <BaseButton 
+                  size="sm" 
+                  variant="ghost" 
+                  @click="compareWithOthers(prediction)"
+                  title="Compare"
+                >
+                  <GitCompare class="h-4 w-4" />
+                </BaseButton>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+      <div class="pagination-info">
+        Showing {{ startIndex + 1 }} to {{ Math.min(startIndex + itemsPerPage, filteredPredictions.length) }} 
+        of {{ filteredPredictions.length }} predictions
+      </div>
+      <div class="pagination-controls">
+        <BaseButton 
+          size="sm" 
+          variant="outline" 
+          :disabled="currentPage === 1"
+          @click="currentPage--"
+        >
+          Previous
+        </BaseButton>
+        <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+        <BaseButton 
+          size="sm" 
+          variant="outline" 
+          :disabled="currentPage === totalPages"
+          @click="currentPage++"
+        >
+          Next
+        </BaseButton>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal -->
+  <div v-if="selectedPrediction" class="modal-overlay" @click="closeModal">
+    <div class="modal-content" @click.stop>
+      <div class="modal-header">
+        <h3>Prediction Details</h3>
+        <button class="close-button" @click="closeModal">
+          <X class="h-5 w-5" />
+        </button>
+      </div>
+      <div class="modal-body">
+        <PredictionDetail :prediction="selectedPrediction" />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, watch } from 'vue'
+import { useMachinesStore } from '@/stores/machines.store'
+import { fetchPredictionHistory } from '@/services/predictions.service'
+import type { PredictionDto } from '@/api/types'
+import { 
+  RefreshCw, 
+  AlertCircle, 
+  BarChart3, 
+  CheckCircle, 
+  Clock, 
+  TrendingUp,
+  Search,
+  ChevronUp,
+  ChevronDown,
+  Eye,
+  GitCompare,
+  Activity,
+  PieChart,
+  X
+} from 'lucide-vue-next'
+
+const machinesStore = useMachinesStore()
+const loading = ref(false)
+const error = ref<string | null>(null)
+const predictions = ref<PredictionDto[]>([])
+const selectedMachineId = ref('')
+const searchQuery = ref('')
+const currentPage = ref(1)
+const itemsPerPage = ref(25)
+const sortField = ref('createdAt')
+const sortDirection = ref<'asc' | 'desc'>('desc')
+const selectedPrediction = ref<PredictionDto | null>(null)
+
+const machines = computed(() => machinesStore.machines)
+
+// Initialize machines if needed
+if (machines.value.length === 0) {
+  machinesStore.fetchMachines()
+}
+
+const filteredPredictions = computed(() => {
+  let result = predictions.value
+  
+  // Filter by machine
+  if (selectedMachineId.value) {
+    result = result.filter(p => p.machineId === selectedMachineId.value)
+  }
+  
+  // Filter by search query
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    result = result.filter(p => 
+      p.machineId.toLowerCase().includes(query) ||
+      p.healthStatus?.toLowerCase().includes(query) ||
+      p.modelVersion.includes(query)
+    )
+  }
+  
+  // Sort
+  result.sort((a, b) => {
+    const aVal = a[sortField.value as keyof PredictionDto]
+    const bVal = b[sortField.value as keyof PredictionDto]
+    
+    if (aVal < bVal) return sortDirection.value === 'asc' ? -1 : 1
+    if (aVal > bVal) return sortDirection.value === 'asc' ? 1 : -1
+    return 0
+  })
+  
+  return result
+})
+
+const paginatedPredictions = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  return filteredPredictions.value.slice(start, start + itemsPerPage.value)
+})
+
+const totalPages = computed(() => 
+  Math.ceil(filteredPredictions.value.length / itemsPerPage.value)
+)
+
+const startIndex = computed(() => 
+  (currentPage.value - 1) * itemsPerPage.value
+)
+
+// Summary calculations
+const totalPredictions = computed(() => predictions.value.length)
+const accuratePredictions = computed(() => 
+  predictions.value.filter(p => p.accuracyScore && p.accuracyScore > 0.8).length
+)
+const averageAge = computed(() => {
+  if (predictions.value.length === 0) return 0
+  const totalAge = predictions.value.reduce((sum, p) => {
+    const age = Math.floor((Date.now() - new Date(p.createdAt).getTime()) / (1000 * 60 * 60 * 24))
+    return sum + age
+  }, 0)
+  return Math.round(totalAge / predictions.value.length)
+})
+const accuracyRate = computed(() => 
+  totalPredictions.value > 0 
+    ? Math.round((accuratePredictions.value / totalPredictions.value) * 100)
+    : 0
+)
+
+const machineTypeDistribution = computed(() => {
+  const distribution: Record<string, number> = {}
+  predictions.value.forEach(p => {
+    const machine = machines.value.find(m => m.id === p.machineId)
+    if (machine) {
+      distribution[machine.type] = (distribution[machine.type] || 0) + 1
+    }
+  })
+  return distribution
+})
+
+const getMachineName = (machineId: string) => {
+  const machine = machines.value.find(m => m.id === machineId)
+  return machine ? machine.name : machineId
+}
+
+const getConfidence = (prediction: PredictionDto) => {
+  if (prediction.rulLowerBound !== undefined && prediction.rulUpperBound !== undefined) {
+    const range = prediction.rulUpperBound - prediction.rulLowerBound
+    return Math.max(0, 100 - (range / prediction.remainingUsefulLifeDays) * 50)
+  }
+  return 75 // Default confidence
+}
+
+const getConfidenceClass = (confidence: number) => {
+  if (confidence >= 80) return 'high'
+  if (confidence >= 60) return 'medium'
+  return 'low'
+}
+
+const getStatusClass = (status: string | undefined) => {
+  if (!status) return 'unknown'
+  const s = status.toLowerCase()
+  if (s.includes('healthy')) return 'healthy'
+  if (s.includes('degraded')) return 'degraded'
+  if (s.includes('critical')) return 'critical'
+  return 'unknown'
+}
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+const sortBy = (field: string) => {
+  if (sortField.value === field) {
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortField.value = field
+    sortDirection.value = 'desc'
+  }
+}
+
+const loadHistory = async () => {
+  loading.value = true
+  error.value = null
+  
+  try {
+    const machineId = selectedMachineId.value || ''
+    const history = await fetchPredictionHistory(machineId, 1000) // Get more for filtering
+    predictions.value = history
+    currentPage.value = 1
+  } catch (err: any) {
+    error.value = err.response?.data?.message || err.message || 'Failed to load prediction history'
+    console.error('History load error:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+const viewDetails = (prediction: PredictionDto) => {
+  selectedPrediction.value = prediction
+}
+
+const compareWithOthers = (prediction: PredictionDto) => {
+  // Would open comparison view
+  console.log('Comparing prediction:', prediction)
+}
+
+const accuracyImprovement = computed(() => {
+  if (predictions.value.length < 2) return 0
+  const recent = predictions.value.slice(0, 10)
+  const older = predictions.value.slice(10, 20)
+  
+  if (recent.length === 0 || older.length === 0) return 0
+  
+  const recentAccuracy = recent.filter(p => p.accuracyScore && p.accuracyScore > 0.8).length / recent.length
+  const olderAccuracy = older.filter(p => p.accuracyScore && p.accuracyScore > 0.8).length / older.length
+  
+  return Math.round(((recentAccuracy - olderAccuracy) / olderAccuracy) * 100)
+})
+
+const modelStability = computed(() => {
+  if (predictions.value.length < 10) return 'Insufficient Data'
+  
+  const accuracies = predictions.value
+    .filter(p => p.accuracyScore)
+    .map(p => p.accuracyScore)
+    .slice(0, 20)
+  
+  if (accuracies.length < 5) return 'Insufficient Data'
+  
+  const mean = accuracies.reduce((sum, acc) => sum + acc, 0) / accuracies.length
+  const variance = accuracies.reduce((sum, acc) => sum + Math.pow(acc - mean, 2), 0) / accuracies.length
+  const standardDeviation = Math.sqrt(variance)
+  
+  const coefficientOfVariation = standardDeviation / mean
+  
+  if (coefficientOfVariation < 0.1) return 'High'
+  if (coefficientOfVariation < 0.2) return 'Medium'
+  return 'Low'
+})
+
+const accuracyChartRef = ref<HTMLElement>()
+const distributionChartRef = ref<HTMLElement>()
+const accuracyCanvas = ref<HTMLCanvasElement>()
+const distributionCanvas = ref<HTMLCanvasElement>()
+const accuracyChartLoading = ref(false)
+const distributionChartLoading = ref(false)
+const accuracyChartData = ref<Array<{date: string, accuracy: number}>>([])
+
+watch([predictions, accuracyChartRef, distributionChartRef], () => {
+  if (predictions.value.length > 0) {
+    renderAccuracyChart()
+    renderDistributionChart()
+  }
+})
+
+const renderAccuracyChart = () => {
+  if (!accuracyCanvas.value || !accuracyChartRef.value) return
+  
+  accuracyChartLoading.value = true
+  
+  try {
+    const ctx = accuracyCanvas.value.getContext('2d')
+    if (!ctx) return
+    
+    const recentPredictions = predictions.value
+      .slice(0, 30)
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    
+    accuracyChartData.value = recentPredictions.map(p => ({
+      date: new Date(p.createdAt).toLocaleDateString(),
+      accuracy: p.accuracyScore || 0
+    }))
+    
+    const width = 400
+    const height = 200
+    const padding = 40
+    
+    ctx.clearRect(0, 0, width, height)
+    
+    ctx.strokeStyle = '#e0e0e0'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.moveTo(padding, padding)
+    ctx.lineTo(width - padding, padding)
+    ctx.moveTo(padding, height - padding)
+    ctx.lineTo(padding, height - padding)
+    ctx.stroke()
+    
+    if (accuracyChartData.value.length > 1) {
+      ctx.strokeStyle = '#3b82f6'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      
+      accuracyChartData.value.forEach((point, index) => {
+        const x = padding + (index / (accuracyChartData.value.length - 1)) * (width - 2 * padding)
+        const y = height - padding - (point.accuracy * (height - 2 * padding))
+        
+        if (index === 0) {
+          ctx.moveTo(x, y)
+        } else {
+          ctx.lineTo(x, y)
+        }
+      })
+      
+      ctx.stroke()
+      
+      ctx.fillStyle = '#3b82f6'
+      accuracyChartData.value.forEach((point, index) => {
+        const x = padding + (index / (accuracyChartData.value.length - 1)) * (width - 2 * padding)
+        const y = height - padding - (point.accuracy * (height - 2 * padding))
+        
+        ctx.beginPath()
+        ctx.arc(x, y, 3, 0, 2 * Math.PI)
+        ctx.fill()
+      })
+    }
+    
+  } catch (error) {
+    console.error('Failed to render accuracy chart:', error)
+  } finally {
+    accuracyChartLoading.value = false
+  }
+}
+
+const renderDistributionChart = () => {
+  if (!distributionCanvas.value || !distributionChartRef.value) return
+  
+  distributionChartLoading.value = true
+  
+  try {
+    const ctx = distributionCanvas.value.getContext('2d')
+    if (!ctx) return
+    
+    const width = 400
+    const height = 200
+    const centerX = width / 2
+    const centerY = height / 2
+    const radius = Math.min(width, height) / 3
+    
+    ctx.clearRect(0, 0, width, height)
+    
+    const distribution = machineTypeDistribution.value
+    const total = Object.values(distribution).reduce((sum, count) => sum + count, 0)
+    
+    if (total === 0) return
+    
+    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+    let currentAngle = -Math.PI / 2
+    
+    Object.entries(distribution).forEach(([type, count], index) => {
+      const sliceAngle = (count / total) * 2 * Math.PI
+      
+      ctx.fillStyle = colors[index % colors.length]
+      ctx.beginPath()
+      ctx.moveTo(centerX, centerY)
+      ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle)
+      ctx.closePath()
+      ctx.fill()
+      
+      const labelAngle = currentAngle + sliceAngle / 2
+      const labelX = centerX + Math.cos(labelAngle) * (radius * 0.7)
+      const labelY = centerY + Math.sin(labelAngle) * (radius * 0.7)
+      
+      ctx.fillStyle = '#ffffff'
+      ctx.font = '12px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      
+      const percentage = Math.round((count / total) * 100)
+      ctx.fillText(`${type} (${percentage}%)`, labelX, labelY)
+      
+      currentAngle += sliceAngle
+    })
+    
+  } catch (error) {
+    console.error('Failed to render distribution chart:', error)
+  } finally {
+    distributionChartLoading.value = false
+  }
+}
+
+const closeModal = () => {
+  selectedPrediction.value = null
+}
+
+// Load initial data
+loadHistory()
+
+// Reset pagination when filters change
+watch([selectedMachineId, searchQuery], () => {
+  currentPage.value = 1
+})
+</script>
+
+<style scoped>
+.prediction-history-page {
+  padding: clamp(var(--space-16), 3vw, var(--space-24)) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: var(--space-20);
+  gap: var(--space-16);
+}
+
+.eyebrow {
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+}
+
+.page-header h1 {
+  margin: 0 0 var(--space-8);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary-color), #096dd9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  max-width: 600px;
+  line-height: 1.6;
+}
+
+.header-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  min-width: 250px;
+}
+
+.machine-selector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.machine-selector label {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.machine-dropdown {
+  padding: var(--space-8);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+}
+
+.machine-dropdown:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.loading-state, .error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  gap: 1rem;
+  text-align: center;
+}
+
+.spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-icon {
+  width: 3rem;
+  height: 3rem;
+  color: var(--color-error);
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--space-16);
+}
+
+.summary-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-16);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.card-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary-color), #096dd9);
+}
+
+.card-icon.success {
+  background: linear-gradient(135deg, var(--color-success), #3f8600);
+}
+
+.card-icon.warning {
+  background: linear-gradient(135deg, var(--color-warning), #d48806);
+}
+
+.card-icon.info {
+  background: linear-gradient(135deg, #1890ff, #096dd9);
+}
+
+.icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  color: white;
+}
+
+.card-content {
+  flex: 1;
+}
+
+.card-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.card-label {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.history-section {
+  padding: var(--space-20);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-16);
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.section-header h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.table-controls {
+  display: flex;
+  gap: var(--space-12);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.filter-controls label {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.items-per-page {
+  padding: var(--space-4) var(--space-8);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: var(--color-text-primary);
+  font-size: 0.875rem;
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: var(--space-8);
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-text-secondary);
+}
+
+.search-input {
+  padding: var(--space-8) var(--space-8) var(--space-8) 2.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  min-width: 250px;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.table-container {
+  overflow-x: auto;
+  margin-bottom: var(--space-16);
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.history-table th {
+  padding: var(--space-12) var(--space-8);
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.history-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.sort-icon {
+  width: 1rem;
+  height: 1rem;
+  opacity: 0.5;
+}
+
+.history-table th.sortable:hover .sort-icon {
+  opacity: 1;
+}
+
+.history-table td {
+  padding: var(--space-12) var(--space-8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.prediction-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.machine-cell .machine-name {
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.machine-cell .machine-id {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.rul-cell .predicted-value {
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.confidence-range {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.actual-value {
+  color: var(--color-success);
+  font-weight: 500;
+}
+
+.no-data {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.confidence-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.confidence-bar {
+  width: 60px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.confidence-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.confidence-fill.high {
+  background: var(--color-success);
+}
+
+.confidence-fill.medium {
+  background: var(--color-warning);
+}
+
+.confidence-fill.low {
+  background: var(--color-error);
+}
+
+.confidence-percent {
+  font-size: 0.8rem;
+  font-weight: 500;
+  min-width: 35px;
+}
+
+.status-badge {
+  padding: var(--space-2) var(--space-8);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.healthy {
+  background: rgba(82, 196, 26, 0.2);
+  color: var(--color-success);
+}
+
+.status-badge.degraded {
+  background: rgba(250, 173, 20, 0.2);
+  color: var(--color-warning);
+}
+
+.status-badge.critical {
+  background: rgba(245, 34, 45, 0.2);
+  color: var(--color-error);
+}
+
+.status-badge.unknown {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-secondary);
+}
+
+.model-version {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.action-buttons {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  padding-top: var(--space-12);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pagination-info {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.page-info {
+  font-size: 0.875rem;
+  color: var(--color-text-primary);
+  padding: 0 var(--space-8);
+}
+
+.charts-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: var(--space-16);
+}
+
+.chart-card {
+  padding: var(--space-20);
+}
+
+.chart-card h3 {
+  margin: 0 0 var(--space-16) 0;
+  color: var(--color-text-primary);
+}
+
+.chart-placeholder {
+  text-align: center;
+  padding: 2rem;
+  color: var(--color-text-secondary);
+}
+
+.chart-container {
+  position: relative;
+  min-height: 200px;
+}
+
+.chart-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+}
+
+.chart-loading .loading-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid rgba(59, 130, 246, 0.1);
+  border-radius: 50%;
+  border-top: 3px solid var(--primary-color);
+  animation: spin 1s linear infinite;
+}
+
+.chart-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--color-text-secondary);
+}
+
+.chart-content {
+  position: relative;
+  width: 100%;
+  height: 200px;
+}
+
+.chart-icon {
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.chart-stats, .distribution-stats {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.stat-item, .dist-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.stat-label, .dist-type {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.stat-value {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.stat-value.positive {
+  color: var(--color-success);
+}
+
+.dist-count {
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-16);
+}
+
+.modal-content {
+  background: var(--background-color);
+  border-radius: 12px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-16) var(--space-20);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: var(--space-4);
+  border-radius: 4px;
+}
+
+.close-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.modal-body {
+  padding: var(--space-20);
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .header-actions {
+    min-width: auto;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .table-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-input {
+    min-width: auto;
+  }
+  
+  .summary-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .charts-section {
+    grid-template-columns: 1fr;
+  }
+  
+  .pagination {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  
+  .chart-stats, .distribution-stats {
+    flex-direction: column;
+    gap: var(--space-8);
+  }
+}
+</style>

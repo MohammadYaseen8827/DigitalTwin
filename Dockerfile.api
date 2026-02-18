@@ -1,0 +1,73 @@
+
+# Multi-stage build for optimal image size
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS base
+WORKDIR /app
+EXPOSE 8080
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    libgomp1 \
+    && rm -rf /var/cache/apk/*
+
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
+WORKDIR /src
+
+# Copy only necessary files for faster builds
+COPY ["src/api/DigitalTwinPlatform.API/DigitalTwinPlatform.API.csproj", "api/DigitalTwinPlatform.API/"]
+COPY ["src/api/DigitalTwinPlatform.Application/DigitalTwinPlatform.Application.csproj", "api/DigitalTwinPlatform.Application/"]
+COPY ["src/api/DigitalTwinPlatform.Domain/DigitalTwinPlatform.Domain.csproj", "api/DigitalTwinPlatform.Domain/"]
+COPY ["src/api/DigitalTwinPlatform.Infrastructure/DigitalTwinPlatform.Infrastructure.csproj", "api/DigitalTwinPlatform.Infrastructure/"]
+
+# Restore packages with caching
+RUN dotnet restore "api/DigitalTwinPlatform.API/DigitalTwinPlatform.API.csproj" \
+    --runtime linux-musl-x64 \
+    --configuration Release \
+    --no-restore \
+    --force
+
+# Copy source code
+COPY . .
+
+# Build optimized for production
+RUN dotnet build "DigitalTwinPlatform.API.csproj" \
+    -c Release \
+    -r linux-musl-x64 \
+    --no-restore \
+    -p:PublishTrimmed=true \
+    -p:PublishSingleFile=true \
+    -p:PublishReadyToRun=true \
+    -o /app/build
+
+# Publish with trimming and single file
+RUN dotnet publish "DigitalTwinPlatform.API.csproj" \
+    -c Release \
+    -r linux-musl-x64 \
+    --self-contained false \
+    --no-restore \
+    -p:PublishTrimmed=true \
+    -p:PublishSingleFile=true \
+    -p:PublishReadyToRun=true \
+    -o /app/publish
+
+# Production stage
+FROM base AS final
+
+# Create non-root user for security
+RUN addgroup -g appuser && adduser -D -G appuser appuser
+
+# Copy published app
+COPY --from=publish /app/publish .
+RUN chown -R appuser:appuser /app
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/api/health || exit 1
+
+# Security and performance optimizations
+USER appuser
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+# Optimize for Kubernetes/SME deployment
+ENTRYPOINT ["dotnet", "DigitalTwinPlatform.API.dll"]

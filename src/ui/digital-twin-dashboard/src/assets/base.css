@@ -1,0 +1,66 @@
+:root {
+  --color-background: var(--color-surface);
+  --color-background-soft: var(--color-surface-alt);
+  --color-background-mute: color-mix(in srgb, var(--color-surface-alt) 70%, var(--color-surface) 30%);
+
+  --color-border: var(--color-border-subtle);
+  --color-border-hover: var(--color-border);
+
+  --color-heading: var(--color-text-primary);
+  --color-text: var(--color-text-secondary);
+
+  --section-gap: 120px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: var(--color-surface);
+    --color-background-soft: var(--color-surface-alt);
+    --color-background-mute: color-mix(in srgb, var(--color-surface-alt) 50%, var(--color-surface) 50%);
+
+    --color-border: var(--color-border-subtle);
+    --color-border-hover: var(--color-border);
+
+    --color-heading: var(--color-text-primary);
+    --color-text: var(--color-text-secondary);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  font-weight: normal;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--color-text-primary);
+  background: var(--color-background);
+  transition:
+    color 0.35s ease,
+    background-color 0.35s ease;
+  line-height: var(--font-lineheight-normal);
+  font-family:
+    'Space Grotesk',
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  font-size: var(--font-size-base);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+#app {
+  min-height: 100vh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}

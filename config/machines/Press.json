@@ -1,0 +1,48 @@
+{
+  "machineType": "Press",
+  "displayName": "Hydraulic Press",
+  "degradationModel": {
+    "modelType": "PhysicsInformed",
+    "parameters": {
+      "baselineDrift": 0.0005,
+      "loadFactor": 1.0
+    },
+    "modelSpecificSettings": {
+      "operationalLoad": 0.8
+    }
+  },
+  "sensorMappings": [
+    {
+      "sensorType": "pressure",
+      "transferFunction": "basePressure + degradationState * pressureCoeff",
+      "transferFunctionParameters": {
+        "basePressure": 50.0,
+        "pressureCoeff": 50.0
+      },
+      "noiseLevel": 2.0,
+      "unit": "bar"
+    },
+    {
+      "sensorType": "vibration",
+      "transferFunction": "baseVib + degradationState * vibCoeff",
+      "transferFunctionParameters": {
+        "baseVib": 0.4,
+        "vibCoeff": 2.5
+      },
+      "noiseLevel": 0.08,
+      "unit": "mm/s"
+    }
+  ],
+  "failureThresholds": {
+    "degradationThreshold": 1.2,
+    "sensorThresholds": {
+      "pressure": 120.0,
+      "vibration": 3.8
+    },
+    "maxOperationalTime": null
+  },
+  "operationalParameters": {
+    "typicalOperatingHours": 12,
+    "maintenanceIntervalDays": 120
+  }
+}

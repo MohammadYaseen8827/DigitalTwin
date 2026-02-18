@@ -1,0 +1,83 @@
+# Node.js dependencies
+node_modules/
+dist/
+.nuxt/
+
+# .NET build artifacts
+**/bin/
+**/obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Docker
+docker-compose.override.yml
+.env.*
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Certificates
+*.pfx
+*.cer
+*.crt
+
+# Temporary files
+tmp/
+temp/
+.cache/
+
+# Build outputs
+out/
+build/
+coverage/
+
+# Testing
+.nyc_output/
+coverage/
+*.lcov
+
+# Vite
+.vite/
+.vitepress/
+
+# Cypress
+cypress/screenshots/
+cypress/videos/
+
+# PNPM
+pnpm-lock.yaml
+
+# Local configuration
+config/local/
+secrets/
+
+# Models
+models/**/*.onnx
+models/**/*.zip
