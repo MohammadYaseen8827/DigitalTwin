@@ -71,11 +71,20 @@ function mapMachineDtoToFrontend(dto: MachineDto): Machine {
 
 function mapBackendStatusToFrontend(status: string): MachineStatus {
     const s = status?.toLowerCase() ?? ''
-    if (s === 'operational' || s === 'warning') return 'Running'
-    if (s === 'maintenance') return 'Maintenance'
-    if (s === 'critical') return 'Error'
-    if (s === 'offline') return 'Offline'
-    return 'Running'
+    switch (s) {
+        case 'operational':
+            return 'Running'
+        case 'warning':
+            return 'Running'  // Warning is still operational but with alerts
+        case 'critical':
+            return 'Error'
+        case 'maintenance':
+            return 'Maintenance'
+        case 'offline':
+            return 'Offline'
+        default:
+            return 'Running'  // Default to Running for unknown statuses
+    }
 }
 
 function mapTelemetryDtoToMetrics(dto: TelemetryDto): TelemetryMetrics {

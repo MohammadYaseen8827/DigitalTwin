@@ -105,7 +105,7 @@ export async function getSimulation(
   machineId: string
 ): Promise<SimulationStateDto> {
   try {
-    const response = await withRetry<SimulationStateDto>(signal =>
+    return await withRetry<SimulationStateDto>(signal =>
       axiosClient.get(
         `/Simulation/${encodeURIComponent(simulationId)}`,
         {
@@ -114,7 +114,6 @@ export async function getSimulation(
         }
       ) as any
     )
-    return response
   } catch (error) {
     console.error(`Failed to get simulation ${simulationId}:`, error)
     throw error
@@ -208,6 +207,31 @@ export async function resumeSimulation(
  * Cancel a running simulation
  */
 export async function cancelSimulation(
+  simulationId: string,
+  machineId: string
+): Promise<SimulationStateDto> {
+  try {
+    const response = await withRetry<SimulationStateDto>(signal =>
+      axiosClient.post(
+        `/api/simulation/cancel`,
+        { simulationId, machineId },
+        { signal }
+      )
+    )
+    toast.success('Simulation cancelled')
+    return response as any
+  } catch (error) {
+    console.error(`Failed to cancel simulation ${simulationId}:`, error)
+    const message = (error as any)?.response?.data?.message ?? 'Failed to cancel simulation'
+    toast.error(message)
+    throw error
+  }
+}
+
+/**
+ * Cancel a running simulation (alternative endpoint)
+ */
+export async function cancelSimulationById(
   simulationId: string,
   machineId: string
 ): Promise<SimulationStateDto> {

@@ -45,9 +45,32 @@ public class TelemetryRepository(DigitalTwinDbContext context)
             .ToListAsync(ct);
     }
 
-    public Task<IEnumerable<TelemetryData>> SearchAsync(string query, DateTime? since = null, CancellationToken ct = default)
+    public async Task<IEnumerable<TelemetryData>> SearchAsync(string query, DateTime? since = null, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        IQueryable<TelemetryData> queryable = _context.TelemetryData;
+
+        // Apply date filter if provided
+        if (since.HasValue)
+        {
+            queryable = queryable.Where(t => t.Timestamp >= since.Value);
+        }
+
+        // Apply text search across relevant fields if query is provided
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            var normalizedQuery = query.ToLowerInvariant();
+            queryable = queryable.Where(t => 
+                t.DataType.ToLower().Contains(normalizedQuery) ||
+                (t.Data != null && t.Data.ToString().ToLower().Contains(normalizedQuery)) ||
+                t.MachineId.ToString().Contains(normalizedQuery) ||
+                (t.Metadata != null && t.Metadata.ToString().ToLower().Contains(normalizedQuery))
+            );
+        }
+
+        // Order by timestamp descending and return results
+        return await queryable
+            .OrderByDescending(t => t.Timestamp)
+            .ToListAsync(ct);
     }
 }
 

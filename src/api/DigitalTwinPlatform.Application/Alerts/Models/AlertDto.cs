@@ -6,13 +6,19 @@ public record AlertDto(
     Guid Id,
     Guid MachineId,
     string Message,
+    string Title,
+    string Description,
     AlertSeverity Severity,
+    string Status,
     DateTime CreatedAt,
-    bool IsAcknowledged,
+    DateTime? AcknowledgedAt = null,
+    DateTime? ResolvedAt = null,
+    bool IsAcknowledged = false,
     string? AcknowledgedBy = null,
     Guid? RelatedPredictionId = null,
     string? Category = null,
-    string? RecommendedAction = null)
+    string? RecommendedAction = null,
+    string? SuggestedActions = null)
 {
     /// <summary>
     /// Creates an AlertDto from a domain Alert entity.
@@ -23,10 +29,19 @@ public record AlertDto(
             alert.Id,
             alert.MachineId,
             alert.Message,
+            alert.Title,
+            alert.Description,
             alert.Severity,
+            alert.Status,
             alert.CreatedAt,
+            alert.AcknowledgedAt,
+            alert.ResolvedAt,
             alert.IsAcknowledged,
             alert.AcknowledgedBy,
-            alert.RelatedPredictionId);
+            alert.RelatedPredictionId,
+            alert.Category,
+            alert.RecommendedAction,
+            alert.SuggestedActions
+        );
     }
 }

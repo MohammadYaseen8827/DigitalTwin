@@ -58,4 +58,15 @@ public class MaintenanceController(IMaintenanceService maintenanceService) : Con
         var active = await maintenanceService.GetActiveMaintenanceAsync();
         return Ok(active);
     }
+
+    [HttpGet("search")]
+    public async Task<ActionResult<IEnumerable<MaintenanceRecord>>> Search(
+        [FromQuery] string query,
+        [FromQuery] string? status = null,
+        [FromQuery] Guid? machineId = null,
+        CancellationToken ct = default)
+    {
+        var results = await maintenanceService.SearchMaintenanceAsync(query, status, machineId, ct);
+        return Ok(results);
+    }
 }

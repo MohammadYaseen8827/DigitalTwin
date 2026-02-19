@@ -174,4 +174,28 @@ public class TelemetryController(IMediator mediator) : ControllerBase
         
         return Ok(latest.ToMetrics());
     }
+
+    /// <summary>
+    /// Searches telemetry data across all machines based on a text query.
+    /// </summary>
+    /// <param name="query">Text query to search in telemetry data fields.</param>
+    /// <param name="range">Optional time range filter (1h, 6h, 12h, 24h).</param>
+    /// <param name="ct">Cancellation token for the operation.</param>
+    /// <returns>List of telemetry readings matching the search criteria.</returns>
+    /// <response code="200">Returns search results successfully.</response>
+    /// <response code="401">Unauthorized - Authentication required.</response>
+    /// <response code="500">Internal server error.</response>
+    [HttpGet("search")]
+    [ProducesResponseType(typeof(IEnumerable<TelemetryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<IEnumerable<TelemetryDto>>> Search(
+        [FromQuery] string query,
+        [FromQuery] string? range = null,
+        CancellationToken ct = default)
+    {
+        var since = ResolveSince(range);
+        var result = await mediator.Send(new GetTelemetrySearchQuery(query, since), ct);
+        return Ok(result);
+    }
 }

@@ -8,39 +8,47 @@ interface BackendAlertDto {
     id: string
     machineId: string
     message: string
+    title: string
+    description: string
     severity: 'Info' | 'Warning' | 'Critical' | 'error' | 'warning' | 'critical' | 'info'
+    status: 'active' | 'acknowledged' | 'resolved'
     createdAt: string
+    acknowledgedAt?: string
+    resolvedAt?: string
     isAcknowledged: boolean
     acknowledgedBy?: string
     relatedPredictionId?: string
+    category?: string
+    recommendedAction?: string
+    suggestedActions?: string
 }
 
 // Map backend alert to frontend Alert interface
 function mapBackendAlert(dto: BackendAlertDto): Alert {
-    // Parse message to extract title and description
-    // Assuming message format: "TYPE: Description"
-    const colonIndex = dto.message.indexOf(':')
-    const title = colonIndex > -1 ? dto.message.substring(0, colonIndex).trim() : dto.message
-    const description = colonIndex > -1 ? dto.message.substring(colonIndex + 1).trim() : dto.message
-
     // Map backend severity to frontend severity
     const severity = dto.severity.toLowerCase() as Alert['severity']
 
-    // Determine status from IsAcknowledged
-    const status = dto.isAcknowledged
-        ? ('acknowledged' as const)
-        : ('active' as const)
+    // Handle suggestedActions - if it's a string, split by semicolon or comma
+    let suggestedActions: string[] = [];
+    if (dto.suggestedActions) {
+        suggestedActions = dto.suggestedActions.split(/[;,]/).map(action => action.trim());
+    }
 
     return {
         id: dto.id,
         machineId: dto.machineId,
-        title,
-        description,
+        title: dto.title,
+        description: dto.description,
         severity,
-        status,
+        status: dto.status,
         timestamp: dto.createdAt,
+        acknowledgedAt: dto.acknowledgedAt,
+        resolvedAt: dto.resolvedAt,
         acknowledgedBy: dto.acknowledgedBy,
-        relatedPredictionId: dto.relatedPredictionId
+        relatedPredictionId: dto.relatedPredictionId,
+        category: dto.category,
+        recommendedAction: dto.recommendedAction,
+        suggestedActions
     }
 }
 

@@ -11,4 +11,5 @@ public interface IMaintenanceService
     Task<MaintenanceRecord> CancelMaintenanceAsync(Guid recordId, string reason);
     Task<IEnumerable<MaintenanceRecord>> GetMaintenanceHistoryAsync(Guid machineId);
     Task<IEnumerable<MaintenanceRecord>> GetActiveMaintenanceAsync();
+    Task<IEnumerable<MaintenanceRecord>> SearchMaintenanceAsync(string query, string? status = null, Guid? machineId = null, CancellationToken ct = default);
 }

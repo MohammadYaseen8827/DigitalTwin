@@ -1,3 +1,317 @@
+// Degradation Modeling types
+export type DegradationModelType =
+  | 'MarkovChain'
+  | 'Weibull'
+  | 'Exponential'
+  | 'Linear'
+  | 'Polynomial'
+  | 'NeuralNetwork'
+  | 'RandomForest'
+  | 'LSTM'
+
+export interface DegradationModelDto {
+  id: string
+  name: string
+  description: string
+  modelType: DegradationModelType
+  parameters: Record<string, number>
+  accuracy: number
+  createdAt: string
+  updatedAt: string
+  isActive: boolean
+}
+
+export interface CreateDegradationModelDto {
+  name: string
+  description: string
+  modelType: DegradationModelType
+  parameters: Record<string, number>
+}
+
+export interface UpdateDegradationModelDto {
+  name?: string
+  description?: string
+  parameters?: Record<string, number>
+  isActive?: boolean
+}
+
+export interface DegradationPredictionDto {
+  timestamp: string
+  predictedValue: number
+  confidenceInterval: { lower: number; upper: number }
+  healthIndex: number
+}
+
+export interface DegradationAnalysisDto {
+  modelId: string
+  analysisPeriod: { startDate: string; endDate: string }
+  degradationRate: number
+  remainingUsefulLife: number
+  predictions: DegradationPredictionDto[]
+  recommendations: string[]
+}
+
+// Mathematical Modeling types
+export type ModelType =
+  | 'DifferentialEquations'
+  | 'LinearAlgebra'
+  | 'Optimization'
+  | 'Statistics'
+  | 'ControlTheory'
+  | 'SignalProcessing'
+  | 'MachineLearning'
+  | 'Custom'
+
+export interface MathematicalModelDto {
+  id: string
+  name: string
+  description: string
+  modelType: ModelType
+  equations: string[]
+  parameters: ModelParameterDto[]
+  createdAt: string
+  updatedAt: string
+  isActive: boolean
+}
+
+export interface CreateMathematicalModelDto {
+  name: string
+  description: string
+  modelType: ModelType
+  equations: string[]
+  parameters: ModelParameterDto[]
+}
+
+export interface UpdateMathematicalModelDto {
+  name?: string
+  description?: string
+  equations?: string[]
+  parameters?: ModelParameterDto[]
+  isActive?: boolean
+}
+
+export interface ModelParameterDto {
+  name: string
+  value: number
+  unit?: string
+  description?: string
+  bounds?: { min: number; max: number }
+}
+
+export interface ModelValidationDto {
+  modelId: string
+  validationScore: number
+  accuracy: number
+  precision: number
+  recall: number
+  f1Score: number
+  validationData: any[]
+  predictions: any[]
+  errors: string[]
+}
+
+export interface ModelSimulationDto {
+  modelId: string
+  simulationId: string
+  timePoints: number[]
+  results: Record<string, number[]>
+  metadata: Record<string, any>
+}
+
+export interface ModelOptimizationDto {
+  modelId: string
+  optimizationId: string
+  optimalParameters: ModelParameterDto[]
+  objectiveValue: number
+  iterations: number
+  convergenceStatus: 'converged' | 'max_iterations' | 'failed'
+}
+
+// Model Lifecycle types
+export interface ModelLifecycleDto {
+  id: string
+  modelId: string
+  version: string
+  status: 'development' | 'training' | 'validation' | 'deployment' | 'retired'
+  stage: string
+  metadata: Record<string, any>
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateModelLifecycleDto {
+  modelId: string
+  version: string
+  stage: string
+  metadata?: Record<string, any>
+}
+
+export interface UpdateModelLifecycleDto {
+  status?: string
+  stage?: string
+  metadata?: Record<string, any>
+}
+
+export interface ModelLifecycleTransitionDto {
+  fromStage: string
+  toStage: string
+  transitionDate: string
+  reason: string
+  approvedBy: string
+}
+
+export interface ModelLifecycleMetricsDto {
+  modelId: string
+  version: string
+  trainingTime: number
+  validationScore: number
+  deploymentPerformance: number
+  usageStatistics: Record<string, number>
+  errorRate: number
+}
+
+// Benchmark Validation types
+export interface BenchmarkValidationResult {
+  id: string
+  modelVersionId: string
+  benchmarkDataset: string
+  validationDate: string
+  metrics: {
+    MAPE: number
+    RMSE: number
+    R2: number
+    MAE: number
+  }
+  predictions: PredictionComparison[]
+  summary: {
+    totalSamples: number
+    passedTests: number
+    failedTests: number
+    overallScore: number
+  }
+  status: 'pending' | 'running' | 'completed' | 'failed'
+}
+
+export interface BenchmarkDatasetInfo {
+  id: string
+  name: string
+  description: string
+  source: string
+  size: number
+  features: string[]
+  targetVariable: string
+  createdAt: string
+  metadata: Record<string, any>
+}
+
+export interface PredictionComparison {
+  actual: number
+  predicted: number
+  error: number
+  absoluteError: number
+  percentageError: number
+}
+
+export interface ValidationSummary {
+  modelVersionId: string
+  totalValidations: number
+  averageScore: number
+  bestScore: number
+  worstScore: number
+  recentValidations: BenchmarkValidationResult[]
+}
+
+// AI Model types
+export interface AIModelDto {
+  id: string
+  name: string
+  description: string
+  version: string
+  modelType: string
+  algorithm: string
+  accuracy: number
+  precision: number
+  recall: number
+  f1Score: number
+  trainingDataSize: number
+  features: string[]
+  tags: string[]
+  status: 'draft' | 'training' | 'deployed' | 'archived'
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateAIModelDto {
+  name: string
+  description: string
+  version: string
+  modelType: string
+  algorithm: string
+  features: string[]
+  tags: string[]
+}
+
+export interface UpdateAIModelDto {
+  name?: string
+  description?: string
+  version?: string
+  status?: string
+  accuracy?: number
+  precision?: number
+  recall?: number
+  f1Score?: number
+  trainingDataSize?: number
+  features?: string[]
+  tags?: string[]
+}
+
+export interface AIModelTrainingRequestDto {
+  modelId: string
+  trainingData: any[]
+  hyperparameters?: Record<string, any>
+  validationSplit?: number
+}
+
+export interface AIModelTrainingResultDto {
+  trainingId: string
+  modelId: string
+  status: 'pending' | 'running' | 'completed' | 'failed'
+  progress: number
+  metrics?: {
+    accuracy: number
+    precision: number
+    recall: number
+    f1Score: number
+    loss: number
+  }
+  errors: string[]
+  startedAt: string
+  completedAt?: string
+}
+
+export interface AIModelValidationResultDto {
+  modelId: string
+  validationId: string
+  status: 'pending' | 'running' | 'completed' | 'failed'
+  results?: {
+    accuracy: number
+    precision: number
+    recall: number
+    f1Score: number
+    confusionMatrix: number[][]
+  }
+  errors: string[]
+}
+
+export interface AIModelDeploymentDto {
+  modelId: string
+  deploymentId: string
+  environment: 'development' | 'staging' | 'production'
+  endpoint: string
+  status: 'pending' | 'deploying' | 'deployed' | 'failed'
+  deployedAt?: string
+}
+
 // Common types for the Digital Twin Platform
 
 export interface MachineDto {
@@ -211,8 +525,8 @@ export interface AIModelDto {
   description: string
   version: string
   status: 'draft' | 'training' | 'deployed' | 'archived'
-  modelType: 'degradation' | 'failure' | 'performance' | 'quality'
-  algorithm: 'random_forest' | 'neural_network' | 'svm' | 'xgboost' | 'lstm'
+  modelType: string
+  algorithm: string
   accuracy: number
   precision: number
   recall: number
@@ -414,6 +728,39 @@ export interface MaintenanceRecordDto {
   updatedAt: string
 }
 
+export interface AlertDto {
+  id: string
+  machineId: string
+  message: string
+  title: string
+  description: string
+  severity: 'info' | 'warning' | 'critical' | 'error'
+  status: 'active' | 'acknowledged' | 'resolved' | 'closed'
+  createdAt: string
+  acknowledgedAt?: string
+  resolvedAt?: string
+  isAcknowledged: boolean
+  acknowledgedBy?: string
+  relatedPredictionId?: string
+  category: string
+  recommendedAction: string
+  suggestedActions: string
+}
+
+export interface AlertStatsDto {
+  totalAlerts: number
+  activeAlerts: number
+  acknowledgedAlerts: number
+  resolvedAlerts: number
+  criticalAlerts: number
+  warningAlerts: number
+  infoAlerts: number
+  averageResolutionTime: number
+  alertsByMachine: Array<{ machineId: string; machineName: string; count: number }>
+  alertsBySeverity: Array<{ severity: string; count: number; percentage: number }>
+  recentTrend: Array<{ date: string; count: number }>
+}
+
 export interface PlanMaintenanceRequest {
   machineId: string
   type: 'preventive' | 'corrective' | 'emergency'
@@ -482,6 +829,133 @@ export interface SavedSearchDto {
   entityTypes?: string[]
   createdAt: string
   lastUsed?: string
+}
+
+// Run-to-Failure Analysis Types
+export interface RunToFailureOptions {
+  maxSteps?: number
+  maxSimulationTime?: string // TimeSpan format
+  stepInterval?: string // TimeSpan format
+  generateTelemetry?: boolean
+  storeTrajectory?: boolean
+  randomSeed?: number
+}
+
+export interface DegradationSnapshot {
+  step: number
+  timestamp: string
+  degradationState: number
+  sensorReadings: Record<string, number>
+}
+
+export interface RunToFailureResult {
+  machineId: string
+  timeToFailure: string // TimeSpan format
+  stepsToFailure: number
+  finalDegradationState: number
+  trajectory: DegradationSnapshot[]
+  generatedTelemetry: TelemetryDataPoint[]
+  reachedFailureThreshold: boolean
+  terminationReason?: string
+}
+
+export interface DegradationTrajectory {
+  machineType: string
+  trajectoryId: string
+  snapshot: DegradationSnapshot[]
+  timeToFailure: string
+}
+
+export interface GenerateTrajectoriesRequest {
+  machineType: string
+  count: number
+  options?: RunToFailureOptions
+}
+
+// External Systems Integration Types
+export interface ExternalSystem {
+  id: string
+  name: string
+  systemType: string
+  connectionUrl: string
+  apiKey?: string
+  username?: string
+  status: ExternalSystemStatus
+  lastConnected: string
+  createdAt: string
+  updatedAt: string
+}
+
+export enum ExternalSystemStatus {
+  Disconnected = 'Disconnected',
+  Connected = 'Connected',
+  Error = 'Error'
+}
+
+export interface SystemIntegration {
+  id: string
+  externalSystemId: string
+  entityId: string
+  entityType: EntityType
+  integrationType: IntegrationType
+  isEnabled: boolean
+  syncIntervalMinutes: number
+  createdAt: string
+  updatedAt: string
+}
+
+export enum EntityType {
+  Machine = 'Machine',
+  MaintenanceRecord = 'MaintenanceRecord',
+  ProductionLine = 'ProductionLine',
+  TelemetryData = 'TelemetryData'
+}
+
+export enum IntegrationType {
+  ReadOnly = 'ReadOnly',
+  ReadWrite = 'ReadWrite',
+  WriteOnly = 'WriteOnly'
+}
+
+export interface DataSynchronization {
+  id: string
+  externalSystemId: string
+  entityId: string
+  entityType: EntityType
+  direction: SyncDirection
+  status: SyncStatus
+  dataPayload?: string
+  errorMessage?: string
+  startedAt: string
+  completedAt?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export enum SyncDirection {
+  Inbound = 'Inbound',
+  Outbound = 'Outbound',
+  Bidirectional = 'Bidirectional'
+}
+
+export enum SyncStatus {
+  Pending = 'Pending',
+  Processing = 'Processing',
+  Completed = 'Completed',
+  Failed = 'Failed'
+}
+
+// Benchmark Dataset Types
+export interface BenchmarkDatasetInfo {
+  id: string
+  name: string
+  description: string
+  source: string
+  size: number
+  features: string[]
+  targetVariable: string
+  createdAt: string
+  metadata: Record<string, any>
 }
 
 export interface SaveSearchRequestDto {

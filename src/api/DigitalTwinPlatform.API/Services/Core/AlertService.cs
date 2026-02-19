@@ -53,6 +53,17 @@ public interface IAlertService
     Task ResolveAlertAsync(Guid alertId);
 
     /// <summary>
+    /// Searches alerts based on query and filters.
+    /// </summary>
+    /// <param name="query">Text query to search in alert fields.</param>
+    /// <param name="status">Optional status filter (active, acknowledged, resolved).</param>
+    /// <param name="severity">Optional severity filter (info, warning, critical, error).</param>
+    /// <param name="machineId">Optional machine ID filter.</param>
+    /// <param name="ct">Cancellation token for the operation.</param>
+    /// <returns>Collection of alerts matching the criteria.</returns>
+    Task<IEnumerable<Alert>> SearchAlertsAsync(string query, string? status = null, string? severity = null, Guid? machineId = null, CancellationToken ct = default);
+
+    /// <summary>
     /// Gets alert statistics for dashboard display.
     /// </summary>
     /// <returns>Statistics including counts by severity and status.</returns>
@@ -65,6 +76,7 @@ public interface IAlertService
 public record AlertStats(
     int TotalActive,
     int TotalAcknowledged,
+    int TotalResolved,
     int CriticalCount,
     int WarningCount,
     int InfoCount
@@ -170,9 +182,7 @@ public class AlertService : IAlertService
         var alert = await _alertRepository.GetAsync(alertId);
         if (alert != null)
         {
-            alert.IsAcknowledged = true;
-            alert.AcknowledgedBy = userId;
-            alert.AcknowledgedAt = DateTime.UtcNow;
+            alert.Acknowledge(userId); // Use the domain method to properly acknowledge the alert
             await _unitOfWork.SaveChangesAsync();
         }
     }
@@ -182,9 +192,23 @@ public class AlertService : IAlertService
         var alert = await _alertRepository.GetAsync(alertId);
         if (alert != null)
         {
-            await _alertRepository.DeleteAsync(alert);
+            alert.Resolve(); // Use the domain method to properly resolve the alert
             await _unitOfWork.SaveChangesAsync();
         }
+    }
+
+    public async Task<IEnumerable<Alert>> SearchAlertsAsync(string query, string? status = null, string? severity = null, Guid? machineId = null, CancellationToken ct = default)
+    {
+        // Use the repository's search method
+        var alerts = await _alertRepository.SearchAsync(query, status, severity, ct);
+        
+        // Apply additional filters if specified
+        if (machineId.HasValue)
+        {
+            alerts = alerts.Where(a => a.MachineId == machineId.Value);
+        }
+        
+        return alerts;
     }
 
     public async Task<AlertStats> GetAlertStatsAsync()
@@ -192,8 +216,9 @@ public class AlertService : IAlertService
         var allAlerts = await _alertRepository.GetAllAsync();
         
         return new AlertStats(
-            TotalActive: allAlerts.Count(a => !a.IsAcknowledged),
-            TotalAcknowledged: allAlerts.Count(a => a.IsAcknowledged),
+            TotalActive: allAlerts.Count(a => a.Status == "active"),
+            TotalAcknowledged: allAlerts.Count(a => a.Status == "acknowledged"),
+            TotalResolved: allAlerts.Count(a => a.Status == "resolved"),
             CriticalCount: allAlerts.Count(a => a.Severity == AlertSeverity.Critical),
             WarningCount: allAlerts.Count(a => a.Severity == AlertSeverity.Warning),
             InfoCount: allAlerts.Count(a => a.Severity == AlertSeverity.Info)

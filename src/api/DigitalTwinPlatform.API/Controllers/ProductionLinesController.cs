@@ -35,4 +35,11 @@ public class ProductionLinesController(IMediator mediator) : ControllerBase
         await mediator.Send(new DeleteProductionLineCommand(id), ct);
         return NoContent();
     }
+
+    [HttpGet("search")]
+    public async Task<ActionResult<IEnumerable<ProductionLineDto>>> Search([FromQuery] string query, CancellationToken ct)
+    {
+        var result = await mediator.Send(new SearchProductionLinesQuery(query), ct);
+        return Ok(result);
+    }
 }

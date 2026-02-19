@@ -65,9 +65,13 @@ export interface Alert {
     severity: 'info' | 'warning' | 'critical' | 'error'
     status: 'active' | 'acknowledged' | 'resolved'
     timestamp: string | Date
-    acknowledgedBy?: string
+    acknowledgedAt?: string | Date
     resolvedAt?: string | Date
+    acknowledgedBy?: string
     relatedPredictionId?: string
+    category?: string
+    recommendedAction?: string
+    suggestedActions?: string[]
 }
 
 export interface Prediction {

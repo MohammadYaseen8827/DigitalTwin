@@ -1,6 +1,4 @@
-import axios from 'axios'
-import type { Ref } from 'vue'
-import { ref } from 'vue'
+import axiosClient from '@/api/axiosClient'
 
 // Define TypeScript interfaces
 export interface BenchmarkDataset {
@@ -67,7 +65,17 @@ class BenchmarkValidationService {
 
   async getAvailableDatasets(): Promise<BenchmarkDataset[]> {
     try {
-      const response = await axios.get<BenchmarkDataset[]>(`${this.baseUrl}/datasets`)
+      const response = await axiosClient.get<BenchmarkDataset[]>(`/api/benchmark/benchmarks`)
+      return response.data
+    } catch (error) {
+      console.error('Failed to fetch benchmark datasets:', error)
+      throw error
+    }
+  }
+
+  async getDatasetsFromValidationService(): Promise<BenchmarkDataset[]> {
+    try {
+      const response = await axiosClient.get<BenchmarkDataset[]>(`${this.baseUrl}/datasets`)
       return response.data
     } catch (error) {
       console.error('Failed to fetch benchmark datasets:', error)
@@ -77,7 +85,7 @@ class BenchmarkValidationService {
 
   async getDatasetById(id: string): Promise<BenchmarkDataset> {
     try {
-      const response = await axios.get<BenchmarkDataset>(`${this.baseUrl}/datasets/${id}`)
+      const response = await axiosClient.get<BenchmarkDataset>(`${this.baseUrl}/datasets/${id}`)
       return response.data
     } catch (error) {
       console.error(`Failed to fetch dataset ${id}:`, error)
@@ -87,7 +95,7 @@ class BenchmarkValidationService {
 
   async validateModel(request: ValidationRequest): Promise<ValidationResult> {
     try {
-      const response = await axios.post<ValidationResult>(`${this.baseUrl}/validate`, request)
+      const response = await axiosClient.post<ValidationResult>(`${this.baseUrl}/validate`, request)
       return response.data
     } catch (error) {
       console.error('Failed to validate model:', error)
@@ -101,7 +109,7 @@ class BenchmarkValidationService {
       if (modelId) params.append('modelId', modelId)
       if (datasetId) params.append('datasetId', datasetId)
       
-      const response = await axios.get<ValidationResult[]>(`${this.baseUrl}/results?${params.toString()}`)
+      const response = await axiosClient.get<ValidationResult[]>(`${this.baseUrl}/results?${params.toString()}`)
       return response.data
     } catch (error) {
       console.error('Failed to fetch validation results:', error)
@@ -111,7 +119,7 @@ class BenchmarkValidationService {
 
   async getValidationResultById(id: string): Promise<ValidationResult> {
     try {
-      const response = await axios.get<ValidationResult>(`${this.baseUrl}/results/${id}`)
+      const response = await axiosClient.get<ValidationResult>(`${this.baseUrl}/results/${id}`)
       return response.data
     } catch (error) {
       console.error(`Failed to fetch validation result ${id}:`, error)
@@ -121,7 +129,7 @@ class BenchmarkValidationService {
 
   async compareModels(modelIds: string[], datasetId: string): Promise<BenchmarkComparison[]> {
     try {
-      const response = await axios.post<BenchmarkComparison[]>(`${this.baseUrl}/compare`, {
+      const response = await axiosClient.post<BenchmarkComparison[]>(`${this.baseUrl}/compare`, {
         modelIds,
         datasetId
       })
@@ -134,7 +142,7 @@ class BenchmarkValidationService {
 
   async generateValidationReport(modelIds: string[], datasetIds: string[]): Promise<ValidationReport> {
     try {
-      const response = await axios.post<ValidationReport>(`${this.baseUrl}/reports`, {
+      const response = await axiosClient.post<ValidationReport>(`${this.baseUrl}/reports`, {
         modelIds,
         datasetIds
       })
@@ -147,7 +155,7 @@ class BenchmarkValidationService {
 
   async getValidationReports(): Promise<ValidationReport[]> {
     try {
-      const response = await axios.get<ValidationReport[]>(`${this.baseUrl}/reports`)
+      const response = await axiosClient.get<ValidationReport[]>(`${this.baseUrl}/reports`)
       return response.data
     } catch (error) {
       console.error('Failed to fetch validation reports:', error)
@@ -157,7 +165,7 @@ class BenchmarkValidationService {
 
   async getValidationReportById(id: string): Promise<ValidationReport> {
     try {
-      const response = await axios.get<ValidationReport>(`${this.baseUrl}/reports/${id}`)
+      const response = await axiosClient.get<ValidationReport>(`${this.baseUrl}/reports/${id}`)
       return response.data
     } catch (error) {
       console.error(`Failed to fetch validation report ${id}:`, error)
@@ -167,7 +175,7 @@ class BenchmarkValidationService {
 
   async deleteValidationReport(id: string): Promise<void> {
     try {
-      await axios.delete(`${this.baseUrl}/reports/${id}`)
+      await axiosClient.delete(`${this.baseUrl}/reports/${id}`)
     } catch (error) {
       console.error(`Failed to delete validation report ${id}:`, error)
       throw error
@@ -176,7 +184,7 @@ class BenchmarkValidationService {
 
   async uploadBenchmarkDataset(formData: FormData): Promise<BenchmarkDataset> {
     try {
-      const response = await axios.post<BenchmarkDataset>(`${this.baseUrl}/datasets/upload`, formData, {
+      const response = await axiosClient.post<BenchmarkDataset>(`${this.baseUrl}/datasets/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -190,7 +198,7 @@ class BenchmarkValidationService {
 
   async deleteBenchmarkDataset(id: string): Promise<void> {
     try {
-      await axios.delete(`${this.baseUrl}/datasets/${id}`)
+      await axiosClient.delete(`${this.baseUrl}/datasets/${id}`)
     } catch (error) {
       console.error(`Failed to delete benchmark dataset ${id}:`, error)
       throw error
@@ -199,7 +207,7 @@ class BenchmarkValidationService {
 
   async getValidationHistory(modelId: string, limit: number = 50): Promise<ValidationResult[]> {
     try {
-      const response = await axios.get<ValidationResult[]>(`${this.baseUrl}/history/${modelId}?limit=${limit}`)
+      const response = await axiosClient.get<ValidationResult[]>(`${this.baseUrl}/history/${modelId}?limit=${limit}`)
       return response.data
     } catch (error) {
       console.error(`Failed to fetch validation history for model ${modelId}:`, error)
@@ -209,7 +217,7 @@ class BenchmarkValidationService {
 
   async cancelValidation(validationId: string): Promise<void> {
     try {
-      await axios.post(`${this.baseUrl}/results/${validationId}/cancel`)
+      await axiosClient.post(`${this.baseUrl}/results/${validationId}/cancel`)
     } catch (error) {
       console.error(`Failed to cancel validation ${validationId}:`, error)
       throw error
@@ -218,7 +226,7 @@ class BenchmarkValidationService {
 
   async retryValidation(validationId: string): Promise<ValidationResult> {
     try {
-      const response = await axios.post<ValidationResult>(`${this.baseUrl}/results/${validationId}/retry`)
+      const response = await axiosClient.post<ValidationResult>(`${this.baseUrl}/results/${validationId}/retry`)
       return response.data
     } catch (error) {
       console.error(`Failed to retry validation ${validationId}:`, error)
@@ -229,112 +237,3 @@ class BenchmarkValidationService {
 
 // Create singleton instance
 export const benchmarkValidationService = new BenchmarkValidationService()
-
-// Composable for benchmark validation management
-export function useBenchmarkValidation() {
-  const datasets: Ref<BenchmarkDataset[]> = ref([])
-  const results: Ref<ValidationResult[]> = ref([])
-  const reports: Ref<ValidationReport[]> = ref([])
-  const loading: Ref<boolean> = ref(false)
-  const error: Ref<string | null> = ref(null)
-
-  const fetchDatasets = async () => {
-    loading.value = true
-    error.value = null
-    try {
-      datasets.value = await benchmarkValidationService.getAvailableDatasets()
-    } catch (err) {
-      error.value = 'Failed to fetch benchmark datasets'
-      console.error(err)
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const fetchResults = async (modelId?: string, datasetId?: string) => {
-    loading.value = true
-    error.value = null
-    try {
-      results.value = await benchmarkValidationService.getValidationResults(modelId, datasetId)
-    } catch (err) {
-      error.value = 'Failed to fetch validation results'
-      console.error(err)
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const fetchReports = async () => {
-    loading.value = true
-    error.value = null
-    try {
-      reports.value = await benchmarkValidationService.getValidationReports()
-    } catch (err) {
-      error.value = 'Failed to fetch validation reports'
-      console.error(err)
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const validateModel = async (request: ValidationRequest) => {
-    loading.value = true
-    error.value = null
-    try {
-      const result = await benchmarkValidationService.validateModel(request)
-      results.value.unshift(result)
-      return result
-    } catch (err) {
-      error.value = 'Failed to validate model'
-      console.error(err)
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const compareModels = async (modelIds: string[], datasetId: string) => {
-    loading.value = true
-    error.value = null
-    try {
-      const comparison = await benchmarkValidationService.compareModels(modelIds, datasetId)
-      return comparison
-    } catch (err) {
-      error.value = 'Failed to compare models'
-      console.error(err)
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const generateReport = async (modelIds: string[], datasetIds: string[]) => {
-    loading.value = true
-    error.value = null
-    try {
-      const report = await benchmarkValidationService.generateValidationReport(modelIds, datasetIds)
-      reports.value.unshift(report)
-      return report
-    } catch (err) {
-      error.value = 'Failed to generate validation report'
-      console.error(err)
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
-
-  return {
-    datasets,
-    results,
-    reports,
-    loading,
-    error,
-    fetchDatasets,
-    fetchResults,
-    fetchReports,
-    validateModel,
-    compareModels,
-    generateReport
-  }
-}

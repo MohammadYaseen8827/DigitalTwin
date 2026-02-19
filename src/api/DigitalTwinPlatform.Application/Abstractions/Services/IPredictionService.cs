@@ -12,4 +12,5 @@ public interface IPredictionService
     Task<IEnumerable<PredictionDto>> GetHighConfidencePredictionsAsync(double minConfidence = 0.8, CancellationToken cancellationToken = default);
     Task CleanupOldPredictionsAsync(DateTime cutoffDate, CancellationToken cancellationToken = default);
     
+    Task<IEnumerable<PredictionDto>> SearchPredictionsAsync(string query, Guid? machineId = null, CancellationToken cancellationToken = default);
 }

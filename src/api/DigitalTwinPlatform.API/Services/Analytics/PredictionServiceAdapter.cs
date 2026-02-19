@@ -48,4 +48,9 @@ public class PredictionServiceAdapter : IPredictionService
     {
         await _predictionService.CleanupOldPredictionsAsync(cutoffDate, cancellationToken);
     }
+
+    public async Task<IEnumerable<PredictionDto>> SearchPredictionsAsync(string query, Guid? machineId = null, CancellationToken cancellationToken = default)
+    {
+        return await _predictionService.SearchPredictionsAsync(query, machineId, cancellationToken);
+    }
 }

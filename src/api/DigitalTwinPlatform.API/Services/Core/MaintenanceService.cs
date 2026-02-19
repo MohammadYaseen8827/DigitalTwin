@@ -106,4 +106,42 @@ public class MaintenanceService : IMaintenanceService
     {
         return await _maintenanceRepository.GetAllAsync(r => r.Status == MaintenanceStatus.InProgress || r.Status == MaintenanceStatus.Planned);
     }
+
+    public async Task<IEnumerable<MaintenanceRecord>> SearchMaintenanceAsync(string query, string? status = null, Guid? machineId = null, CancellationToken ct = default)
+    {
+        // Cast to IMaintenanceRepository to access the SearchAsync method
+        var repo = _unitOfWork.Repository<MaintenanceRecord>() as IMaintenanceRepository;
+        if (repo != null)
+        {
+            return await repo.SearchAsync(query, status, ct);
+        }
+
+        // Fallback: Search without status filter if the specific repository interface isn't available
+        var results = await _maintenanceRepository.GetAllAsync();
+
+        // Apply filters manually
+        if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<MaintenanceStatus>(status, true, out var statusEnum))
+        {
+            results = results.Where(r => r.Status == statusEnum);
+        }
+
+        if (machineId.HasValue)
+        {
+            results = results.Where(r => r.MachineId == machineId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            var normalizedQuery = query.ToLowerInvariant();
+            results = results.Where(r =>
+                r.Type.ToString().ToLower().Contains(normalizedQuery) ||
+                r.Notes.ToLower().Contains(normalizedQuery) ||
+                r.Technician.ToLower().Contains(normalizedQuery) ||
+                r.MachineId.ToString().Contains(normalizedQuery) ||
+                r.Id.ToString().Contains(normalizedQuery)
+            );
+        }
+
+        return results;
+    }
 }

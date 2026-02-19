@@ -297,7 +297,7 @@ https://api.digitaltwin.example.com/v1
         services.AddScoped<IAdvancedPredictiveService, AdvancedPredictiveService>();
         services.AddScoped<IPrescriptiveAnalyticsService, PrescriptiveAnalyticsService>();
 
-        // External System Integration: mock in development; replace with real implementation for production.
+        // External System Integration: mock in development; use real implementation for production.
         var environment = configuration.GetSection("Environment").Value?.ToLower() ?? "development";
         if (environment == "development" || environment == "staging")
         {
@@ -306,10 +306,14 @@ https://api.digitaltwin.example.com/v1
         else
         {
             // In production, register the real implementation
-            // services.AddScoped<IExternalSystemService, ExternalSystemService>(); // Uncomment when real implementation is ready
-            // For now, we'll throw an exception if the service is requested in production without a real implementation
-            services.AddScoped<IExternalSystemService>(provider => 
-                throw new NotImplementedException("Real ExternalSystemService not implemented for production"));
+            services.AddHttpClient<IExternalSystemService, ExternalSystemService>(client =>
+            {
+                // Configure base address from configuration
+                client.BaseAddress = new Uri(configuration["ExternalSystems:BaseUrl"] ?? 
+                                            configuration.GetConnectionString("ExternalSystemsApi") ?? 
+                                            "https://localhost:8080/api/");
+            });
+            services.AddScoped<IExternalSystemService, ExternalSystemService>();
         }
 
         return services;

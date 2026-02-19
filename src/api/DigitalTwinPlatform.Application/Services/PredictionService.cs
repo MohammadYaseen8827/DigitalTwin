@@ -242,6 +242,70 @@ public class PredictionService : IPredictionService
     }
 
     /// <summary>
+    /// Search predictions by query and optional machine ID.
+    /// </summary>
+    public async Task<IEnumerable<PredictionDto>> SearchPredictionsAsync(string query, Guid? machineId = null, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var predictionRepository = _unitOfWork.Repository<Prediction>() as IPredictionRepository;
+            
+            IEnumerable<Prediction> predictions;
+
+            if (predictionRepository == null)
+            {
+                // Fallback to basic repository search if IPredictionRepository is not available
+                var repository = _unitOfWork.Repository<Prediction>();
+                var allPredictions = await repository.GetAllAsync(null, ct: cancellationToken, take: 1000);
+                
+                var filteredPredictions = allPredictions.AsEnumerable();
+                
+                if (!string.IsNullOrWhiteSpace(query))
+                {
+                    var lowerQuery = query.ToLowerInvariant();
+                    filteredPredictions = filteredPredictions.Where(p =>
+                        p.Machine.Name.ToLower().Contains(lowerQuery) ||
+                        p.Machine.Type.ToLower().Contains(lowerQuery) ||
+                        p.HealthStatus.ToLower().Contains(lowerQuery) ||
+                        p.ModelVersion.ToLower().Contains(lowerQuery) ||
+                        p.Id.ToString().Contains(lowerQuery)
+                    );
+                }
+                
+                if (machineId.HasValue)
+                {
+                    filteredPredictions = filteredPredictions.Where(p => p.MachineId == machineId.Value);
+                }
+                
+                predictions = filteredPredictions.ToList();
+            }
+            else
+            {
+                // Use the repository's search method
+                predictions = await predictionRepository.SearchAsync(query, machineId, cancellationToken);
+            }
+            
+            return predictions.Select(p => new PredictionDto(
+                p.Id,
+                p.MachineId,
+                p.RemainingUsefulLifeDays,
+                p.RulLowerBound,
+                p.RulUpperBound,
+                p.FailureProbability,
+                p.HealthStatus,
+                p.FeatureContributions,
+                p.CreatedAt,
+                p.ModelVersion
+            )).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to search predictions with query: {Query}, machineId: {MachineId}", query, machineId);
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Broadcast new prediction to all subscribers.
     /// </summary>
     public async Task BroadcastPredictionAsync(Guid machineId)

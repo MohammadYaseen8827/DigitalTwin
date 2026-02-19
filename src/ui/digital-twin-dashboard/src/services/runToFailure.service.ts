@@ -53,6 +53,19 @@ export async function runToFailureSimulation(
   options?: RunToFailureOptions
 ): Promise<RunToFailureResult> {
   return axiosClient.post<RunToFailureResult, RunToFailureResult>(
+    `/api/runtofailure/${machineId}`,
+    options || {}
+  )
+}
+
+/**
+ * Run a single run-to-failure simulation for a machine (alternative endpoint)
+ */
+export async function runToFailureSimulationAlt(
+  machineId: string,
+  options?: RunToFailureOptions
+): Promise<RunToFailureResult> {
+  return axiosClient.post<RunToFailureResult, RunToFailureResult>(
     `/RunToFailure/${machineId}`,
     options || {}
   )
@@ -65,6 +78,18 @@ export async function generateTrajectories(
   request: GenerateTrajectoriesRequest
 ): Promise<DegradationTrajectory[]> {
   return axiosClient.post<DegradationTrajectory[], DegradationTrajectory[]>(
+    '/api/runtofailure/generate-trajectories',
+    request
+  )
+}
+
+/**
+ * Generate multiple degradation trajectories for a machine type (alternative endpoint)
+ */
+export async function generateTrajectoriesAlt(
+  request: GenerateTrajectoriesRequest
+): Promise<DegradationTrajectory[]> {
+  return axiosClient.post<DegradationTrajectory[], DegradationTrajectory[]>(
     '/RunToFailure/generate-trajectories',
     request
   )
@@ -72,9 +97,22 @@ export async function generateTrajectories(
 
 /**
  * Get run-to-failure results for a machine (if stored)
- * Note: Backend currently returns 501 Not Implemented
  */
 export async function getRunToFailureResults(machineId: string): Promise<any> {
+  try {
+    return await axiosClient.get(`/api/runtofailure/${machineId}/results`)
+  } catch (error: any) {
+    if (error.response?.status === 501) {
+      throw new Error('Result storage not yet implemented on the backend')
+    }
+    throw error
+  }
+}
+
+/**
+ * Get run-to-failure results for a machine (if stored) - alternative endpoint
+ */
+export async function getRunToFailureResultsAlt(machineId: string): Promise<any> {
   try {
     return await axiosClient.get(`/RunToFailure/${machineId}/results`)
   } catch (error: any) {
@@ -83,4 +121,18 @@ export async function getRunToFailureResults(machineId: string): Promise<any> {
     }
     throw error
   }
+}
+
+/**
+ * Get available run-to-failure simulation parameters
+ */
+export async function getRunToFailureParameters(): Promise<any> {
+  return axiosClient.get('/api/runtofailure/parameters')
+}
+
+/**
+ * Get run-to-failure simulation history for a machine
+ */
+export async function getRunToFailureHistory(machineId: string): Promise<any[]> {
+  return axiosClient.get(`/api/runtofailure/${machineId}/history`)
 }

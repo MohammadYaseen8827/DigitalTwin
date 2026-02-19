@@ -219,15 +219,35 @@ class SignalRService {
 
     // Map backend AlertData to frontend Alert interface
     private mapBackendAlertToFrontend(data: BackendAlertData): Alert {
+        // Parse message to extract title and description
+        const colonIndex = data.message?.indexOf(':') ?? -1;
+        const title = colonIndex > -1 ? data.message?.substring(0, colonIndex)?.trim() || 'Alert' : data.message || 'Alert';
+        const description = colonIndex > -1 ? data.message?.substring(colonIndex + 1)?.trim() || data.message || '' : data.message || '';
+
+        // Handle severity mapping
+        let severity = (data.severity?.toLowerCase() || 'info') as Alert['severity'];
+        if (!['info', 'warning', 'critical', 'error'].includes(severity)) {
+            severity = 'info'; // default fallback
+        }
+
+        // Handle status mapping
+        let status: Alert['status'] = data.acknowledged ? 'acknowledged' : 'active';
+
         return {
             id: data.alertId || data.machineId,
             machineId: data.machineId,
-            title: data.message?.split(':')[0] || 'Alert',
-            description: data.message?.split(':').slice(1).join(':') || data.message || '',
-            severity: (data.severity?.toLowerCase() || 'info') as Alert['severity'],
-            status: data.acknowledged ? 'acknowledged' as const : 'active' as const,
+            title,
+            description,
+            severity,
+            status,
             timestamp: data.timestamp || new Date().toISOString(),
-            category: data.category
+            acknowledgedAt: data.acknowledged ? new Date(data.timestamp || new Date()) : undefined,
+            resolvedAt: undefined, // Backend AlertData doesn't have resolved info
+            acknowledgedBy: data.acknowledged ? 'system' : undefined, // Could be enhanced with actual user info
+            relatedPredictionId: undefined, // Backend AlertData doesn't have this info
+            category: data.category,
+            recommendedAction: data.recommendedAction,
+            suggestedActions: data.recommendedAction ? [data.recommendedAction] : [] // Convert single recommendation to array
         }
     }
 

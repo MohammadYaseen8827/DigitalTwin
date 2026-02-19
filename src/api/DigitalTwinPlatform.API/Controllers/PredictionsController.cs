@@ -24,6 +24,7 @@ public class PredictionsController(
     IHealthClassifier healthClassifier,
     ITelemetryRepository telemetryRepository,
     IFeatureExtractionService featureExtractor,
+    IPredictionService predictionService,
     ILogger<PredictionsController> logger) : ControllerBase
 {
     /// <summary>
@@ -374,6 +375,55 @@ public class PredictionsController(
         {
             logger.LogError(ex, "Error getting anomaly prediction for machine {MachineId}", machineId);
             return StatusCode(500, new { Message = "Internal server error during anomaly detection" });
+        }
+    }
+
+    /// <summary>
+    /// Searches prediction data across all machines based on a text query.
+    /// </summary>
+    /// <param name="query">Text query to search in prediction data fields.</param>
+    /// <param name="machineId">Optional machine ID filter.</param>
+    /// <param name="ct">Cancellation token for the operation.</param>
+    /// <returns>List of predictions matching the search criteria.</returns>
+    /// <response code="200">Returns search results successfully.</response>
+    /// <response code="401">Unauthorized - Authentication required.</response>
+    /// <response code="500">Internal server error.</response>
+    [HttpGet("search")]
+    [ProducesResponseType(typeof(IEnumerable<RulPredictionResult>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<IEnumerable<RulPredictionResult>>> Search(
+        [FromQuery] string query,
+        [FromQuery] Guid? machineId = null,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            logger.LogInformation("Searching predictions with query: {Query} for machine: {MachineId}", query, machineId);
+
+            // Use the prediction service to search predictions
+            var predictionDtos = await predictionService.SearchPredictionsAsync(query, machineId, ct);
+
+            // Convert PredictionDto to RulPredictionResult
+            var results = predictionDtos.Select(dto => new RulPredictionResult
+            {
+                MachineId = dto.MachineId,
+                Rul = dto.RemainingUsefulLifeDays,
+                RulUnit = "days",
+                Confidence = dto.Confidence,
+                FailureProbability = dto.FailureProbability,
+                HealthStatus = dto.HealthStatus,
+                FeatureContributions = dto.FeatureContributions,
+                PredictionTime = dto.CreatedAt,
+                ModelVersion = dto.ModelVersion
+            }).ToList();
+
+            return Ok(results);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error searching predictions");
+            return StatusCode(500, new { Message = "Internal server error during search" });
         }
     }
 }

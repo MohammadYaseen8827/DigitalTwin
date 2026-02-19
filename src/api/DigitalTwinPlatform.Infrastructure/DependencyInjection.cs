@@ -37,6 +37,9 @@ public static class DependencyInjection
         services.AddScoped<ITelemetryRepository, TelemetryRepository>();
         services.AddScoped<IPredictionRepository, PredictionRepository>();
         services.AddScoped<IModelVersionRepository, ModelVersionRepository>();
+        services.AddScoped<IAlertRepository, AlertRepository>();
+        services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
+        services.AddScoped<IProductionLineRepository, ProductionLineRepository>();
 
         return services;
     }

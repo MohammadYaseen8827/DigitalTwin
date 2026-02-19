@@ -289,8 +289,15 @@ public class DigitalTwinDbContext : IdentityDbContext<ApplicationUser>
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Severity).HasConversion<string>().HasMaxLength(20);
             entity.Property(x => x.Message).HasMaxLength(1000);
+            entity.Property(x => x.Title).HasMaxLength(200);
+            entity.Property(x => x.Description).HasMaxLength(1000);
+            entity.Property(x => x.Status).HasMaxLength(20);
+            entity.Property(x => x.Category).HasMaxLength(100);
+            entity.Property(x => x.RecommendedAction).HasMaxLength(500);
+            entity.Property(x => x.SuggestedActions).HasMaxLength(1000);
             entity.Property(x => x.CreatedAt).HasColumnType("timestamp with time zone").IsRequired();
             entity.Property(x => x.AcknowledgedAt).HasColumnType("timestamp with time zone");
+            entity.Property(x => x.ResolvedAt).HasColumnType("timestamp with time zone");
             entity.Property(x => x.AcknowledgedBy).HasMaxLength(200);
             
             entity.HasOne(x => x.Machine)
@@ -305,6 +312,7 @@ public class DigitalTwinDbContext : IdentityDbContext<ApplicationUser>
             entity.HasIndex(x => x.MachineId);
             entity.HasIndex(x => x.CreatedAt);
             entity.HasIndex(x => x.Severity);
+            entity.HasIndex(x => x.Status);
             entity.HasIndex(x => x.IsAcknowledged);
             entity.HasIndex(x => new { x.MachineId, x.IsAcknowledged });
         });

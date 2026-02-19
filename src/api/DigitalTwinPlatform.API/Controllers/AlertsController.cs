@@ -138,10 +138,38 @@ public class AlertsController(IAlertService alertService) : ControllerBase
         return Ok(new AlertStatsDto(
             stats.TotalActive,
             stats.TotalAcknowledged,
+            stats.TotalResolved,
             stats.CriticalCount,
             stats.WarningCount,
             stats.InfoCount
         ));
+    }
+
+    /// <summary>
+    /// Searches alerts based on a text query.
+    /// </summary>
+    /// <param name="query">Text query to search in alert fields.</param>
+    /// <param name="status">Optional status filter (active, acknowledged, resolved).</param>
+    /// <param name="severity">Optional severity filter (info, warning, critical, error).</param>
+    /// <param name="machineId">Optional machine ID filter.</param>
+    /// <param name="ct">Cancellation token for the operation.</param>
+    /// <returns>List of alerts matching the search criteria.</returns>
+    /// <response code="200">Returns search results successfully.</response>
+    /// <response code="401">Unauthorized - Authentication required.</response>
+    /// <response code="500">Internal server error.</response>
+    [HttpGet("search")]
+    [ProducesResponseType(typeof(IEnumerable<AlertDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<IEnumerable<AlertDto>>> Search(
+        [FromQuery] string query,
+        [FromQuery] string? status = null,
+        [FromQuery] string? severity = null,
+        [FromQuery] Guid? machineId = null,
+        CancellationToken ct = default)
+    {
+        var alerts = await alertService.SearchAlertsAsync(query, status, severity, machineId, ct);
+        return Ok(alerts.Select(AlertDto.FromEntity));
     }
 }
 
@@ -151,6 +179,7 @@ public class AlertsController(IAlertService alertService) : ControllerBase
 public record AlertStatsDto(
     int TotalActive,
     int TotalAcknowledged,
+    int TotalResolved,
     int CriticalCount,
     int WarningCount,
     int InfoCount

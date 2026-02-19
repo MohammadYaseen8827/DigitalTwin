@@ -673,11 +673,13 @@ public class TokenResponse
     /// <summary>
     /// JWT access token.
     /// </summary>
+    [System.Text.Json.Serialization.JsonPropertyName("accessToken")]
     public string AccessToken { get; set; } = null!;
     
     /// <summary>
     /// Refresh token for obtaining new access tokens.
     /// </summary>
+    [System.Text.Json.Serialization.JsonPropertyName("refreshToken")]
     public string RefreshToken { get; set; } = null!;
     
     /// <summary>

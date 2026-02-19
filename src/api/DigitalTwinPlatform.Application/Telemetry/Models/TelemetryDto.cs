@@ -2,12 +2,24 @@ using System.Text.Json;
 
 namespace DigitalTwinPlatform.Application.Telemetry.Models;
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+namespace DigitalTwinPlatform.Application.Telemetry.Models;
+
 public record TelemetryDto(
     Guid Id,
     Guid MachineId,
     string DataType,
     JsonDocument Data,
-    DateTime Timestamp);
+    DateTime Timestamp)
+{
+    // Expose data as object for proper JSON serialization
+    [JsonPropertyName("data")]
+    public object DataObject => Data != null ? 
+        JsonSerializer.Deserialize<object>(Data.RootElement.GetRawText()) : 
+        new { };
+}
 
 public record TelemetryIngestDto(
     Guid MachineId,

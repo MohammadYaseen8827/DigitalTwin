@@ -17,5 +17,34 @@ public class PredictionRepository(DigitalTwinDbContext context) : Repository<Pre
             .Take(take)
             .ToListAsync(ct);
     }
+
+    public async Task<IEnumerable<Prediction>> SearchAsync(string query, Guid? machineId = null, CancellationToken ct = default)
+    {
+        var queryable = _context.Predictions.AsQueryable();
+
+        // Apply machine filter if specified
+        if (machineId.HasValue)
+        {
+            queryable = queryable.Where(p => p.MachineId == machineId.Value);
+        }
+
+        // Apply text search across relevant fields if query is provided
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            var lowerQuery = query.ToLowerInvariant();
+            queryable = queryable.Where(p =>
+                p.Machine.Name.ToLower().Contains(lowerQuery) ||
+                p.Machine.Type.ToLower().Contains(lowerQuery) ||
+                p.HealthStatus.ToLower().Contains(lowerQuery) ||
+                p.ModelVersion.ToLower().Contains(lowerQuery) ||
+                p.Id.ToString().Contains(lowerQuery)
+            );
+        }
+
+        // Order by creation date descending and return results
+        return await queryable
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync(ct);
+    }
 }
 
