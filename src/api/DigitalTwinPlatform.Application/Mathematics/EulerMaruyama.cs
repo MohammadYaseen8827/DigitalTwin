@@ -9,7 +9,7 @@ namespace DigitalTwinPlatform.Application.Mathematics;
 /// Euler-Maruyama method for solving stochastic differential equations (SDEs).
 /// Provides numerical integration for degradation models with random noise and uncertainty.
 /// </summary>
-public class EulerMaruyama
+public class EulerMaruyama : INumericalODESolver
 {
     private readonly ILogger<EulerMaruyama> _logger;
     private readonly Random _random;

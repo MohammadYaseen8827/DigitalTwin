@@ -135,6 +135,7 @@ public class AdvancedPredictiveService(
             prediction.HealthStatus,
             prediction.FeatureContributions,
             prediction.CreatedAt,
+            prediction.UpdatedAt,
             prediction.ModelVersion);
     }
 
@@ -220,6 +221,7 @@ public class AdvancedPredictiveService(
             result.HealthStatus,
             result.FeatureContributions,
             result.CreatedAt,
+            result.UpdatedAt,
             result.ModelVersion);
     }
 

@@ -46,7 +46,6 @@ internal sealed class UpdateMachineCommandHandler(IUnitOfWork unitOfWork)
                 () => (object?)null,
                 error => throw new InvalidOperationException($"Failed to update health metrics: {error}"));
             
-            // Update properties using domain method
             if (dto.Properties != null)
             {
                 var jsonDoc = JsonDocument.Parse(dto.Properties.ToString() ?? "{}");
@@ -55,6 +54,15 @@ internal sealed class UpdateMachineCommandHandler(IUnitOfWork unitOfWork)
                     () => (object?)null,
                     error => throw new InvalidOperationException($"Failed to update properties: {error}"));
             }
+
+            if (dto.Location != null) machine.UpdateLocation(dto.Location);
+            if (dto.InstallationDate.HasValue) machine.UpdateInstallationDate(dto.InstallationDate.Value);
+            if (dto.LastMaintenanceDate.HasValue) machine.RecordMaintenance(dto.LastMaintenanceDate.Value);
+            if (dto.NextMaintenanceDate.HasValue) machine.ScheduleNextMaintenance(dto.NextMaintenanceDate.Value);
+            if (dto.WarrantyExpiry.HasValue) machine.UpdateWarrantyExpiry(dto.WarrantyExpiry.Value);
+            if (dto.MaintenanceIntervalDays.HasValue) machine.UpdateMaintenanceInterval(dto.MaintenanceIntervalDays.Value);
+            
+            machine.UpdateBasicInfo(dto.SerialNumber, dto.Manufacturer, dto.Model, dto.Criticality);
 
             await repository.UpdateAsync(machine, cancellationToken);
             await unitOfWork.CommitAsync(cancellationToken);

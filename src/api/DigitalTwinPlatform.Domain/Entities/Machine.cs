@@ -47,9 +47,15 @@ public class Machine
     
     // Enhanced configuration fields
     public string Location { get; private set; } = string.Empty;
+    public string SerialNumber { get; private set; } = string.Empty;
+    public string Manufacturer { get; private set; } = string.Empty;
+    public string Model { get; private set; } = string.Empty;
+    public int? Criticality { get; private set; }
     public DateTime? InstallationDate { get; private set; }
     public DateTime? LastMaintenanceDate { get; private set; }
     public DateTime? NextMaintenanceDate { get; private set; }
+    public DateTime? WarrantyExpiry { get; private set; }
+    public int? MaintenanceIntervalDays { get; private set; }
     
     public JsonDocument Configuration { get; private set; } = JsonDocument.Parse("{}");
     public JsonDocument Properties { get; private set; } = JsonDocument.Parse("{}");
@@ -171,6 +177,33 @@ public class Machine
             return new Result.Failure("Next maintenance date must be in the future");
 
         NextMaintenanceDate = nextMaintenanceDate;
+        UpdatedAt = DateTime.UtcNow;
+        return new Result.Success();
+    }
+
+    public Result UpdateWarrantyExpiry(DateTime? expiryDate)
+    {
+        WarrantyExpiry = expiryDate;
+        UpdatedAt = DateTime.UtcNow;
+        return new Result.Success();
+    }
+
+    public Result UpdateMaintenanceInterval(int? intervalDays)
+    {
+        if (intervalDays < 0)
+            return new Result.Failure("Maintenance interval cannot be negative");
+
+        MaintenanceIntervalDays = intervalDays;
+        UpdatedAt = DateTime.UtcNow;
+        return new Result.Success();
+    }
+
+    public Result UpdateBasicInfo(string? serialNumber, string? manufacturer, string? model, int? criticality)
+    {
+        if (serialNumber != null) SerialNumber = serialNumber;
+        if (manufacturer != null) Manufacturer = manufacturer;
+        if (model != null) Model = model;
+        if (criticality != null) Criticality = criticality;
         UpdatedAt = DateTime.UtcNow;
         return new Result.Success();
     }

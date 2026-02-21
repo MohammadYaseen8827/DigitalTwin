@@ -1,11 +1,13 @@
 using Asp.Versioning;
 using DigitalTwinPlatform.Application.Abstractions.Repositories;
-using MediatR;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using DigitalTwinPlatform.Application.Abstractions.Services;
 using DigitalTwinPlatform.Application.ML.Commands;
+using DigitalTwinPlatform.Application.ML.Models;
+using DigitalTwinPlatform.Application.Predictions.Models;
 using DigitalTwinPlatform.Application.Services;
+using DigitalTwinPlatform.Application.Abstractions.Services;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalTwinPlatform.API.Controllers;
 
@@ -25,6 +27,7 @@ public class PredictionsController(
     ITelemetryRepository telemetryRepository,
     IFeatureExtractionService featureExtractor,
     IPredictionService predictionService,
+    DigitalTwinPlatform.API.Services.Analytics.Advanced.IAdvancedPredictiveService advancedPredictiveService,
     ILogger<PredictionsController> logger) : ControllerBase
 {
     /// <summary>
@@ -220,6 +223,18 @@ public class PredictionsController(
         });
     }
 
+    /// <summary>
+    /// Requests a new prediction for a machine.
+    /// </summary>
+    [HttpPost]
+    [ProducesResponseType(typeof(PredictionDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<PredictionDto>> RequestPrediction([FromBody] PredictionRequestDto request, CancellationToken ct)
+    {
+        var result = await predictionService.PredictAsync(request, ct);
+        return Ok(result);
+    }
+
     private async Task<List<TelemetryData>> GetTelemetryForMachine(Guid machineId, CancellationToken ct)
     {
         var telemetry = await telemetryRepository.GetRecentAsync(
@@ -234,42 +249,29 @@ public class PredictionsController(
     /// Gets list of predictions for all machines or a specific machine.
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<RulPredictionResult>), StatusCodes.Status200OK)]
+    [HttpGet("{machineId:guid}")]
+    [ProducesResponseType(typeof(IEnumerable<PredictionDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<RulPredictionResult>>> GetPredictions(
-        [FromQuery] Guid? machineId = null,
+    public async Task<ActionResult<IEnumerable<PredictionDto>>> GetPredictions(
+        Guid? machineId = null,
+        [FromQuery] int limit = 50,
         CancellationToken ct = default)
     {
         try
         {
             logger.LogInformation("Getting predictions list for machine {MachineId}", machineId);
 
-            // In a real implementation, this would fetch from a predictions repository
-            // For now, return empty list as placeholder
-            var predictions = new List<RulPredictionResult>();
-            
             if (machineId.HasValue)
             {
-                // Return predictions for specific machine
-                // This would involve querying the prediction history
-                var telemetry = await GetTelemetryForMachine(machineId.Value, ct);
-                
-                if (telemetry.Count >= 20)
-                {
-                    var features = featureExtractor.ExtractFeatures(telemetry);
-                    var result = rulPredictor.PredictWithDetails(machineId.Value.ToString(), features);
-                    predictions.Add(result);
-                }
+                var history = await predictionService.GetPredictionHistoryAsync(machineId.Value, limit, ct);
+                return Ok(history);
             }
             else
             {
-                // Return predictions for all machines
-                // This would involve querying all machines and their predictions
-                logger.LogWarning("Prediction list endpoint not fully implemented - returning empty list");
+                var search = await predictionService.SearchPredictionsAsync(string.Empty, null, ct);
+                return Ok(search.Take(limit));
             }
-
-            return Ok(predictions);
         }
         catch (Exception ex)
         {
@@ -342,34 +344,13 @@ public class PredictionsController(
         {
             logger.LogInformation("Getting anomaly prediction for machine {MachineId}", machineId);
 
-            var telemetry = await GetTelemetryForMachine(machineId, ct);
-
-            if (telemetry.Count < 20)
-            {
-                logger.LogWarning("Insufficient telemetry data for machine {MachineId}: {Count} points", machineId, telemetry.Count);
-                return BadRequest(new { Message = $"Insufficient telemetry data. Required: 20, Available: {telemetry.Count}" });
-            }
-
-            // In a real implementation, this would call an anomaly detection service
-            // For now, we'll return a mock result based on the existing AdvancedPredictiveService
-            var anomalyResult = new AnomalyDetectionResult
-            {
-                MachineId = machineId,
-                TotalAnomalies = 0,
-                CriticalAnomalies = 0,
-                HighAnomalies = 0,
-                MediumAnomalies = 0,
-                LowAnomalies = 0,
-                Anomalies = new List<Anomaly>(),
-                DetectionPeriod = new DateTimeRange { Start = DateTime.UtcNow.AddDays(-7), End = DateTime.UtcNow },
-                OverallRiskScore = 0.1
-            };
+            var result = await advancedPredictiveService.DetectAnomaliesAsync(machineId, null, null, ct);
 
             logger.LogInformation(
                 "Anomaly detection for {MachineId}: {TotalAnomalies} anomalies (score: {RiskScore:P2})",
-                machineId, anomalyResult.TotalAnomalies, anomalyResult.OverallRiskScore);
+                machineId, result.TotalAnomalies, result.OverallRiskScore);
 
-            return Ok(anomalyResult);
+            return Ok(result);
         }
         catch (Exception ex)
         {
@@ -407,13 +388,12 @@ public class PredictionsController(
             // Convert PredictionDto to RulPredictionResult
             var results = predictionDtos.Select(dto => new RulPredictionResult
             {
-                MachineId = dto.MachineId,
+                MachineId = dto.MachineId.ToString(),
                 Rul = dto.RemainingUsefulLifeDays,
                 RulUnit = "days",
-                Confidence = dto.Confidence,
-                FailureProbability = dto.FailureProbability,
-                HealthStatus = dto.HealthStatus,
-                FeatureContributions = dto.FeatureContributions,
+                Confidence = 0.8, // Default confidence since PredictionDto doesn't have it
+                LowerBound = dto.RulLowerBound,
+                UpperBound = dto.RulUpperBound,
                 PredictionTime = dto.CreatedAt,
                 ModelVersion = dto.ModelVersion
             }).ToList();
@@ -426,97 +406,29 @@ public class PredictionsController(
             return StatusCode(500, new { Message = "Internal server error during search" });
         }
     }
-}
-
-/// <summary>
-/// Request DTO for model training.
-/// </summary>
-public class TrainModelRequestDto
-{
-    /// <summary>
-    /// Force retraining even if existing model is valid.
-    /// </summary>
-    public bool ForceRetrain { get; set; }
 
     /// <summary>
-    /// Type of model to train (rul, health, or all).
+    /// Manually requests a new prediction for a machine.
     /// </summary>
-    public string ModelType { get; set; } = "all";
+    [HttpPost("manual")]
+    [ProducesResponseType(typeof(PredictionDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<PredictionDto>> RequestPredictionManual(
+        [FromBody] PredictionRequestDto request,
+        CancellationToken ct)
+    {
+        try
+        {
+            logger.LogInformation("Manually requesting prediction for machine {MachineId}", request.MachineId);
+            var result = await predictionService.PredictAsync(request, ct);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error requesting prediction for machine {MachineId}", request.MachineId);
+            return StatusCode(500, new { Message = "Internal server error during manual prediction request" });
+        }
+    }
 }
-
-/// <summary>
-/// Result DTO for model training.
-/// </summary>
-public class TrainingResultDto
-{
-    public bool Success { get; init; }
-    public int SamplesUsed { get; init; }
-    public double R2Score { get; init; }
-    public double Mape { get; init; }
-    public string ModelPath { get; init; } = string.Empty;
-    public DateTime TrainedAt { get; init; }
-    public string Message { get; init; } = string.Empty;
-}
-
-/// <summary>
-/// Status DTO for ML models.
-/// </summary>
-public class ModelStatusDto
-{
-    public bool RulModelLoaded { get; init; }
-    public bool HealthModelLoaded { get; init; }
-    public string ModelVersion { get; init; } = string.Empty;
-    public DateTime LastUpdated { get; init; }
-}
-
-#region Supporting Classes
-
-public class AnomalyDetectionResult
-{
-    public Guid MachineId { get; set; }
-    public int TotalAnomalies { get; set; }
-    public int CriticalAnomalies { get; set; }
-    public int HighAnomalies { get; set; }
-    public int MediumAnomalies { get; set; }
-    public int LowAnomalies { get; set; }
-    public List<Anomaly> Anomalies { get; set; } = new();
-    public DateTimeRange DetectionPeriod { get; set; } = new();
-    public double OverallRiskScore { get; set; }
-}
-
-public class Anomaly
-{
-    public Guid Id { get; set; }
-    public string? Metric { get; set; }
-    public double Value { get; set; }
-    public double ExpectedValue { get; set; }
-    public double Deviation { get; set; }
-    public AnomalySeverity Severity { get; set; }
-    public double SeverityScore { get; set; }
-    public DateTime Timestamp { get; set; }
-    public AnomalyType Type { get; set; }
-}
-
-public enum AnomalySeverity
-{
-    Low,
-    Medium,
-    High,
-    Critical
-}
-
-public enum AnomalyType
-{
-    Statistical,
-    Temporal,
-    Multivariate,
-    Threshold
-}
-
-public class DateTimeRange
-{
-    public DateTime Start { get; set; }
-    public DateTime End { get; set; }
-}
-
-#endregion

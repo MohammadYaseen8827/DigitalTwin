@@ -402,26 +402,52 @@ public class SyntheticDataGenerator : ISyntheticDataGenerator
 
         try
         {
-            // For now, return a mock validation report
-            // In production, this would use actual benchmark datasets
-            var mockReport = new Domain.Entities.DataValidationReport
+            if (syntheticData == null || !syntheticData.Any())
             {
-                OverallScore = 0.85,
-                KolmogorovSmirnovStatistic = 0.12,
-                MaximumMeanDiscrepancy = 0.08,
-                PassedTests = 3,
-                FailedTests = 0,
-                BenchmarkDataset = "NASA_CMAPSS",
-                ValidationDate = DateTime.UtcNow,
-                Recommendations = new List<string>
+                return new Domain.Entities.DataValidationReport
                 {
-                    "Increase sample size for better statistical significance",
-                    "Add more sensor types for comprehensive validation",
-                    "Implement cross-validation with benchmark datasets"
-                }
+                    OverallScore = 0,
+                    PassedTests = 0,
+                    FailedTests = 1,
+                    ValidationDate = DateTime.UtcNow,
+                    Recommendations = new List<string> { "Provide non-empty data for validation" }
+                };
+            }
+
+            // Calculate basic statistics for validation
+            var avgTemp = syntheticData.Average(p => p.Temperature);
+            var avgVib = syntheticData.Average(p => p.Vibration);
+            var avgPress = syntheticData.Average(p => p.Pressure);
+
+            // Mock benchmark data (e.g. from NASA CMAPSS)
+            var benchmarkTemp = 25.0;
+            var benchmarkVib = 2.0;
+            var benchmarkPress = 110.0;
+
+            // Simple distance-based score (1.0 - normalized difference)
+            var tempScore = Math.Max(0, 1.0 - Math.Abs((avgTemp ?? 0) - benchmarkTemp) / benchmarkTemp);
+            var vibScore = Math.Max(0, 1.0 - Math.Abs((avgVib ?? 0) - benchmarkVib) / benchmarkVib);
+            var pressScore = Math.Max(0, 1.0 - Math.Abs((avgPress ?? 0) - benchmarkPress) / benchmarkPress);
+
+            var overallScore = (tempScore + vibScore + pressScore) / 3.0;
+
+            var report = new Domain.Entities.DataValidationReport
+            {
+                OverallScore = overallScore,
+                KolmogorovSmirnovStatistic = 1.0 - overallScore, // Simulated
+                MaximumMeanDiscrepancy = (1.0 - overallScore) * 0.5, // Simulated
+                PassedTests = overallScore > 0.7 ? 3 : overallScore > 0.4 ? 2 : 1,
+                FailedTests = overallScore > 0.7 ? 0 : 1,
+                BenchmarkDataset = "NASA_CMAPSS_Simplified",
+                ValidationDate = DateTime.UtcNow,
+                Recommendations = new List<string>()
             };
 
-            return mockReport;
+            if (tempScore < 0.8) report.Recommendations.Add("Temperature distribution deviates significantly from benchmark");
+            if (vibScore < 0.8) report.Recommendations.Add("Vibration variance is higher than expected for this machine type");
+            if (overallScore < 0.8) report.Recommendations.Add("Consider adjusting the drift and diffusion parameters for higher fidelity");
+
+            return report;
         }
         catch (Exception ex)
         {

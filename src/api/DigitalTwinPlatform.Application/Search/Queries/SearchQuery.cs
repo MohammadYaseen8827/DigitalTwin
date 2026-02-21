@@ -183,7 +183,7 @@ public class SearchQueryHandler(
 
     private async Task<List<SearchResultItemDto>> SearchAlerts(string query, SearchRequestDto request, CancellationToken ct)
     {
-        var alerts = await alertRepository.SearchAsync(query, request.StatusFilter, ct);
+        var alerts = await alertRepository.SearchAsync(query, request.StatusFilter, null, ct);
         
         return alerts.Select(alert => new SearchResultItemDto
         {

@@ -15,5 +15,6 @@ internal static class PredictionMapper
         prediction.HealthStatus,
         prediction.FeatureContributions,
         prediction.CreatedAt,
+        prediction.CreatedAt,
         prediction.ModelVersion);
 }

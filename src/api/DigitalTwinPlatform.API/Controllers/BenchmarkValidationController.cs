@@ -3,6 +3,14 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalTwinPlatform.API.Controllers;
 
+public class BenchmarkValidateModelRequest
+{
+    public string BenchmarkDataset { get; set; } = string.Empty;
+    public string? ModelVersionId { get; set; }
+    public string? ModelPath { get; set; }
+    public string? ModelType { get; set; }
+}
+
 [ApiController]
 [Route("api/[controller]")]
 public class BenchmarkValidationController : ControllerBase
@@ -23,7 +31,7 @@ public class BenchmarkValidationController : ControllerBase
     /// </summary>
     [HttpPost("validate")]
     public async Task<ActionResult<BenchmarkValidationResult>> ValidateModel(
-        [FromBody] ValidateModelRequest request,
+        [FromBody] BenchmarkValidateModelRequest request,
         CancellationToken ct = default)
     {
         try
@@ -102,12 +110,4 @@ public class BenchmarkValidationController : ControllerBase
             return StatusCode(500, new { error = ex.Message });
         }
     }
-}
-
-public class ValidateModelRequest
-{
-    public string BenchmarkDataset { get; set; } = string.Empty;
-    public string? ModelVersionId { get; set; }
-    public string? ModelPath { get; set; }
-    public string? ModelType { get; set; }
 }

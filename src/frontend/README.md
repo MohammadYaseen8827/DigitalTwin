@@ -1,64 +1,89 @@
-# Digital Twin Platform - Frontend
+# digital-twin-dashboard
 
-Vue.js 3 frontend for the Digital Twin Platform for Predictive Maintenance.
+This template should help get you started developing with Vue 3 in Vite.
 
-## Technology Stack
+## Recommended IDE Setup
 
-- **Vue.js 3** - Progressive JavaScript framework with Composition API
-- **TypeScript** - Type-safe JavaScript
-- **Pinia** - State management
-- **Vue Router** - Client-side routing with lazy loading
-- **ApexCharts** - Interactive charts for RUL, temperature, vibration data
-- **SignalR** - Real-time communication for live telemetry
-- **Tailwind CSS** - Utility-first CSS framework
-- **Axios** - HTTP client with interceptors
+[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
 
-## Project Structure
+## Recommended Browser Setup
 
-```
-frontend/
-├── src/
-│   ├── api/              # API client services
-│   ├── assets/           # Static assets
-│   │   └── css/         # Global styles with Tailwind
-│   ├── components/       # Reusable Vue components
-│   │   ├── common/      # Buttons, inputs, cards
-│   │   ├── charts/      # Chart components
-│   │   ├── dashboard/   # Dashboard components
-│   │   └── alerts/      # Alert components
-│   ├── composables/      # Vue composables
-│   ├── layouts/         # Page layouts
-│   ├── router/          # Vue Router configuration
-│   ├── stores/          # Pinia stores
-│   ├── types/           # TypeScript types
-│   ├── views/           # Page views
-│   ├── services/        # External services
-│   ├── utils/           # Utility functions
-│   ├── App.vue
-│   └── main.ts
-├── index.html
-├── package.json
-├── tsconfig.json
-├── vite.config.ts
-└── tailwind.config.js
-```
+- Chromium-based browsers (Chrome, Edge, Brave, etc.):
+  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
+  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
+- Firefox:
+  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
+  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
 
-## Features
+## Type Support for `.vue` Imports in TS
 
-- Real-time monitoring via SignalR
-- Predictive analytics visualization
-- Alert management system
-- Responsive design with Tailwind CSS
-- JWT authentication with token refresh
+TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
 
-## Getting Started
+## Customize configuration
 
-```bash
-cd frontend
+See [Vite Configuration Reference](https://vite.dev/config/).
+
+## Project Setup
+
+```sh
 npm install
+```
+
+### Compile and Hot-Reload for Development
+
+```sh
 npm run dev
 ```
 
-## License
+### Type-Check, Compile and Minify for Production
 
-MIT
+```sh
+npm run build
+```
+
+### Run Unit Tests with [Vitest](https://vitest.dev/)
+
+```sh
+npm run test:unit
+```
+
+### Run End-to-End Tests with [Cypress](https://www.cypress.io/)
+
+```sh
+npm run test:e2e:dev
+```
+
+This runs the end-to-end tests against the Vite development server.
+It is much faster than the production build.
+
+But it's still recommended to test the production build with `test:e2e` before deploying (e.g. in CI environments):
+
+```sh
+npm run build
+npm run test:e2e
+```
+
+### Run End-to-End Tests with [Playwright](https://playwright.dev)
+
+```sh
+# Install browsers for the first run
+npx playwright install
+
+# When testing on CI, must build the project first
+npm run build
+
+# Runs the end-to-end tests
+npm run test:e2e
+# Runs the tests only on Chromium
+npm run test:e2e -- --project=chromium
+# Runs the tests of a specific file
+npm run test:e2e -- tests/example.spec.ts
+# Runs the tests in debug mode
+npm run test:e2e -- --debug
+```
+
+### Lint with [ESLint](https://eslint.org/)
+
+```sh
+npm run lint
+```

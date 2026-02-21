@@ -96,6 +96,7 @@ public class PredictionService : IPredictionService
             prediction.HealthStatus,
             prediction.FeatureContributions,
             prediction.CreatedAt,
+            prediction.CreatedAt,
             prediction.ModelVersion);
     }
 
@@ -137,6 +138,7 @@ public class PredictionService : IPredictionService
                 latestPrediction.HealthStatus,
                 latestPrediction.FeatureContributions,
                 latestPrediction.CreatedAt,
+                latestPrediction.CreatedAt,
                 latestPrediction.ModelVersion);
         }
         catch (Exception ex)
@@ -172,6 +174,7 @@ public class PredictionService : IPredictionService
                 p.HealthStatus,
                 p.FeatureContributions,
                 p.CreatedAt,
+                p.CreatedAt,
                 p.ModelVersion));
         }
         catch (Exception ex)
@@ -204,6 +207,7 @@ public class PredictionService : IPredictionService
                 p.FailureProbability,
                 p.HealthStatus,
                 p.FeatureContributions,
+                p.CreatedAt,
                 p.CreatedAt,
                 p.ModelVersion));
         }
@@ -264,10 +268,10 @@ public class PredictionService : IPredictionService
                 {
                     var lowerQuery = query.ToLowerInvariant();
                     filteredPredictions = filteredPredictions.Where(p =>
-                        p.Machine.Name.ToLower().Contains(lowerQuery) ||
-                        p.Machine.Type.ToLower().Contains(lowerQuery) ||
-                        p.HealthStatus.ToLower().Contains(lowerQuery) ||
-                        p.ModelVersion.ToLower().Contains(lowerQuery) ||
+                        (p.Machine?.Name?.Value ?? string.Empty).ToLowerInvariant().Contains(lowerQuery) ||
+                        (p.Machine?.Type?.ToString() ?? string.Empty).ToLowerInvariant().Contains(lowerQuery) ||
+                        p.HealthStatus.ToString().ToLowerInvariant().Contains(lowerQuery) ||
+                        p.ModelVersion.ToLowerInvariant().Contains(lowerQuery) ||
                         p.Id.ToString().Contains(lowerQuery)
                     );
                 }
@@ -294,6 +298,7 @@ public class PredictionService : IPredictionService
                 p.FailureProbability,
                 p.HealthStatus,
                 p.FeatureContributions,
+                p.CreatedAt,
                 p.CreatedAt,
                 p.ModelVersion
             )).ToList();

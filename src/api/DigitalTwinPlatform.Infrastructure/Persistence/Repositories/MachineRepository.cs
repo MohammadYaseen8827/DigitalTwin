@@ -18,7 +18,8 @@ public class MachineRepository(DigitalTwinDbContext context) : Repository<Machin
         // Apply status filter if provided
         if (!string.IsNullOrEmpty(statusFilter))
         {
-            queryable = queryable.Where(m => m.Status!.Contains(statusFilter));
+            var statuses = statusFilter.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            queryable = queryable.Where(m => statuses.Contains(m.Status.ToString()));
         }
 
         // Apply text search across relevant fields if query is provided
@@ -26,10 +27,9 @@ public class MachineRepository(DigitalTwinDbContext context) : Repository<Machin
         {
             var normalizedQuery = query.ToLowerInvariant();
             queryable = queryable.Where(m => 
-                m.Name.ToLower().Contains(normalizedQuery) ||
-                m.Type.ToLower().Contains(normalizedQuery) ||
-                m.Location.ToLower().Contains(normalizedQuery) ||
-                (m.Properties != null && m.Properties.ToLower().Contains(normalizedQuery)) ||
+                m.Name.Value.ToLowerInvariant().Contains(normalizedQuery) ||
+                m.Type.ToString().ToLowerInvariant().Contains(normalizedQuery) ||
+                m.Location.ToLowerInvariant().Contains(normalizedQuery) ||
                 m.Id.ToString().Contains(normalizedQuery)
             );
         }

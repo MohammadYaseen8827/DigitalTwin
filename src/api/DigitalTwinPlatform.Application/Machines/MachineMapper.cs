@@ -12,7 +12,7 @@ internal static class MachineMapper
         machine.Name.Value,
         machine.Type.Value,
         machine.Status.ToString(),
-        machine.Properties.RootElement.GetRawText(),
+        machine.Properties.RootElement,
         machine.RemainingUsefulLifeDays,
         machine.FailureProbability,
         machine.HealthStatus?.ToString(),
@@ -22,31 +22,31 @@ internal static class MachineMapper
         machine.InstallationDate,
         machine.LastMaintenanceDate,
         machine.NextMaintenanceDate,
+        machine.WarrantyExpiry,
+        machine.MaintenanceIntervalDays,
         machine.HealthStatus.HasValue ? MapHealthStatusToScore(machine.HealthStatus.Value) : null,
-        ExtractSpecifications(machine.Properties.RootElement.GetRawText()));
+        ExtractSpecifications(machine.Properties.RootElement),
+        machine.SerialNumber,
+        machine.Manufacturer,
+        machine.Model,
+        machine.Criticality);
 
-    private static string? ExtractSpecifications(string propertiesJson)
+    private static JsonElement? ExtractSpecifications(JsonElement root)
     {
-        // Extract specifications from the properties JSON
-        // This assumes the properties JSON contains a "specifications" field or needs to be transformed
         try
         {
-            using var document = JsonDocument.Parse(propertiesJson);
-            var root = document.RootElement;
-            
             // If there's already a specifications field, return it
             if (root.TryGetProperty("specifications", out var specs))
             {
-                return specs.GetRawText();
+                return specs;
             }
             
-            // Otherwise, return the entire properties as specifications
-            return propertiesJson;
+            // Otherwise, return null (specifications not found as a sub-property)
+            return null;
         }
         catch
         {
-            // If parsing fails, return the original properties
-            return propertiesJson;
+            return null;
         }
     }
 

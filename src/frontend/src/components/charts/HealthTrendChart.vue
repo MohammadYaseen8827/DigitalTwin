@@ -178,7 +178,7 @@ function getEventColor(severity: string): string {
 async function fetchHealthData() {
     isLoading.value = true
     try {
-        const response = await api.get<HealthTrendDataPoint[]>(`/api/health/trend/${props.machineId}`, {
+        const response = await api.get<HealthTrendDataPoint[]>(`/api/Health/trend/${props.machineId}`, {
             params: { days: props.days }
         })
         healthData.value = response.data
@@ -192,7 +192,7 @@ async function fetchHealthData() {
 
 async function fetchMaintenanceEvents() {
     try {
-        const response = await api.get<MaintenanceEvent[]>(`/api/maintenance/${props.machineId}`)
+        const response = await api.get<MaintenanceEvent[]>(`/api/Maintenance/${props.machineId}`)
         maintenanceEvents.value = response.data
     } catch (error) {
         console.error('Error fetching maintenance events:', error)

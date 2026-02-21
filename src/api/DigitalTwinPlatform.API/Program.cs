@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using DigitalTwinPlatform.API.Extensions;
 using DigitalTwinPlatform.API.Hubs;
 using DigitalTwinPlatform.API.Infrastructure;
@@ -10,8 +11,13 @@ using FluentValidation;
 // Configure and build the web application
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure core services
-builder.Services.AddControllers();
+// Configure core services with camelCase JSON serialization
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    });
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();

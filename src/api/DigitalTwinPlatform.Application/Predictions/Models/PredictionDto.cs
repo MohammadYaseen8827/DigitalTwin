@@ -13,6 +13,7 @@ public record PredictionDto(
     HealthClassification HealthStatus,
     Dictionary<string, double>? FeatureContributions,
     DateTime CreatedAt,
+    DateTime UpdatedAt,
     string ModelVersion);
 
 public record PredictionRequestDto(Guid MachineId);

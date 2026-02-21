@@ -19,12 +19,7 @@ internal sealed class SearchProductionLinesQueryHandler(IProductionLineRepositor
     private static ProductionLineDto MapToDto(ProductionLine productionLine) => new(
         productionLine.Id,
         productionLine.Name,
-        productionLine.Description,
-        productionLine.Location,
-        productionLine.Status.ToString(),
-        productionLine.Capacity,
-        productionLine.Efficiency,
-        productionLine.CreatedAt,
-        productionLine.UpdatedAt
+        productionLine.Configuration,
+        productionLine.Machines.Select(m => m.Id)
     );
 }

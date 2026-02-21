@@ -81,7 +81,7 @@ namespace DigitalTwinPlatform.API.Controllers
         [HttpPost]
         [ProducesResponseType(typeof(AIModelDto), 201)]
         [ProducesResponseType(400)]
-        public async Task<ActionResult<AIModelDto>> DeployModel([FromBody] DeployAIModelCommand command)
+        public async Task<ActionResult<AIModelDto>> DeployModel([FromForm] DeployAIModelRequest request)
         {
             try
             {
@@ -89,6 +89,36 @@ namespace DigitalTwinPlatform.API.Controllers
                 {
                     return BadRequest(ModelState);
                 }
+
+                byte[] modelFileBytes;
+                if (request.ModelFile != null)
+                {
+                    using var ms = new MemoryStream();
+                    await request.ModelFile.CopyToAsync(ms);
+                    modelFileBytes = ms.ToArray();
+                }
+                else
+                {
+                    return BadRequest(new { Message = "Model file is required" });
+                }
+
+                var command = new DeployAIModelCommand
+                {
+                    Name = request.Name,
+                    Description = request.Description ?? string.Empty,
+                    Version = request.Version,
+                    ModelType = request.ModelType,
+                    Algorithm = request.Algorithm,
+                    Accuracy = request.Accuracy,
+                    Precision = request.Precision,
+                    Recall = request.Recall,
+                    F1Score = request.F1Score,
+                    TrainingDataSize = request.TrainingDataSize,
+                    Features = DeserializeArray(request.Features),
+                    Tags = DeserializeArray(request.Tags),
+                    TargetMachines = DeserializeArray(request.TargetMachines),
+                    ModelFile = modelFileBytes
+                };
 
                 var model = await _mediator.Send(command);
                 return CreatedAtAction(nameof(GetModel), new { id = model.Id }, model);
@@ -101,6 +131,19 @@ namespace DigitalTwinPlatform.API.Controllers
             {
                 _logger.LogError(ex, "Error deploying AI model");
                 return StatusCode(500, new { Message = "Internal server error" });
+            }
+        }
+
+        private static IEnumerable<string> DeserializeArray(string? json)
+        {
+            if (string.IsNullOrEmpty(json)) return new List<string>();
+            try
+            {
+                return System.Text.Json.JsonSerializer.Deserialize<IEnumerable<string>>(json) ?? new List<string>();
+            }
+            catch
+            {
+                return new List<string>();
             }
         }
 
@@ -345,7 +388,7 @@ namespace DigitalTwinPlatform.API.Controllers
         [HttpPost("validate-model")]
         [ProducesResponseType(typeof(ModelValidationResultDto), 200)]
         [ProducesResponseType(400)]
-        public async Task<ActionResult<ModelValidationResultDto>> ValidateModel([FromBody] ValidateModelDto request)
+        public async Task<ActionResult<ModelValidationResultDto>> ValidateModel([FromForm] ValidateModelRequest request)
         {
             try
             {
@@ -354,7 +397,19 @@ namespace DigitalTwinPlatform.API.Controllers
                     return BadRequest(ModelState);
                 }
 
-                var validationResult = await _aiService.ValidateModel(request.ModelFile, request.ModelType);
+                byte[] modelFileBytes;
+                if (request.ModelFile != null)
+                {
+                    using var ms = new MemoryStream();
+                    await request.ModelFile.CopyToAsync(ms);
+                    modelFileBytes = ms.ToArray();
+                }
+                else
+                {
+                    return BadRequest(new { Message = "Model file is required" });
+                }
+
+                var validationResult = await _aiService.ValidateModel(modelFileBytes, request.ModelType);
                 return Ok(validationResult);
             }
             catch (ArgumentException ex)
@@ -376,10 +431,32 @@ namespace DigitalTwinPlatform.API.Controllers
         public IEnumerable<string> MachineIds { get; set; } = new List<string>();
     }
 
-    public class ValidateModelDto
+    public class DeployAIModelRequest
     {
         [Required]
-        public byte[] ModelFile { get; set; } = [];
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        [Required]
+        public string Version { get; set; } = string.Empty;
+        [Required]
+        public string ModelType { get; set; } = string.Empty;
+        [Required]
+        public string Algorithm { get; set; } = string.Empty;
+        public double Accuracy { get; set; }
+        public double Precision { get; set; }
+        public double Recall { get; set; }
+        public double F1Score { get; set; }
+        public int TrainingDataSize { get; set; }
+        public string? Features { get; set; } // JSON array
+        public string? Tags { get; set; } // JSON array
+        public string? TargetMachines { get; set; } // JSON array
+        public IFormFile? ModelFile { get; set; }
+    }
+
+    public class ValidateModelRequest
+    {
+        [Required]
+        public IFormFile ModelFile { get; set; } = null!;
         
         [Required]
         public string ModelType { get; set; } = string.Empty;

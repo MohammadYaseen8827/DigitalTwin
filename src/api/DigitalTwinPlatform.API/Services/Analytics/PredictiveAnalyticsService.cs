@@ -77,6 +77,7 @@ public class PredictiveAnalyticsService : IPredictiveAnalyticsService
                 defaultPrediction.HealthStatus, 
                 defaultPrediction.FeatureContributions, 
                 defaultPrediction.CreatedAt, 
+                defaultPrediction.UpdatedAt,
                 defaultPrediction.ModelVersion);
         }
 
@@ -129,7 +130,8 @@ public class PredictiveAnalyticsService : IPredictiveAnalyticsService
             prediction.FailureProbability, 
             prediction.HealthStatus, 
             prediction.FeatureContributions, 
-            prediction.CreatedAt, 
+            prediction.CreatedAt,
+            prediction.UpdatedAt,
             prediction.ModelVersion);
     }
 
@@ -256,6 +258,7 @@ public class PredictiveAnalyticsService : IPredictiveAnalyticsService
                 p.FailureProbability, 
                 p.HealthStatus, 
                 p.FeatureContributions, 
-                p.CreatedAt, 
+                p.CreatedAt,
+                p.UpdatedAt,
                 p.ModelVersion));
 }

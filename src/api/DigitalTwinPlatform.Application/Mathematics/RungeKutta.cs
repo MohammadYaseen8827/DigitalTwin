@@ -9,7 +9,7 @@ namespace DigitalTwinPlatform.Application.Mathematics;
 /// Runge-Kutta 4th order numerical integration method for solving ODEs.
 /// Provides accurate and stable integration for deterministic degradation models.
 /// </summary>
-public class RungeKutta : IODESolver
+public class RungeKutta : INumericalODESolver
 {
     private readonly ILogger<RungeKutta> _logger;
 

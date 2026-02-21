@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using DigitalTwinPlatform.Domain.Entities;
+using DigitalTwinPlatform.Domain.Entities.Simulation;
 using DigitalTwinPlatform.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -38,8 +40,17 @@ namespace DigitalTwinPlatform.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("Category")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<bool>("IsAcknowledged")
                         .HasColumnType("boolean");
@@ -52,13 +63,34 @@ namespace DigitalTwinPlatform.Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
+                    b.Property<string>("RecommendedAction")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<Guid?>("RelatedPredictionId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Severity")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("SuggestedActions")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.HasKey("Id");
 
@@ -71,6 +103,8 @@ namespace DigitalTwinPlatform.Infrastructure.Migrations
                     b.HasIndex("RelatedPredictionId");
 
                     b.HasIndex("Severity");
+
+                    b.HasIndex("Status");
 
                     b.HasIndex("MachineId", "IsAcknowledged");
 
@@ -201,6 +235,138 @@ namespace DigitalTwinPlatform.Infrastructure.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.DataSynchronization", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DataPayload")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("EntityType")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ExternalSystemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("bytea");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedById")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExternalSystemId");
+
+                    b.ToTable("DataSynchronizations");
+                });
+
+            modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.ExternalSystem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ApiKey")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("ConnectionUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Password")
+                        .HasColumnType("text");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("bytea");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SystemType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ExternalSystems");
+                });
+
             modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.Machine", b =>
                 {
                     b.Property<Guid>("Id")
@@ -215,6 +381,9 @@ namespace DigitalTwinPlatform.Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("Criticality")
+                        .HasColumnType("integer");
 
                     b.Property<double?>("FailureProbability")
                         .HasColumnType("double precision");
@@ -239,6 +408,20 @@ namespace DigitalTwinPlatform.Infrastructure.Migrations
                         .HasColumnType("character varying(200)")
                         .HasDefaultValue("");
 
+                    b.Property<int?>("MaintenanceIntervalDays")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Manufacturer")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("NextMaintenanceDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid?>("ProductionLineId")
                         .HasColumnType("uuid");
 
@@ -251,6 +434,10 @@ namespace DigitalTwinPlatform.Infrastructure.Migrations
                     b.Property<double?>("RemainingUsefulLifeDays")
                         .HasColumnType("double precision");
 
+                    b.Property<string>("SerialNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
@@ -259,6 +446,9 @@ namespace DigitalTwinPlatform.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("WarrantyExpiry")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("_name")
@@ -476,6 +666,9 @@ namespace DigitalTwinPlatform.Infrastructure.Migrations
                     b.Property<double>("RulUpperBound")
                         .HasColumnType("decimal(18,4)");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Confidence");
@@ -514,6 +707,35 @@ namespace DigitalTwinPlatform.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ProductionLines");
+                });
+
+            modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.Simulation.SimulationResult", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Dictionary<string, object>>("Data")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<List<SimulationEvent>>("Events")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<Dictionary<string, double>>("Metrics")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<Guid>("SimulationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SimulationResults");
                 });
 
             modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.Simulation.SimulationState", b =>
@@ -566,6 +788,100 @@ namespace DigitalTwinPlatform.Infrastructure.Migrations
                     b.ToTable("SimulationStates");
                 });
 
+            modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.SyntheticDataGeneration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("GeneratedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MachineType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("NumberOfTrajectories")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RandomSeed")
+                        .HasColumnType("integer");
+
+                    b.Property<GenerationStatistics>("Statistics")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<TimeSpan?>("TimeRange")
+                        .HasColumnType("interval");
+
+                    b.Property<DataValidationReport>("ValidationReport")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SyntheticDataGenerations");
+                });
+
+            modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.SystemIntegration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("EntityType")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("ExternalSystemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("bytea");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedById")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExternalSystemId");
+
+                    b.ToTable("SystemIntegrations");
+                });
+
             modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.TelemetryData", b =>
                 {
                     b.Property<Guid>("Id")
@@ -615,6 +931,268 @@ namespace DigitalTwinPlatform.Infrastructure.Migrations
                     b.HasIndex("MachineId", "Timestamp");
 
                     b.ToTable("TelemetryData");
+                });
+
+            modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.Tenant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConnectionString")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("bytea");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedById")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Tenants");
+                });
+
+            modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.TenantSetting", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("bytea");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedById")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("TenantSettings");
+                });
+
+            modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.TenantUser", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("bytea");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("TenantUsers");
+                });
+
+            modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("text");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("bytea");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedById")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("User");
+                });
+
+            modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.Workflow", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("DefinitionJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Workflows");
+                });
+
+            modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.WorkflowExecution", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("text");
+
+                    b.Property<string>("InputContextJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("OutputJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("TriggeredBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("WorkflowId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkflowId");
+
+                    b.ToTable("WorkflowExecutions");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -767,6 +1345,17 @@ namespace DigitalTwinPlatform.Infrastructure.Migrations
                     b.Navigation("RelatedPrediction");
                 });
 
+            modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.DataSynchronization", b =>
+                {
+                    b.HasOne("DigitalTwinPlatform.Domain.Entities.ExternalSystem", "ExternalSystem")
+                        .WithMany("Synchronizations")
+                        .HasForeignKey("ExternalSystemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ExternalSystem");
+                });
+
             modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.Machine", b =>
                 {
                     b.HasOne("DigitalTwinPlatform.Domain.Entities.ProductionLine", "ProductionLine")
@@ -808,6 +1397,62 @@ namespace DigitalTwinPlatform.Infrastructure.Migrations
                     b.Navigation("Machine");
                 });
 
+            modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.SyntheticDataGeneration", b =>
+                {
+                    b.OwnsMany("DigitalTwinPlatform.Domain.Entities.SyntheticDataPoint", "DataPoints", b1 =>
+                        {
+                            b1.Property<Guid>("SyntheticDataGenerationId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer");
+
+                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
+
+                            b1.Property<Dictionary<string, object>>("Data")
+                                .HasColumnType("jsonb");
+
+                            b1.Property<double?>("HealthScore")
+                                .HasColumnType("double precision");
+
+                            b1.Property<double?>("Pressure")
+                                .HasColumnType("double precision");
+
+                            b1.Property<double?>("Rpm")
+                                .HasColumnType("double precision");
+
+                            b1.Property<double?>("Temperature")
+                                .HasColumnType("double precision");
+
+                            b1.Property<DateTime>("Timestamp")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<double?>("Vibration")
+                                .HasColumnType("double precision");
+
+                            b1.HasKey("SyntheticDataGenerationId", "Id");
+
+                            b1.ToTable("SyntheticDataPoint");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SyntheticDataGenerationId");
+                        });
+
+                    b.Navigation("DataPoints");
+                });
+
+            modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.SystemIntegration", b =>
+                {
+                    b.HasOne("DigitalTwinPlatform.Domain.Entities.ExternalSystem", "ExternalSystem")
+                        .WithMany("Integrations")
+                        .HasForeignKey("ExternalSystemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ExternalSystem");
+                });
+
             modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.TelemetryData", b =>
                 {
                     b.HasOne("DigitalTwinPlatform.Domain.Entities.Machine", "Machine")
@@ -817,6 +1462,47 @@ namespace DigitalTwinPlatform.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Machine");
+                });
+
+            modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.TenantSetting", b =>
+                {
+                    b.HasOne("DigitalTwinPlatform.Domain.Entities.Tenant", "Tenant")
+                        .WithMany("Settings")
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.TenantUser", b =>
+                {
+                    b.HasOne("DigitalTwinPlatform.Domain.Entities.Tenant", "Tenant")
+                        .WithMany("Users")
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DigitalTwinPlatform.Domain.Entities.User", "User")
+                        .WithMany("TenantUsers")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.WorkflowExecution", b =>
+                {
+                    b.HasOne("DigitalTwinPlatform.Domain.Entities.Workflow", "Workflow")
+                        .WithMany()
+                        .HasForeignKey("WorkflowId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Workflow");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -870,6 +1556,13 @@ namespace DigitalTwinPlatform.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.ExternalSystem", b =>
+                {
+                    b.Navigation("Integrations");
+
+                    b.Navigation("Synchronizations");
+                });
+
             modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.Machine", b =>
                 {
                     b.Navigation("MaintenanceRecords");
@@ -887,6 +1580,18 @@ namespace DigitalTwinPlatform.Infrastructure.Migrations
             modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.ProductionLine", b =>
                 {
                     b.Navigation("Machines");
+                });
+
+            modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.Tenant", b =>
+                {
+                    b.Navigation("Settings");
+
+                    b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("DigitalTwinPlatform.Domain.Entities.User", b =>
+                {
+                    b.Navigation("TenantUsers");
                 });
 #pragma warning restore 612, 618
         }

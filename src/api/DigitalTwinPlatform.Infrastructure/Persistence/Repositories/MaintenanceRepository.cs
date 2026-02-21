@@ -28,9 +28,7 @@ public class MaintenanceRepository(DigitalTwinDbContext context)
         {
             var normalizedQuery = query.ToLowerInvariant();
             queryable = queryable.Where(m => 
-                m.Type.ToString().ToLower().Contains(normalizedQuery) ||
-                m.Notes != null && m.Notes.ToLower().Contains(normalizedQuery) ||
-                m.PerformedBy != null && m.PerformedBy.ToLower().Contains(normalizedQuery) ||
+                m.Type.ToString().ToLowerInvariant().Contains(normalizedQuery) ||
                 m.MachineId.ToString().Contains(normalizedQuery) ||
                 m.Id.ToString().Contains(normalizedQuery)
             );

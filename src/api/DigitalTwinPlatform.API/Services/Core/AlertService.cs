@@ -84,14 +84,14 @@ public record AlertStats(
 
 public class AlertService : IAlertService
 {
-    private readonly IRepository<Alert> _alertRepository;
+    private readonly IAlertRepository _alertRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IHubPublisher _hubPublisher;
     private readonly INotificationService _notificationService;
     private readonly ILogger<AlertService> _logger;
 
     public AlertService(
-        IRepository<Alert> alertRepository,
+        IAlertRepository alertRepository,
         IUnitOfWork unitOfWork,
         IHubPublisher hubPublisher,
         INotificationService notificationService,
@@ -142,7 +142,7 @@ public class AlertService : IAlertService
         await _unitOfWork.SaveChangesAsync();
         
         // Broadcast to SignalR
-        await _hubPublisher.BroadcastAlertAsync(machineId, new AlertDto(alert.Id, alert.MachineId, alert.Message, alert.Severity, alert.CreatedAt, alert.IsAcknowledged));
+        await _hubPublisher.BroadcastAlertAsync(machineId, AlertDto.FromEntity(alert));
         
         // Dispatch notifications for Critical and Warning alerts
         if (severity >= DigitalTwinPlatform.Domain.Entities.AlertSeverity.Warning)

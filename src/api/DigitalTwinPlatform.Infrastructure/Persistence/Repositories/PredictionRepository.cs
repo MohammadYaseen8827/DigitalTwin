@@ -32,11 +32,10 @@ public class PredictionRepository(DigitalTwinDbContext context) : Repository<Pre
         if (!string.IsNullOrWhiteSpace(query))
         {
             var lowerQuery = query.ToLowerInvariant();
+            // Use simple search without null-propagating operators in expression tree
             queryable = queryable.Where(p =>
-                p.Machine.Name.ToLower().Contains(lowerQuery) ||
-                p.Machine.Type.ToLower().Contains(lowerQuery) ||
-                p.HealthStatus.ToLower().Contains(lowerQuery) ||
-                p.ModelVersion.ToLower().Contains(lowerQuery) ||
+                p.HealthStatus.ToString().ToLowerInvariant().Contains(lowerQuery) ||
+                p.ModelVersion.ToLowerInvariant().Contains(lowerQuery) ||
                 p.Id.ToString().Contains(lowerQuery)
             );
         }

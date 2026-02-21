@@ -11,6 +11,7 @@ using DigitalTwinPlatform.Application.Abstractions.Analytics;
 using DigitalTwinPlatform.Infrastructure.Exporters;
 using DigitalTwinPlatform.Application.Maintenance;
 using DigitalTwinPlatform.Application.Services;
+using DigitalTwinPlatform.Application.Tenants.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -296,12 +297,15 @@ https://api.digitaltwin.example.com/v1
         // Advanced analytics services
         services.AddScoped<IAdvancedPredictiveService, AdvancedPredictiveService>();
         services.AddScoped<IPrescriptiveAnalyticsService, PrescriptiveAnalyticsService>();
+        services.AddScoped<Application.Workflows.Services.IWorkflowService, Application.Workflows.Services.WorkflowService>();
 
         // External System Integration: mock in development; use real implementation for production.
         var environment = configuration.GetSection("Environment").Value?.ToLower() ?? "development";
         if (environment == "development" || environment == "staging")
         {
             services.AddScoped<IExternalSystemService, MockExternalSystemService>();
+            // Use mock tenant service for development
+            services.AddScoped<Application.Tenants.Services.ITenantService, MockTenantService>();
         }
         else
         {
@@ -314,6 +318,8 @@ https://api.digitaltwin.example.com/v1
                                             "https://localhost:8080/api/");
             });
             services.AddScoped<IExternalSystemService, ExternalSystemService>();
+            // Use mock tenant service
+            services.AddScoped<Application.Tenants.Services.ITenantService, Application.Tenants.Services.MockTenantService>();
         }
 
         return services;
@@ -343,7 +349,7 @@ https://api.digitaltwin.example.com/v1
         }
 
         // Azure services
-        ConfigureAzureServices(services, configuration);
+        //ConfigureAzureServices(services, configuration);
 
         return services;
     }

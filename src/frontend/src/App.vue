@@ -1,276 +1,507 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, computed } from 'vue'
-import { RouterView, RouterLink, useRoute, useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import SessionTimeoutWarning from '@/components/auth/SessionTimeoutWarning.vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth.store'
+import { Toaster } from 'vue-sonner'
+import {
+  Home,
+  BarChart3,
+  Zap,
+  Brain,
+  TrendingUp,
+  History,
+  LayoutDashboard,
+  FileText,
+  Settings,
+  Info,
+  LogOut,
+  // Core Operations Icons
+  Server,
+  Wrench,
+  Bell,
+  Play,
+  Factory,
+  // Monitoring Icons
+  Activity,
+  Eye,
+  Search,
+  Database,
+  // ML/AI Icons
+  Cpu,
+  Network,
+  Calculator,
+  Shuffle,
+  // System Icons
+  Heart,
+  Shield,
+  Cloud,
+  // Additional Icons
+  Layers,
+  Filter,
+  Archive,
+  FileBarChart,
+  Building,
+  Radio,
+  Plug,
+  Target
+} from 'lucide-vue-next'
 
-const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
-// Check if current route is auth layout
-const isAuthRoute = computed(() => {
-    return route.meta.layout === 'auth'
-})
-
-// Mobile menu state
-const isMobileMenuOpen = ref(false)
-const isProfileDropdownOpen = ref(false)
-
-// Navigation items
-const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: 'home' },
-    { name: 'Machines', path: '/machines', icon: 'cpu' },
-    { name: 'Predictions', path: '/predictions', icon: 'chart' },
-    { name: 'Alerts', path: '/alerts', icon: 'bell' },
-    { name: 'Settings', path: '/settings', icon: 'settings' },
-]
-
-// Get icon path
-function getIconPath(icon: string) {
-    const icons: Record<string, string> = {
-        home: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
-        cpu: 'M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z',
-        chart: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
-        bell: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9',
-        settings: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z',
-    }
-    return icons[icon] || icons.home
-}
-
-// Toggle mobile menu
-function toggleMobileMenu() {
-    isMobileMenuOpen.value = !isMobileMenuOpen.value
-}
-
-// Toggle profile dropdown
-function toggleProfileDropdown() {
-    isProfileDropdownOpen.value = !isProfileDropdownOpen.value
-}
-
-// Close dropdowns on outside click
-function handleClickOutside(event: MouseEvent) {
-    const target = event.target as HTMLElement
-    if (!target.closest('[data-profile-dropdown]')) {
-        isProfileDropdownOpen.value = false
-    }
-}
-
-// Handle logout
-function handleLogout() {
-    authStore.logout()
-    isProfileDropdownOpen.value = false
-}
-
-// Initialize auth store
+// Debug auth state on mount
 onMounted(() => {
-    authStore.init()
-    document.addEventListener('click', handleClickOutside)
+  console.log('App mounted - auth state:', {
+    isAuthenticated: authStore.isAuthenticated,
+    user: authStore.user,
+    token: authStore.token
+  })
 })
 
-// Cleanup
-onUnmounted(() => {
-    authStore.cleanup()
-    document.removeEventListener('click', handleClickOutside)
-})
+const navItems = ref([
+  // Core Dashboard
+  { name: 'Home', path: '/', icon: Home },
+  { name: 'Dashboard', path: '/dashboard', icon: BarChart3 },
+  
+  // Core Operations
+  { name: 'Machines', path: '/machines', icon: Server },
+  { name: 'Maintenance', path: '/maintenance', icon: Wrench },
+  { name: 'Alerts', path: '/alerts', icon: Bell },
+  { name: 'Simulations', path: '/simulations', icon: Play },
+  { name: 'Production Lines', path: '/production-lines', icon: Factory },
+  
+  // Monitoring & Analytics
+  { name: 'Telemetry', path: '/telemetry', icon: Activity },
+  { name: 'Advanced Analytics', path: '/advanced-analytics-viz', icon: Eye },
+  { name: 'Performance', path: '/performance-monitoring', icon: BarChart3 },
+  { name: 'Drift Detection', path: '/drift-detection', icon: TrendingUp },
+  
+  // Configuration & Management
+  { name: 'Configuration', path: '/configuration', icon: Settings },
+  { name: 'Advanced Search', path: '/search', icon: Search },
+  { name: 'Data Archival', path: '/data-archival', icon: Archive },
+  
+  // ML & AI Systems
+  { name: 'Synthetic Data', path: '/synthetic-data', icon: Database },
+  { name: 'Mathematical Modeling', path: '/mathematical-modeling', icon: Calculator },
+  { name: 'Uncertainty', path: '/uncertainty', icon: Shuffle },
+  { name: 'Run-to-Failure', path: '/run-to-failure', icon: Cpu },
+  { name: 'Prescriptive', path: '/prescriptive-maintenance', icon: Network },
+  { name: 'Predictive Dashboard', path: '/predictive-analytics-dashboard', icon: TrendingUp },
+  { name: 'Model Validation', path: '/model-validation', icon: FileBarChart },
+  { name: 'Model Lifecycle', path: '/model-lifecycle', icon: Layers },
+  { name: 'Azure Digital Twin', path: '/azure-digital-twin', icon: Cloud },
+  
+  // Enterprise Integration
+  { name: 'Tenant Management', path: '/tenants', icon: Building },
+  { name: 'External Systems', path: '/external-systems', icon: Plug },
+  
+  // Real-time Analytics
+  { name: 'Real-time Analytics', path: '/real-time-analytics', icon: Radio },
+  
+  // Benchmark Validation
+  { name: 'Benchmark Validation', path: '/benchmark-validation', icon: Target },
+  
+  // System & Reports
+  { name: 'System Health', path: '/system-health', icon: Heart },
+  { name: 'Reporting Dashboard', path: '/reporting-dashboard', icon: FileText },
+  
+  // Legacy Routes
+  { name: 'Prediction History', path: '/prediction-history', icon: History },
+  { name: 'Analytics Dashboard', path: '/advanced-analytics-dashboard', icon: LayoutDashboard },
+  { name: 'Enhanced Prescriptive', path: '/enhanced-prescriptive', icon: Zap },
+  { name: 'Reporting', path: '/reporting', icon: FileText },
+  
+  // System
+  { name: 'Settings', path: '/settings', icon: Settings },
+  { name: 'About', path: '/about', icon: Info }
+])
+
+const handleLogout = () => {
+  authStore.clearAuth()
+  router.push('/login')
+}
 </script>
 
 <template>
-    <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-        <!-- Session Timeout Warning -->
-        <SessionTimeoutWarning />
-
-        <!-- Auth Layout -->
-        <template v-if="isAuthRoute">
-            <RouterView />
-        </template>
-
-        <!-- App Layout -->
-        <template v-else>
-            <div class="flex h-screen overflow-hidden">
-                <!-- Mobile Header -->
-                <header class="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                    <div class="flex items-center justify-between px-4 h-16">
-                        <button 
-                            @click="toggleMobileMenu" 
-                            class="p-2 rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-                            aria-label="Toggle menu"
-                        >
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path v-if="!isMobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                                <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                        
-                        <RouterLink to="/dashboard" class="flex items-center gap-2">
-                            <div class="h-8 w-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                                </svg>
-                            </div>
-                            <span class="text-lg font-bold text-gray-900 dark:text-white hidden sm:block">Digital Twin</span>
-                        </RouterLink>
-
-                        <!-- Profile Button -->
-                        <div class="relative" data-profile-dropdown>
-                            <button 
-                                @click="toggleProfileDropdown"
-                                class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-                            >
-                                <div class="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-primary-600 dark:text-primary-400 text-sm font-semibold">
-                                    {{ authStore.userInitials }}
-                                </div>
-                            </button>
-                        </div>
-                    </div>
-                </header>
-
-                <!-- Sidebar -->
-                <aside 
-                    :class="[
-                        'fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:transform-none',
-                        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-                    ]"
-                >
-                    <div class="flex flex-col h-full">
-                        <!-- Logo -->
-                        <div class="flex items-center gap-3 px-6 py-5 border-b border-gray-200 dark:border-gray-700">
-                            <div class="h-10 w-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-600/30">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h1 class="text-lg font-bold text-gray-900 dark:text-white">Digital Twin</h1>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Predictive Maintenance</p>
-                            </div>
-                        </div>
-
-                        <!-- Navigation -->
-                        <nav class="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-                            <RouterLink
-                                v-for="item in navItems"
-                                :key="item.path"
-                                :to="item.path"
-                                @click="isMobileMenuOpen = false"
-                                :class="[
-                                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                                    route.path === item.path || route.path.startsWith(item.path + '/')
-                                        ? 'bg-primary-50 dark:bg-primary-900/50 text-primary-700 dark:text-primary-400'
-                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                ]"
-                            >
-                                <svg 
-                                    class="w-5 h-5" 
-                                    :class="route.path === item.path ? 'text-primary-600 dark:text-primary-400' : 'text-gray-400'"
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    viewBox="0 0 24 24"
-                                    aria-hidden="true"
-                                >
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getIconPath(item.icon)" />
-                                </svg>
-                                {{ item.name }}
-                                <span 
-                                    v-if="item.name === 'Alerts' && authStore.sessionWarning.show"
-                                    class="ml-auto h-2 w-2 rounded-full bg-danger-500 animate-pulse"
-                                ></span>
-                            </RouterLink>
-                        </nav>
-
-                        <!-- User Section -->
-                        <div class="p-4 border-t border-gray-200 dark:border-gray-700">
-                            <div 
-                                class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50"
-                                data-profile-dropdown
-                            >
-                                <div class="h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-primary-600 dark:text-primary-400 text-sm font-semibold flex-shrink-0">
-                                    {{ authStore.userInitials }}
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                        {{ authStore.userFullName }}
-                                    </p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                        {{ authStore.user?.email }}
-                                    </p>
-                                </div>
-                                <button 
-                                    @click="toggleProfileDropdown"
-                                    class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 dark:hover:text-gray-200"
-                                >
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <!-- Profile Dropdown -->
-                            <Transition
-                                enter-active-class="transition-all duration-200"
-                                enter-from-class="opacity-0 -translate-y-2"
-                                enter-to-class="opacity-100 translate-y-0"
-                                leave-active-class="transition-all duration-150"
-                                leave-from-class="opacity-100 translate-y-0"
-                                leave-to-class="opacity-0 -translate-y-2"
-                            >
-                                <div 
-                                    v-if="isProfileDropdownOpen" 
-                                    class="mt-2 py-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
-                                >
-                                    <RouterLink 
-                                        to="/settings"
-                                        @click="isProfileDropdownOpen = false"
-                                        class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                    >
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                        </svg>
-                                        Your Profile
-                                    </RouterLink>
-                                    <button 
-                                        @click="handleLogout"
-                                        class="w-full flex items-center gap-2 px-4 py-2 text-sm text-danger-600 dark:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-900/20"
-                                    >
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                        </svg>
-                                        Sign Out
-                                    </button>
-                                </div>
-                            </Transition>
-                        </div>
-                    </div>
-                </aside>
-
-                <!-- Mobile Overlay -->
-                <Transition
-                    enter-active-class="transition-opacity duration-300"
-                    enter-from-class="opacity-0"
-                    enter-to-class="opacity-100"
-                    leave-active-class="transition-opacity duration-200"
-                    leave-from-class="opacity-100"
-                    leave-to-class="opacity-0"
-                >
-                    <div 
-                        v-if="isMobileMenuOpen" 
-                        @click="isMobileMenuOpen = false"
-                        class="lg:hidden fixed inset-0 bg-gray-900/50 z-40"
-                    ></div>
-                </Transition>
-
-                <!-- Main Content -->
-                <main class="flex-1 overflow-y-auto">
-                    <RouterView />
-                </main>
-            </div>
-        </template>
-    </div>
+  <div class="app-container">
+    <nav class="sidebar glass-panel">
+      <div class="logo">
+        <div class="logo-icon">🏭</div>
+        <span class="logo-text">Digital Twin</span>
+      </div>
+      
+      <div class="nav-menu">
+        <router-link 
+          v-for="item in navItems" 
+          :key="item.name"
+          :to="item.path"
+          class="nav-item"
+          active-class="active"
+        >
+          <component :is="item.icon" class="nav-icon" />
+          <span class="nav-text">{{ item.name }}</span>
+        </router-link>
+      </div>
+      
+      <div class="nav-footer">
+        <button class="logout-btn" @click="handleLogout">
+          <LogOut class="logout-icon" />
+          <span>Logout</span>
+        </button>
+      </div>
+    </nav>
+    
+    <main class="main-content">
+      <router-view />
+    </main>
+    
+    <!-- Toast Container -->
+    <Toaster position="top-right" />
+  </div>
 </template>
 
-<script lang="ts">
-import { ref } from 'vue'
-export default {
-    name: 'App'
+<style scoped>
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-background);
 }
-</script>
+
+.sidebar {
+  width: 280px;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  height: 100vh;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.logo-icon {
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary);
+  border-radius: 8px;
+  color: white;
+}
+
+.logo-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.nav-menu {
+  flex: 1;
+  padding: 1rem 0;
+  overflow-y: auto;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.75rem 1.5rem;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.nav-item:hover {
+  background: var(--color-background-secondary);
+  color: var(--color-text-primary);
+}
+
+.nav-item.active {
+  background: var(--color-primary);
+  color: white;
+  border-left-color: var(--color-primary);
+}
+
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.nav-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-footer {
+  padding: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--color-error);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.logout-btn:hover {
+  background: #dc2626;
+}
+
+.logout-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 280px;
+  padding: 2rem;
+  background: var(--color-background);
+  min-height: 100vh;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .main-content {
+    margin-left: 0;
+    padding: 1rem;
+  }
+}
+
+/* Legacy styles for other components */
+.app-shell {
+  position: relative;
+  min-height: 100vh;
+  padding: clamp(var(--space-16), 4vw, var(--space-32)) 0 var(--space-32);
+}
+
+.bg-accents {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.orb {
+  position: absolute;
+  width: 42vw;
+  height: 42vw;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.35;
+}
+.orb-a {
+  top: -10%;
+  left: -12%;
+  background: radial-gradient(circle, rgba(56, 232, 255, 0.65), transparent 60%);
+  animation: drift 16s ease-in-out infinite alternate;
+}
+.orb-b {
+  bottom: -16%;
+  right: -12%;
+  background: radial-gradient(circle, rgba(124, 77, 255, 0.55), transparent 60%);
+  animation: drift 18s ease-in-out infinite alternate;
+}
+
+.topbar {
+  position: sticky;
+  top: clamp(var(--space-8), 2vw, var(--space-16));
+  margin: 0 auto clamp(var(--space-20), 4vw, var(--space-32));
+  width: min(1360px, calc(100% - 24px));
+  z-index: 2;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-16);
+  padding: var(--space-12) var(--space-20);
+  background: color-mix(in srgb, var(--color-glass) 90%, transparent);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+}
+.logo {
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.4));
+}
+.eyebrow {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+}
+.title {
+  margin: 2px 0 0;
+  font-size: var(--font-size-lg);
+  letter-spacing: 0.01em;
+}
+
+.nav-pills {
+  display: inline-flex;
+  justify-content: center;
+  gap: var(--space-8);
+  padding: 6px;
+  background: color-mix(in srgb, var(--color-surface-alt) 80%, transparent);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-subtle);
+}
+.nav-pills a {
+  padding: 10px 14px;
+  border-radius: var(--radius-lg);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  transition: 180ms ease;
+}
+.nav-pills a:hover {
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+.nav-pills a.router-link-exact-active {
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--color-primary) 28%, transparent);
+  box-shadow: var(--glow-primary);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+}
+
+.main {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--space-20);
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: clamp(var(--space-16), 3vw, var(--space-32));
+  padding: clamp(var(--space-20), 6vw, var(--space-40));
+  border-radius: var(--radius-2xl);
+  background: var(--gradient-card);
+}
+.hero-copy h2 {
+  margin: 6px 0 10px;
+  font-size: clamp(var(--font-size-2xl), 2.4vw, 2.6rem);
+}
+.hero-copy .lede {
+  margin: 0 0 var(--space-16);
+  color: var(--color-text-secondary);
+  max-width: 560px;
+}
+.hero-actions {
+  display: flex;
+  gap: var(--space-12);
+  flex-wrap: wrap;
+}
+.hero-visual {
+  position: relative;
+  min-height: 220px;
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--color-border-subtle);
+  background: color-mix(in srgb, var(--color-surface) 80%, transparent);
+  overflow: hidden;
+}
+.glow,
+.pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  filter: blur(24px);
+}
+.glow {
+  background: radial-gradient(circle at 30% 30%, rgba(56, 232, 255, 0.4), transparent 55%),
+    radial-gradient(circle at 80% 20%, rgba(124, 77, 255, 0.35), transparent 55%),
+    radial-gradient(circle at 60% 80%, rgba(107, 229, 155, 0.3), transparent 55%);
+  animation: shimmer 10s ease-in-out infinite alternate;
+}
+.pulse {
+  background: radial-gradient(circle at 50% 50%, rgba(56, 232, 255, 0.16), transparent 70%);
+  animation: pulse 3s ease-in-out infinite;
+}
+
+.content {
+  padding: clamp(var(--space-16), 3vw, var(--space-24));
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--color-border-subtle);
+}
+
+@keyframes drift {
+  to {
+    transform: translate(12px, -14px) scale(1.05);
+  }
+}
+
+@keyframes shimmer {
+  to {
+    transform: scale(1.04) translate(-6px, 6px);
+    opacity: 0.92;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}
+
+@media (max-width: 960px) {
+  .topbar {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+  .actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+</style>

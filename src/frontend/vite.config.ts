@@ -1,47 +1,62 @@
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import { fileURLToPath, URL } from 'node:url'
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import path from 'path';
+import Icons from 'unplugin-icons/vite';
+import Components from 'unplugin-vue-components/vite';
+import { FileSystemIconLoader } from 'unplugin-icons/loaders';
 
 export default defineConfig({
-    plugins: [vue()],
-    resolve: {
-        alias: {
-            '@': fileURLToPath(new URL('./src', import.meta.url)),
-            '@components': fileURLToPath(new URL('./src/components', import.meta.url)),
-            '@services': fileURLToPath(new URL('./src/services', import.meta.url)),
-            '@stores': fileURLToPath(new URL('./src/stores', import.meta.url)),
-            '@types': fileURLToPath(new URL('./src/types', import.meta.url)),
-            '@utils': fileURLToPath(new URL('./src/utils', import.meta.url)),
-            '@views': fileURLToPath(new URL('./src/views', import.meta.url))
-        }
-    },
-    server: {
-        port: 3000,
-        proxy: {
-            '/api': {
-                target: 'http://localhost:5000',
-                changeOrigin: true,
-                secure: false
-            },
-            '/hub': {
-                target: 'http://localhost:5000',
-                changeOrigin: true,
-                secure: false,
-                ws: true
-            }
-        }
-    },
-    build: {
-        outDir: 'dist',
-        sourcemap: true,
-        rollupOptions: {
-            output: {
-                manualChunks: {
-                    'vendor': ['vue', 'vue-router', 'pinia'],
-                    'charts': ['apexcharts', 'vue3-apexcharts'],
-                    'utils': ['lodash-es', 'date-fns']
-                }
-            }
-        }
+  plugins: [
+    vue(),
+    Icons({
+      compiler: 'vue3',
+      autoInstall: true,
+      customCollections: {
+        'app': FileSystemIconLoader('./src/assets/icons')
+      }
+    }),
+    Components({
+      dts: true,
+      dirs: ['src/components'],
+      deep: true,
+      include: [/\.vue$/, /\.vue\?vue/, /\.tsx?$/]
+    })
+  ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src')
     }
-})
+  },
+  server: {
+    port: 3000,
+    host: true,
+    strictPort: true,
+    watch: {
+      usePolling: true
+    }
+  },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: true,
+    chunkSizeWarningLimit: 1000
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './tests/setup.ts',
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        '**/node_modules/',
+        '**/dist/',
+        '**/tests/',
+        '**/*.d.ts',
+        '**/types.ts',
+        '**/main.ts',
+        '**/vite-env.d.ts'
+      ]
+    }
+  }
+});

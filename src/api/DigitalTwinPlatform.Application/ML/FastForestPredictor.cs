@@ -20,11 +20,16 @@ namespace DigitalTwinPlatform.Application.ML
 
         public ITransformer? Model => _model;
 
-        public void Train(List<ModelTrainingData> trainingData)
+        public Dictionary<string, double> Train(List<ModelTrainingData> trainingData)
         {
-            _logger.LogInformation("Training FastForest model with {Count} samples", trainingData.Count());
+            _logger.LogInformation("Training FastForest model with {Count} samples", trainingData.Count);
 
             var dataView = _mlContext.Data.LoadFromEnumerable(trainingData);
+
+            // Split into train/test
+            var trainTestSplit = _mlContext.Data.TrainTestSplit(dataView, testFraction: 0.2);
+            var trainSet = trainTestSplit.TrainSet;
+            var testSet = trainTestSplit.TestSet;
 
             var pipeline = _mlContext.Transforms.Concatenate("Features", 
                 nameof(ModelTrainingData.Temperature), 
@@ -34,12 +39,27 @@ namespace DigitalTwinPlatform.Application.ML
                 nameof(ModelTrainingData.Age),
                 nameof(ModelTrainingData.CycleCount))
                 .Append(_mlContext.Regression.Trainers.FastForest(
-                    labelColumnName: nameof(ModelTrainingData.Label),
+                    labelColumnName: "Label",
+                    featureColumnName: "Features",
                     numberOfLeaves: 20,
                     numberOfTrees: 100));
 
-            _model = pipeline.Fit(dataView);
-            _logger.LogInformation("FastForest model training completed");
+            var model = pipeline.Fit(trainSet);
+            _model = model;
+
+            // Evaluate
+            var predictions = model.Transform(testSet);
+            var metrics = _mlContext.Regression.Evaluate(predictions, labelColumnName: "Label", scoreColumnName: "Score");
+
+            _logger.LogInformation("FastForest model training completed. R2: {R2}, MAE: {MAE}", metrics.RSquared, metrics.MeanAbsoluteError);
+
+            return new Dictionary<string, double>
+            {
+                ["RSquared"] = metrics.RSquared,
+                ["MeanAbsoluteError"] = metrics.MeanAbsoluteError,
+                ["MeanSquaredError"] = metrics.MeanSquaredError,
+                ["RootMeanSquaredError"] = metrics.RootMeanSquaredError
+            };
         }
 
         public ModelPredictionDto Predict(ModelInputData input)

@@ -2,6 +2,7 @@ using DigitalTwinPlatform.Application.ExternalSystems.Dtos;
 using DigitalTwinPlatform.Application.ExternalSystems.Services;
 using DigitalTwinPlatform.Domain.Common;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using System.Net.Http.Json;
 
 namespace DigitalTwinPlatform.Application.ExternalSystems.Services;

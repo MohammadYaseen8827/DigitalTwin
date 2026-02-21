@@ -121,8 +121,8 @@ async function fetchAlerts() {
     isLoading.value = true
     try {
         const url = props.machineId 
-            ? `/api/alerts?machineId=${props.machineId}&days=${props.days}`
-            : `/api/alerts?days=${props.days}`
+            ? `/api/Alerts?machineId=${props.machineId}&days=${props.days}`
+            : `/api/Alerts?days=${props.days}`
         const response = await api.get<AlertTimelineItem[]>(url)
         alerts.value = response.data
     } catch (error) {

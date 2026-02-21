@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using DigitalTwinPlatform.Application.Behaviors;
 using DigitalTwinPlatform.Application.ML;
 using DigitalTwinPlatform.Application.Workflows;
+using DigitalTwinPlatform.Application.Simulations;
 
 namespace DigitalTwinPlatform.Application;
 
@@ -40,10 +41,13 @@ public static class DependencyInjection
         // Add Workflows Services
         // Add Workflows Services
         services.AddWorkflowsServices();
+
+        // Add Simulation Services
+        services.AddSimulationServices();
         
         // Add Numerical Solvers
         services.AddScoped<DigitalTwinPlatform.Application.Mathematics.RungeKutta>();
-        services.AddScoped<DigitalTwinPlatform.Application.Mathematics.IODESolver, DigitalTwinPlatform.Application.Mathematics.RungeKutta>();
+        services.AddScoped<DigitalTwinPlatform.Application.Mathematics.INumericalODESolver, DigitalTwinPlatform.Application.Mathematics.RungeKutta>();
         
         // Add Core Services
         services.AddScoped<DigitalTwinPlatform.Application.Services.IParameterEstimation, DigitalTwinPlatform.Application.Services.ParameterEstimationService>();

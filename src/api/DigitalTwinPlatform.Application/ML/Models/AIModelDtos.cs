@@ -101,4 +101,23 @@ namespace DigitalTwinPlatform.Application.ML.Models
         public string Message { get; set; } = string.Empty;
         public Dictionary<string, double> Metrics { get; set; } = new();
     }
+    /// <summary>
+    /// Request DTO for model training.
+    /// </summary>
+    public class TrainModelRequestDto
+    {
+        public bool ForceRetrain { get; set; }
+        public string ModelType { get; set; } = "all";
+    }
+
+    /// <summary>
+    /// Status DTO for ML models.
+    /// </summary>
+    public class ModelStatusDto
+    {
+        public bool RulModelLoaded { get; init; }
+        public bool HealthModelLoaded { get; init; }
+        public string ModelVersion { get; init; } = string.Empty;
+        public DateTime LastUpdated { get; init; }
+    }
 }

@@ -60,10 +60,8 @@ public class TelemetryRepository(DigitalTwinDbContext context)
         {
             var normalizedQuery = query.ToLowerInvariant();
             queryable = queryable.Where(t => 
-                t.DataType.ToLower().Contains(normalizedQuery) ||
-                (t.Data != null && t.Data.ToString().ToLower().Contains(normalizedQuery)) ||
-                t.MachineId.ToString().Contains(normalizedQuery) ||
-                (t.Metadata != null && t.Metadata.ToString().ToLower().Contains(normalizedQuery))
+                t.DataType.ToLowerInvariant().Contains(normalizedQuery) ||
+                t.MachineId.ToString().Contains(normalizedQuery)
             );
         }
 

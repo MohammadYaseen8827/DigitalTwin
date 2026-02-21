@@ -31,6 +31,18 @@ public class DigitalTwinDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Alert> Alerts => Set<Alert>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<ModelVersion> ModelVersions => Set<ModelVersion>();
+    public DbSet<Workflow> Workflows => Set<Workflow>();
+    public DbSet<WorkflowExecution> WorkflowExecutions => Set<WorkflowExecution>();
+    public DbSet<ExternalSystem> ExternalSystems => Set<ExternalSystem>();
+    public DbSet<DataSynchronization> DataSynchronizations => Set<DataSynchronization>();
+    public DbSet<SystemIntegration> SystemIntegrations => Set<SystemIntegration>();
+    public DbSet<SyntheticDataGeneration> SyntheticDataGenerations => Set<SyntheticDataGeneration>();
+    public DbSet<SimulationResult> SimulationResults => Set<SimulationResult>();
+    
+    // Multi-tenancy entities
+    public DbSet<Tenant> Tenants => Set<Tenant>();
+    public DbSet<TenantUser> TenantUsers => Set<TenantUser>();
+    public DbSet<TenantSetting> TenantSettings => Set<TenantSetting>();
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
@@ -245,6 +257,7 @@ public class DigitalTwinDbContext : IdentityDbContext<ApplicationUser>
         {
             entity.HasKey(x => x.Id);
             entity.Property(x => x.CreatedAt).HasColumnType("timestamp with time zone").IsRequired();
+            entity.Property(x => x.UpdatedAt).HasColumnType("timestamp with time zone");
             entity.Property(x => x.PredictionTime).HasColumnType("timestamp with time zone");
             entity.Property(x => x.HealthStatus).HasConversion<string>();
             entity.Property(x => x.Confidence).HasColumnType("decimal(5,4)");
@@ -330,6 +343,71 @@ public class DigitalTwinDbContext : IdentityDbContext<ApplicationUser>
             entity.HasIndex(x => x.Timestamp);
             entity.HasIndex(x => x.EntityName);
             entity.HasIndex(x => x.UserId);
+        });
+
+        modelBuilder.Entity<Workflow>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Type).HasMaxLength(50);
+            entity.Property(x => x.DefinitionJson).HasColumnType("jsonb");
+            entity.Property(x => x.CreatedBy).HasMaxLength(100);
+            entity.Property(x => x.CreatedAt).HasColumnType("timestamp with time zone");
+            entity.Property(x => x.UpdatedAt).HasColumnType("timestamp with time zone");
+        });
+
+        modelBuilder.Entity<WorkflowExecution>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Status).HasMaxLength(50);
+            entity.Property(x => x.InputContextJson).HasColumnType("jsonb");
+            entity.Property(x => x.OutputJson).HasColumnType("jsonb");
+            entity.Property(x => x.TriggeredBy).HasMaxLength(100);
+            entity.Property(x => x.StartedAt).HasColumnType("timestamp with time zone");
+            entity.Property(x => x.CompletedAt).HasColumnType("timestamp with time zone");
+            
+            entity.HasOne(x => x.Workflow)
+                .WithMany()
+                .HasForeignKey(x => x.WorkflowId);
+        });
+
+        modelBuilder.Entity<ExternalSystem>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.SystemType).HasMaxLength(100);
+            entity.Property(x => x.ConnectionUrl).HasMaxLength(500);
+            entity.Property(x => x.ApiKey).HasMaxLength(200);
+            entity.Property(x => x.Status).HasConversion<string>();
+        });
+        
+        modelBuilder.Entity<SyntheticDataGeneration>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.MachineType).HasMaxLength(100);
+            entity.Property(x => x.Status).HasConversion<string>();
+            entity.Property(x => x.Statistics).HasColumnType("jsonb");
+            entity.Property(x => x.ValidationReport).HasColumnType("jsonb");
+            
+            entity.OwnsMany(x => x.DataPoints, dp =>
+            {
+                dp.Property(p => p.Timestamp).HasColumnType("timestamp with time zone");
+                dp.Property(p => p.Temperature);
+                dp.Property(p => p.Vibration);
+                dp.Property(p => p.Pressure);
+                dp.Property(p => p.Rpm);
+                dp.Property(p => p.HealthScore);
+                dp.Property(p => p.Data).HasColumnType("jsonb");
+            });
+        });
+
+        modelBuilder.Entity<SimulationResult>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Data).HasColumnType("jsonb");
+            entity.Property(x => x.Metrics).HasColumnType("jsonb");
+            entity.Property(x => x.Events).HasColumnType("jsonb");
+            entity.Property(x => x.Timestamp).HasColumnType("timestamp with time zone");
         });
     }
 }

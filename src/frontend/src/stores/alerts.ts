@@ -1,143 +1,131 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { api } from '@/services/api'
-import type { Alert } from '@/types'
-
-// Backend alert response DTO interface
-interface BackendAlertDto {
-    id: string
-    machineId: string
-    message: string
-    title: string
-    description: string
-    severity: 'Info' | 'Warning' | 'Critical' | 'error' | 'warning' | 'critical' | 'info'
-    status: 'active' | 'acknowledged' | 'resolved'
-    createdAt: string
-    acknowledgedAt?: string
-    resolvedAt?: string
-    isAcknowledged: boolean
-    acknowledgedBy?: string
-    relatedPredictionId?: string
-    category?: string
-    recommendedAction?: string
-    suggestedActions?: string
-}
-
-// Map backend alert to frontend Alert interface
-function mapBackendAlert(dto: BackendAlertDto): Alert {
-    // Map backend severity to frontend severity
-    const severity = dto.severity.toLowerCase() as Alert['severity']
-
-    // Handle suggestedActions - if it's a string, split by semicolon or comma
-    let suggestedActions: string[] = [];
-    if (dto.suggestedActions) {
-        suggestedActions = dto.suggestedActions.split(/[;,]/).map(action => action.trim());
-    }
-
-    return {
-        id: dto.id,
-        machineId: dto.machineId,
-        title: dto.title,
-        description: dto.description,
-        severity,
-        status: dto.status,
-        timestamp: dto.createdAt,
-        acknowledgedAt: dto.acknowledgedAt,
-        resolvedAt: dto.resolvedAt,
-        acknowledgedBy: dto.acknowledgedBy,
-        relatedPredictionId: dto.relatedPredictionId,
-        category: dto.category,
-        recommendedAction: dto.recommendedAction,
-        suggestedActions
-    }
-}
+import { alertsService } from '@/services/alerts.service'
+import type { AlertDto } from '@/api/types'
 
 export const useAlertsStore = defineStore('alerts', () => {
-    const alerts = ref<Alert[]>([])
-    const activeAlerts = computed(() => alerts.value.filter(a => a.status === 'active'))
-    const criticalAlerts = computed(() => alerts.value.filter(a => a.severity === 'critical' && a.status === 'active'))
-    const acknowledgedAlerts = computed(() => alerts.value.filter(a => a.status === 'acknowledged'))
-    const isLoading = ref(false)
-    const error = ref<string | null>(null)
+  const alerts = ref<AlertDto[]>([])
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+  const selectedAlert = ref<AlertDto | null>(null)
 
-    async function fetchAlerts(machineId?: string): Promise<void> {
-        isLoading.value = true
-        error.value = null
+  // Computed properties
+  const activeAlerts = computed(() => {
+    return alerts.value.filter(alert => !alert.acknowledged)
+  })
 
-        try {
-            const url = machineId
-                ? `/api/alerts?machineId=${machineId}`
-                : '/api/alerts'
-            const response = await api.get<BackendAlertDto[]>(url)
-            // Map backend DTOs to frontend Alert interface
-            alerts.value = response.data.map(mapBackendAlert)
-        } catch (err) {
-            error.value = 'Failed to fetch alerts'
-            console.error('Error fetching alerts:', err)
-        } finally {
-            isLoading.value = false
-        }
+  const criticalAlerts = computed(() => {
+    return activeAlerts.value.filter(alert => alert.severity === 'critical')
+  })
+
+  const highAlerts = computed(() => {
+    return activeAlerts.value.filter(alert => alert.severity === 'high')
+  })
+
+  const mediumAlerts = computed(() => {
+    return activeAlerts.value.filter(alert => alert.severity === 'medium')
+  })
+
+  const lowAlerts = computed(() => {
+    return activeAlerts.value.filter(alert => alert.severity === 'low')
+  })
+
+  const alertsByMachine = computed(() => {
+    const grouped = alerts.value.reduce((acc, alert) => {
+      const machineId = alert.machineId
+      if (!acc[machineId]) {
+        acc[machineId] = []
+      }
+      acc[machineId].push(alert)
+      return acc
+    }, {} as Record<string, AlertDto[]>)
+    
+    return grouped
+  })
+
+  const unreadCount = computed(() => {
+    return activeAlerts.value.length
+  })
+
+  const sortedAlerts = computed(() => {
+    return [...alerts.value].sort((a, b) => {
+      const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 }
+      const severityDiff = severityOrder[b.severity] - severityOrder[a.severity]
+      return severityDiff // Sort by severity (critical first)
+    })
+  })
+
+  // Actions
+  const fetchAlerts = async () => {
+    loading.value = true
+    error.value = null
+    
+    try {
+      alerts.value = await alertsService.getActiveAlerts()
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to fetch alerts'
+    } finally {
+      loading.value = false
     }
+  }
 
-    function addAlert(alert: Alert): void {
-        alerts.value.unshift(alert)
-        // Keep only last 100 alerts
-        if (alerts.value.length > 100) {
-            alerts.value.pop()
-        }
+  const acknowledgeAlert = async (alertId: string) => {
+    try {
+      await alertsService.acknowledgeAlert(alertId)
+      // Update local state
+      const alert = alerts.value.find(a => a.id === alertId)
+      if (alert) {
+        alert.acknowledged = true
+        alert.acknowledgedAt = new Date()
+      }
+    } catch (error) {
+      console.error('Failed to acknowledge alert:', error)
     }
+  }
 
-    function updateAlert(id: string, updatedAlert: Alert): void {
-        const index = alerts.value.findIndex(a => a.id === id)
-        if (index !== -1) {
-            alerts.value[index] = updatedAlert
-        }
+  const dismissAlert = async (alertId: string) => {
+    try {
+      await alertsService.dismissAlert(alertId)
+      // Remove from local state
+      const index = alerts.value.findIndex(a => a.id === alertId)
+      if (index !== -1) {
+        alerts.value.splice(index, 1)
+      }
+    } catch (error) {
+      console.error('Failed to dismiss alert:', error)
     }
+  }
 
-    async function acknowledgeAlert(id: string): Promise<void> {
-        try {
-            await api.put(`/api/alerts/${id}/acknowledge`)
-            const alert = alerts.value.find(a => a.id === id)
-            if (alert) {
-                alert.status = 'acknowledged'
-                alert.acknowledgedBy = 'current-user' // Would come from auth
-            }
-        } catch (err) {
-            console.error('Error acknowledging alert:', err)
-            throw err
-        }
-    }
+  const selectAlert = (alert: AlertDto) => {
+    selectedAlert.value = alert
+  }
 
-    async function resolveAlert(id: string): Promise<void> {
-        try {
-            await api.delete(`/api/alerts/${id}`)
-            const alert = alerts.value.find(a => a.id === id)
-            if (alert) {
-                alert.status = 'resolved'
-                alert.resolvedAt = new Date()
-            }
-        } catch (err) {
-            console.error('Error resolving alert:', err)
-            throw err
-        }
-    }
+  const clearSelection = () => {
+    selectedAlert.value = null
+  }
 
-    function clearAlerts(): void {
-        alerts.value = []
-    }
-
-    return {
-        alerts,
-        activeAlerts,
-        criticalAlerts,
-        acknowledgedAlerts,
-        isLoading,
-        error,
-        fetchAlerts,
-        addAlert,
-        updateAlert,
-        acknowledgeAlert,
-        resolveAlert,
-        clearAlerts
-    }
+  return {
+    // State
+    alerts: readonly(alerts),
+    loading: readonly(loading),
+    error: readonly(error),
+    selectedAlert: readonly(selectedAlert),
+    
+    // Computed
+    activeAlerts,
+    criticalAlerts,
+    highAlerts,
+    mediumAlerts,
+    lowAlerts,
+    alertsByMachine,
+    unreadCount,
+    sortedAlerts,
+    
+    // Actions
+    fetchAlerts,
+    acknowledgeAlert,
+    dismissAlert,
+    selectAlert,
+    clearSelection
+  }
 })

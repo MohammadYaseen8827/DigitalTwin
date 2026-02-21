@@ -112,7 +112,11 @@ public class DigitalTwinLifecycleIntegrationTests : IClassFixture<WebApplication
         var responses = await Task.WhenAll(tasks);
         
         // Assert
-        Assert.All(responses, response => response.IsSuccessStatusCode);
+        foreach (var response in responses)
+        {
+            Assert.True(response.IsSuccessStatusCode);
+            
+        }
         
         // Verify latest telemetry
         var latestResponse = await _client.GetAsync($"/api/telemetry/{machineId}/latest");

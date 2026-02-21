@@ -66,7 +66,7 @@ const chartOptions = computed<ApexOptions>(() => ({
 async function fetchPredictionData() {
     isLoading.value = true
     try {
-        const response = await api.get<PredictionDataPoint[]>(`/api/predictions/history/${props.machineId}`)
+        const response = await api.get<PredictionDataPoint[]>(`/api/Predictions/history/${props.machineId}`)
         predictionData.value = response.data
     } catch (error) {
         console.error('Error fetching prediction data:', error)

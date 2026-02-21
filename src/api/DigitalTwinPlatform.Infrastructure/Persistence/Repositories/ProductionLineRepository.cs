@@ -19,10 +19,7 @@ public class ProductionLineRepository(DigitalTwinDbContext context)
         {
             var normalizedQuery = query.ToLowerInvariant();
             queryable = queryable.Where(p => 
-                p.Name.ToLower().Contains(normalizedQuery) ||
-                p.Description != null && p.Description.ToLower().Contains(normalizedQuery) ||
-                p.Location != null && p.Location.ToLower().Contains(normalizedQuery) ||
-                p.Status.ToString().ToLower().Contains(normalizedQuery) ||
+                p.Name.ToLowerInvariant().Contains(normalizedQuery) ||
                 p.Id.ToString().Contains(normalizedQuery)
             );
         }

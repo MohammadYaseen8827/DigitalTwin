@@ -1,5 +1,6 @@
 // Main types index for Digital Twin Platform
 export * from './chart'
+export * from './dtos'
 
 // Re-export types used in stores and services
 export type MachineStatus = 'Running' | 'Stopped' | 'Maintenance' | 'Error' | 'Offline'

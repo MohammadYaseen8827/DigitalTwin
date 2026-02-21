@@ -103,6 +103,7 @@ public class SimplePredictiveAnalyticsService : IPredictiveAnalyticsService
             prediction.HealthStatus,
             null, // No feature contributions for heuristic
             prediction.CreatedAt,
+            prediction.UpdatedAt,
             prediction.ModelVersion);
     }
 
@@ -123,6 +124,7 @@ public class SimplePredictiveAnalyticsService : IPredictiveAnalyticsService
                 p.HealthStatus,
                 p.FeatureContributions,
                 p.CreatedAt,
+                p.UpdatedAt,
                 p.ModelVersion));
     }
 }

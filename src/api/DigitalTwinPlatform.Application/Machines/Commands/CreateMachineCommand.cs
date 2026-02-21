@@ -41,7 +41,6 @@ internal sealed class CreateMachineCommandHandler(IUnitOfWork unitOfWork)
                 throw new InvalidOperationException("Failed to update machine status");
         }
         
-        // Update properties if provided
         if (dto.Properties != null)
         {
             var jsonDoc = System.Text.Json.JsonDocument.Parse(dto.Properties.ToString() ?? "{}");
@@ -49,6 +48,13 @@ internal sealed class CreateMachineCommandHandler(IUnitOfWork unitOfWork)
             if (updatePropsResult is not Domain.Common.Result.Success)
                 throw new InvalidOperationException("Failed to update machine properties");
         }
+
+        if (!string.IsNullOrEmpty(dto.Location)) machine.UpdateLocation(dto.Location);
+        if (dto.InstallationDate.HasValue) machine.UpdateInstallationDate(dto.InstallationDate.Value);
+        if (dto.WarrantyExpiry.HasValue) machine.UpdateWarrantyExpiry(dto.WarrantyExpiry.Value);
+        if (dto.MaintenanceIntervalDays.HasValue) machine.UpdateMaintenanceInterval(dto.MaintenanceIntervalDays.Value);
+        
+        machine.UpdateBasicInfo(dto.SerialNumber, dto.Manufacturer, dto.Model, dto.Criticality);
         
         // Persist using UnitOfWork
         await unitOfWork.BeginTransactionAsync(cancellationToken);
