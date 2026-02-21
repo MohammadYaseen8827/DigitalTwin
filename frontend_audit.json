@@ -1,0 +1,1656 @@
+{
+  "services": [
+    {
+      "name": "advancedAnalytics.service",
+      "methods": [
+        {
+          "name": "ensemblePrediction",
+          "verb": "post",
+          "url": "/AdvancedAnalytics/predictions/{machineId}/ensemble",
+          "params": "machineId: string"
+        },
+        {
+          "name": "deepLearningPrediction",
+          "verb": "post",
+          "url": "/AdvancedAnalytics/predictions/{machineId}/deep-learning",
+          "params": "machineId: string"
+        },
+        {
+          "name": "detectAnomalies",
+          "verb": "post",
+          "url": "/AdvancedAnalytics/anomaly-detection/{machineId}",
+          "params": "machineId: string,\n  request: AnomalyDetectionRequest = {}"
+        },
+        {
+          "name": "forecastTimeSeries",
+          "verb": "post",
+          "url": "/AdvancedAnalytics/forecasting/{machineId}/{metric}",
+          "params": "machineId: string,\n  metric: string,\n  request: ForecastRequest"
+        },
+        {
+          "name": "generateMaintenanceRecommendation",
+          "verb": "post",
+          "url": "/AdvancedAnalytics/prescriptive/maintenance/{machineId}",
+          "params": "machineId: string,\n  request: MaintenanceRecommendationRequest"
+        },
+        {
+          "name": "optimizeProductionSchedule",
+          "verb": "post",
+          "url": "/AdvancedAnalytics/prescriptive/scheduling",
+          "params": "request: SchedulingOptimizationRequest"
+        },
+        {
+          "name": "optimizeResourceAllocation",
+          "verb": "post",
+          "url": "/AdvancedAnalytics/prescriptive/resource-allocation",
+          "params": "request: ResourceAllocationRequest"
+        },
+        {
+          "name": "optimizeMaintenanceCosts",
+          "verb": "post",
+          "url": "/AdvancedAnalytics/prescriptive/cost-optimization",
+          "params": "request: CostOptimizationRequest"
+        },
+        {
+          "name": "getAdvancedAnalyticsDashboard",
+          "verb": "get",
+          "url": "/AdvancedAnalytics/dashboard/{machineId}",
+          "params": "machineId: string"
+        }
+      ]
+    },
+    {
+      "name": "aiModels.service",
+      "methods": [
+        {
+          "name": "fetchAllAIModels",
+          "verb": "get",
+          "url": "/AIModel",
+          "params": ""
+        },
+        {
+          "name": "fetchAIModelById",
+          "verb": "get",
+          "url": "/AIModel/{id}",
+          "params": "id: string"
+        },
+        {
+          "name": "deployAIModel",
+          "verb": "post",
+          "url": "/AIModel",
+          "params": "modelData: {\n  name: string\n  description: string\n  version: string\n  modelType: string\n  algorithm: string\n  accuracy: number\n  precision: number\n  recall: number\n  f1Score: number\n  trainingDataSize: number\n  features: string[]\n  tags: string[]\n  modelFile: ArrayBuffer\n  targetMachines: string[]\n}"
+        },
+        {
+          "name": "updateAIModel",
+          "verb": "put",
+          "url": "/AIModel/{id}",
+          "params": "id: string, \n  updates: Partial<{\n    name: string\n    description: string\n    version: string\n    status: string\n    accuracy: number\n    precision: number\n    recall: number\n    f1Score: number\n    trainingDataSize: number\n    features: string[]\n    tags: string[]\n    modelFile: ArrayBuffer\n  }>"
+        },
+        {
+          "name": "deleteAIModel",
+          "verb": "delete",
+          "url": "/AIModel/{id}",
+          "params": "id: string"
+        },
+        {
+          "name": "predictWithModel",
+          "verb": "post",
+          "url": "/AIModel/{modelId}/predict",
+          "params": "modelId: string, \n  input: ModelInputDto"
+        },
+        {
+          "name": "getModelMetrics",
+          "verb": "get",
+          "url": "/AIModel/{modelId}/metrics",
+          "params": "modelId: string"
+        },
+        {
+          "name": "retrainModel",
+          "verb": "post",
+          "url": "/AIModel/{modelId}/retrain",
+          "params": "modelId: string,\n  trainingData: string[],\n  hyperparameters?: Record<string, any>"
+        },
+        {
+          "name": "getCompatibleMachines",
+          "verb": "get",
+          "url": "/AIModel/{modelId}/compatible-machines",
+          "params": "modelId: string"
+        },
+        {
+          "name": "deployModelToMachines",
+          "verb": "post",
+          "url": "/AIModel/{modelId}/deploy-to-machines",
+          "params": "modelId: string,\n  machineIds: string[]"
+        },
+        {
+          "name": "getModelDeploymentStatus",
+          "verb": "get",
+          "url": "/AIModel/{modelId}/deployment-status",
+          "params": "modelId: string"
+        },
+        {
+          "name": "validateModel",
+          "verb": "post",
+          "url": "/AIModel/validate-model",
+          "params": "modelFile: ArrayBuffer,\n  modelType: string"
+        }
+      ]
+    },
+    {
+      "name": "alertRules.service",
+      "methods": [
+        {
+          "name": "getAllAlertRules",
+          "verb": "get",
+          "url": "/AlertRules",
+          "params": ""
+        },
+        {
+          "name": "getAlertRule",
+          "verb": "get",
+          "url": "/AlertRules/{id}",
+          "params": "id: number"
+        },
+        {
+          "name": "createAlertRule",
+          "verb": "post",
+          "url": "/AlertRules",
+          "params": "request: AlertRuleCreateDto"
+        },
+        {
+          "name": "updateAlertRule",
+          "verb": "put",
+          "url": "/AlertRules/{id}",
+          "params": "id: number, request: AlertRuleUpdateDto"
+        },
+        {
+          "name": "deleteAlertRule",
+          "verb": "delete",
+          "url": "/AlertRules/{id}",
+          "params": "id: number"
+        },
+        {
+          "name": "toggleAlertRule",
+          "verb": "patch",
+          "url": "/AlertRules/{id}/toggle",
+          "params": "id: number"
+        }
+      ]
+    },
+    {
+      "name": "alerts.service",
+      "methods": [
+        {
+          "name": "fetchActiveAlerts",
+          "verb": "get",
+          "url": "/Alerts",
+          "params": "machineId?: string"
+        },
+        {
+          "name": "fetchAlert",
+          "verb": "get",
+          "url": "/Alerts/{alertId}",
+          "params": "alertId: string"
+        },
+        {
+          "name": "acknowledgeAlert",
+          "verb": "put",
+          "url": "/Alerts/{alertId}/acknowledge",
+          "params": "alertId: string"
+        },
+        {
+          "name": "deleteAlert",
+          "verb": "delete",
+          "url": "/Alerts/{alertId}",
+          "params": "alertId: string"
+        },
+        {
+          "name": "fetchAllAlerts",
+          "verb": "get",
+          "url": "/Alerts/all",
+          "params": "machineId?: string"
+        },
+        {
+          "name": "fetchAlertStats",
+          "verb": "get",
+          "url": "/Alerts/stats",
+          "params": "machineId?: string"
+        },
+        {
+          "name": "searchAlerts",
+          "verb": "get",
+          "url": "/Alerts/search",
+          "params": "params: {\n  query?: string\n  status?: string\n  severity?: string\n  machineId?: string\n  startDate?: string\n  endDate?: string\n  page?: number\n  pageSize?: number\n}"
+        },
+        {
+          "name": "getAlertById",
+          "verb": "get",
+          "url": "/Alerts/{alertId}",
+          "params": "alertId: string"
+        }
+      ]
+    },
+    {
+      "name": "antiForgery.service",
+      "methods": [
+        {
+          "name": "validateToken",
+          "verb": "post",
+          "url": "/AntiForgery/validate",
+          "params": "request: ValidateTokenRequest"
+        }
+      ]
+    },
+    {
+      "name": "auth.service",
+      "methods": [
+        {
+          "name": "register",
+          "verb": "post",
+          "url": "/Auth/register",
+          "params": "request: RegisterRequest"
+        },
+        {
+          "name": "login",
+          "verb": "post",
+          "url": "/Auth/login",
+          "params": "request: LoginRequest"
+        },
+        {
+          "name": "refreshToken",
+          "verb": "post",
+          "url": "/Auth/refresh",
+          "params": "refreshTokenValue: string"
+        },
+        {
+          "name": "revokeToken",
+          "verb": "post",
+          "url": "/Auth/revoke",
+          "params": "refreshTokenValue: string"
+        },
+        {
+          "name": "getCurrentUser",
+          "verb": "get",
+          "url": "/Auth/me",
+          "params": ""
+        },
+        {
+          "name": "updateProfile",
+          "verb": "put",
+          "url": "/Auth/profile",
+          "params": "request: UpdateProfileRequest"
+        },
+        {
+          "name": "changePassword",
+          "verb": "post",
+          "url": "/Auth/change-password",
+          "params": "request: ChangePasswordRequest"
+        },
+        {
+          "name": "forgotPassword",
+          "verb": "post",
+          "url": "/Auth/forgot-password",
+          "params": "request: ForgotPasswordRequest"
+        },
+        {
+          "name": "resetPassword",
+          "verb": "post",
+          "url": "/Auth/reset-password",
+          "params": "request: ResetPasswordRequest"
+        },
+        {
+          "name": "logout",
+          "verb": "post",
+          "url": "/Auth/logout",
+          "params": ""
+        },
+        {
+          "name": "enableTwoFactor",
+          "verb": "post",
+          "url": "/Auth/2fa/enable",
+          "params": ""
+        },
+        {
+          "name": "verifyTwoFactor",
+          "verb": "post",
+          "url": "/Auth/2fa/verify",
+          "params": "request: TwoFactorVerifyRequest"
+        },
+        {
+          "name": "disableTwoFactor",
+          "verb": "post",
+          "url": "/Auth/2fa/disable",
+          "params": "request: TwoFactorVerifyRequest"
+        }
+      ]
+    },
+    {
+      "name": "azureDigitalTwin.service",
+      "methods": [
+        {
+          "name": "syncMachine",
+          "verb": "post",
+          "url": "/AzureDigitalTwin/machines/{machineId}/sync",
+          "params": "machineId: string"
+        },
+        {
+          "name": "syncProductionLine",
+          "verb": "post",
+          "url": "/AzureDigitalTwin/production-lines/{lineId}/sync",
+          "params": "lineId: string"
+        },
+        {
+          "name": "upsertTwin",
+          "verb": "post",
+          "url": "/AzureDigitalTwin/twins/upsert",
+          "params": "twinData: any"
+        }
+      ]
+    },
+    {
+      "name": "benchmarkValidation.service",
+      "methods": [
+        {
+          "name": "getAvailableDatasets",
+          "verb": "get",
+          "url": "/BenchmarkValidation/benchmarks",
+          "params": ""
+        },
+        {
+          "name": "getDatasetByName",
+          "verb": "get",
+          "url": "/BenchmarkValidation/benchmarks/{datasetName}",
+          "params": "datasetName: string"
+        },
+        {
+          "name": "validateModel",
+          "verb": "post",
+          "url": "/BenchmarkValidation/validate",
+          "params": "request: ValidationRequest"
+        }
+      ]
+    },
+    {
+      "name": "csrf.service",
+      "methods": []
+    },
+    {
+      "name": "dashboard.service",
+      "methods": [
+        {
+          "name": "getDashboardStats",
+          "verb": "get",
+          "url": "/Dashboard/stats",
+          "params": ""
+        }
+      ]
+    },
+    {
+      "name": "dataArchival.service",
+      "methods": [
+        {
+          "name": "archiveTelemetry",
+          "verb": "post",
+          "url": "/DataArchival",
+          "params": "request: DataArchivalRequest"
+        }
+      ]
+    },
+    {
+      "name": "degradationModeling.service",
+      "methods": [
+        {
+          "name": "solveExponentialDegradation",
+          "verb": "post",
+          "url": "/DegradationModeling/solve/exponential",
+          "params": "request: ExponentialDegradationRequest"
+        },
+        {
+          "name": "solvePowerLawDegradation",
+          "verb": "post",
+          "url": "/DegradationModeling/solve/powerlaw",
+          "params": "request: PowerLawDegradationRequest"
+        },
+        {
+          "name": "solveMultiVariableDegradation",
+          "verb": "post",
+          "url": "/DegradationModeling/solve/multivariable",
+          "params": "request: MultiVariableDegradationRequest"
+        },
+        {
+          "name": "solveStochasticDegradation",
+          "verb": "post",
+          "url": "/DegradationModeling/solve/stochastic",
+          "params": "request: StochasticDegradationRequest"
+        },
+        {
+          "name": "estimateExponentialParameters",
+          "verb": "post",
+          "url": "/DegradationModeling/estimate/exponential",
+          "params": "request: ParameterEstimationRequest"
+        },
+        {
+          "name": "estimatePowerLawParameters",
+          "verb": "post",
+          "url": "/DegradationModeling/estimate/powerlaw",
+          "params": "request: ParameterEstimationRequest"
+        },
+        {
+          "name": "estimateMultiVariableParameters",
+          "verb": "post",
+          "url": "/DegradationModeling/estimate/multivariable",
+          "params": "request: {\n  historicalData: Array<{ time: number; value: number }>\n  variableNames: string[]\n  initialGuess?: Record<string, number>\n}"
+        },
+        {
+          "name": "compareModels",
+          "verb": "post",
+          "url": "/DegradationModeling/compare",
+          "params": "request: {\n  historicalData: Array<{ time: number; value: number }>\n  modelTypes: string[]\n}"
+        },
+        {
+          "name": "validateParameters",
+          "verb": "post",
+          "url": "/DegradationModeling/validate",
+          "params": "request: {\n  estimatedParameters: ParameterEstimationResult\n  historicalData: Array<{ time: number; value: number }>\n  folds?: number\n}"
+        },
+        {
+          "name": "validateSolution",
+          "verb": "post",
+          "url": "/DegradationModeling/validate/solution",
+          "params": "request: {\n  solution: ODESolution\n  validationParameters?: Record<string, number>\n}"
+        }
+      ]
+    },
+    {
+      "name": "driftDetection.service",
+      "methods": [
+        {
+          "name": "getCurrentDriftStatus",
+          "verb": "get",
+          "url": "/Drift/status",
+          "params": ""
+        },
+        {
+          "name": "getDriftHistory",
+          "verb": "get",
+          "url": "/Drift/history/{modelName}?hours={hours}",
+          "params": "modelName: string, hours: number = 24"
+        },
+        {
+          "name": "getThresholds",
+          "verb": "get",
+          "url": "/Drift/thresholds/{modelName}",
+          "params": "modelName: string"
+        },
+        {
+          "name": "configureThresholds",
+          "verb": "put",
+          "url": "/Drift/thresholds/{modelName}",
+          "params": "modelName: string, thresholds: DriftThresholds"
+        },
+        {
+          "name": "generateDriftReport",
+          "verb": "get",
+          "url": "/Drift/report?${params.toString()}",
+          "params": "modelName?: string, days: number = 7"
+        },
+        {
+          "name": "detectDrift",
+          "verb": "post",
+          "url": "/Drift/detect",
+          "params": "request: DriftDetectionRequest"
+        },
+        {
+          "name": "getMonitoringConfig",
+          "verb": "get",
+          "url": "/Drift/monitoring/config",
+          "params": ""
+        }
+      ]
+    },
+    {
+      "name": "errorLogger.service",
+      "methods": []
+    },
+    {
+      "name": "external-systems.service",
+      "methods": [
+        {
+          "name": "getAllExternalSystems",
+          "verb": "get",
+          "url": "/ExternalSystems",
+          "params": ""
+        },
+        {
+          "name": "getConnectedExternalSystems",
+          "verb": "get",
+          "url": "/ExternalSystems/connected",
+          "params": ""
+        },
+        {
+          "name": "getExternalSystemsByType",
+          "verb": "get",
+          "url": "/ExternalSystems/type/{systemType}",
+          "params": "systemType: string"
+        },
+        {
+          "name": "getExternalSystemById",
+          "verb": "get",
+          "url": "/ExternalSystems/{id}",
+          "params": "id: string"
+        },
+        {
+          "name": "getExternalSystemStatus",
+          "verb": "get",
+          "url": "/ExternalSystems/{id}/status",
+          "params": "id: string"
+        },
+        {
+          "name": "createExternalSystem",
+          "verb": "post",
+          "url": "/ExternalSystems",
+          "params": "system: ExternalSystemCreateDto"
+        },
+        {
+          "name": "updateExternalSystem",
+          "verb": "put",
+          "url": "/ExternalSystems/{id}",
+          "params": "id: string, system: ExternalSystemUpdateDto"
+        },
+        {
+          "name": "deleteExternalSystem",
+          "verb": "delete",
+          "url": "/ExternalSystems/{id}",
+          "params": "id: string"
+        },
+        {
+          "name": "connectExternalSystem",
+          "verb": "post",
+          "url": "/ExternalSystems/{id}/connect",
+          "params": "id: string"
+        },
+        {
+          "name": "disconnectExternalSystem",
+          "verb": "post",
+          "url": "/ExternalSystems/{id}/disconnect",
+          "params": "id: string"
+        },
+        {
+          "name": "testExternalSystemConnection",
+          "verb": "post",
+          "url": "/ExternalSystems/{id}/test",
+          "params": "id: string"
+        },
+        {
+          "name": "getSystemIntegrations",
+          "verb": "get",
+          "url": "/ExternalSystems/integrations",
+          "params": ""
+        },
+        {
+          "name": "getSystemIntegrationsBySystem",
+          "verb": "get",
+          "url": "/ExternalSystems/{systemId}/integrations",
+          "params": "systemId: string"
+        },
+        {
+          "name": "getActiveSystemIntegrations",
+          "verb": "get",
+          "url": "/ExternalSystems/integrations/active",
+          "params": ""
+        },
+        {
+          "name": "createSystemIntegration",
+          "verb": "post",
+          "url": "/ExternalSystems/integrations",
+          "params": "integration: SystemIntegrationCreateDto"
+        },
+        {
+          "name": "updateSystemIntegration",
+          "verb": "put",
+          "url": "/ExternalSystems/integrations/{id}",
+          "params": "id: string, integration: SystemIntegrationUpdateDto"
+        },
+        {
+          "name": "deleteSystemIntegration",
+          "verb": "delete",
+          "url": "/ExternalSystems/integrations/{id}",
+          "params": "id: string"
+        },
+        {
+          "name": "enableSystemIntegration",
+          "verb": "post",
+          "url": "/ExternalSystems/integrations/{id}/enable",
+          "params": "id: string"
+        },
+        {
+          "name": "disableSystemIntegration",
+          "verb": "post",
+          "url": "/ExternalSystems/integrations/{id}/disable",
+          "params": "id: string"
+        },
+        {
+          "name": "getDataSynchronizations",
+          "verb": "get",
+          "url": "/ExternalSystems/synchronizations",
+          "params": ""
+        },
+        {
+          "name": "getPendingSynchronizations",
+          "verb": "get",
+          "url": "/ExternalSystems/synchronizations/pending",
+          "params": ""
+        },
+        {
+          "name": "getFailedSynchronizations",
+          "verb": "get",
+          "url": "/ExternalSystems/synchronizations/failed",
+          "params": ""
+        },
+        {
+          "name": "getRecentSynchronizations",
+          "verb": "get",
+          "url": "/ExternalSystems/synchronizations/recent?limit={limit}",
+          "params": "limit: number = 50"
+        },
+        {
+          "name": "createDataSynchronization",
+          "verb": "post",
+          "url": "/ExternalSystems/synchronizations",
+          "params": "sync: DataSynchronizationCreateDto"
+        },
+        {
+          "name": "processDataSynchronizations",
+          "verb": "post",
+          "url": "/ExternalSystems/synchronizations/process",
+          "params": ""
+        }
+      ]
+    },
+    {
+      "name": "health.service",
+      "methods": [
+        {
+          "name": "getHealthStatus",
+          "verb": "get",
+          "url": "/health",
+          "params": ""
+        },
+        {
+          "name": "getReadinessStatus",
+          "verb": "get",
+          "url": "/Health/ready",
+          "params": ""
+        }
+      ]
+    },
+    {
+      "name": "machineConfiguration.service",
+      "methods": [
+        {
+          "name": "fetchAllConfigurations",
+          "verb": "get",
+          "url": "/MachineConfiguration",
+          "params": ""
+        },
+        {
+          "name": "fetchConfiguration",
+          "verb": "get",
+          "url": "/MachineConfiguration/{machineType}",
+          "params": "machineType: string"
+        },
+        {
+          "name": "saveConfiguration",
+          "verb": "post",
+          "url": "/MachineConfiguration",
+          "params": "configuration: MachineConfiguration"
+        },
+        {
+          "name": "deleteConfiguration",
+          "verb": "delete",
+          "url": "/MachineConfiguration/{machineType}",
+          "params": "machineType: string"
+        },
+        {
+          "name": "validateConfiguration",
+          "verb": "post",
+          "url": "/MachineConfiguration/validate",
+          "params": "jsonContent: string"
+        }
+      ]
+    },
+    {
+      "name": "machines.service",
+      "methods": [
+        {
+          "name": "fetchMachines",
+          "verb": "get",
+          "url": "/Machines",
+          "params": ""
+        },
+        {
+          "name": "fetchMachinesPage",
+          "verb": "get",
+          "url": "/Machines",
+          "params": "params: { page?: number; pageSize?: number } = {}"
+        },
+        {
+          "name": "fetchMachine",
+          "verb": "get",
+          "url": "/Machines/{id}",
+          "params": "id: string"
+        },
+        {
+          "name": "createMachine",
+          "verb": "post",
+          "url": "/Machines",
+          "params": "payload: MachineCreateDto"
+        },
+        {
+          "name": "updateMachine",
+          "verb": "put",
+          "url": "/Machines/{id}",
+          "params": "id: string, payload: MachineUpdateDto"
+        },
+        {
+          "name": "deleteMachine",
+          "verb": "delete",
+          "url": "/Machines/{id}",
+          "params": "id: string"
+        }
+      ]
+    },
+    {
+      "name": "maintenance.service",
+      "methods": [
+        {
+          "name": "planMaintenance",
+          "verb": "post",
+          "url": "/Maintenance/plan",
+          "params": "request: PlanMaintenanceRequest"
+        },
+        {
+          "name": "startMaintenance",
+          "verb": "post",
+          "url": "/Maintenance/{id}/start",
+          "params": "id: string"
+        },
+        {
+          "name": "completeMaintenance",
+          "verb": "post",
+          "url": "/Maintenance/{id}/complete",
+          "params": "id: string, request: CompleteMaintenanceRequest"
+        },
+        {
+          "name": "cancelMaintenance",
+          "verb": "post",
+          "url": "/Maintenance/{id}/cancel",
+          "params": "id: string, reason: string"
+        },
+        {
+          "name": "fetchMaintenanceHistory",
+          "verb": "get",
+          "url": "/Maintenance/machine/{machineId}",
+          "params": "machineId: string"
+        },
+        {
+          "name": "fetchActiveMaintenance",
+          "verb": "get",
+          "url": "/Maintenance/active",
+          "params": ""
+        },
+        {
+          "name": "searchMaintenance",
+          "verb": "get",
+          "url": "/Maintenance/search",
+          "params": "query: string"
+        }
+      ]
+    },
+    {
+      "name": "mathematicalModeling.service",
+      "methods": [
+        {
+          "name": "solveOde",
+          "verb": "post",
+          "url": "/MathematicalModeling/ode/solve",
+          "params": "request: OdeSolveRequest"
+        },
+        {
+          "name": "solveSystemDynamics",
+          "verb": "post",
+          "url": "/MathematicalModeling/system-dynamics/solve",
+          "params": "request: SystemDynamicsRequest"
+        },
+        {
+          "name": "gradientOptimization",
+          "verb": "post",
+          "url": "/MathematicalModeling/optimization/gradient",
+          "params": "request: GradientOptimizationRequest"
+        },
+        {
+          "name": "geneticOptimization",
+          "verb": "post",
+          "url": "/MathematicalModeling/optimization/genetic",
+          "params": "request: GeneticOptimizationRequest"
+        },
+        {
+          "name": "multiObjectiveOptimization",
+          "verb": "post",
+          "url": "/MathematicalModeling/optimization/multi-objective",
+          "params": "request: MultiObjectiveOptimizationRequest"
+        },
+        {
+          "name": "getSystemModels",
+          "verb": "get",
+          "url": "/MathematicalModeling/models",
+          "params": ""
+        }
+      ]
+    },
+    {
+      "name": "modelLifecycle.service",
+      "methods": [
+        {
+          "name": "registerModelVersion",
+          "verb": "post",
+          "url": "/ModelLifecycle/register",
+          "params": "request: RegisterModelVersionRequest"
+        },
+        {
+          "name": "promoteModelVersion",
+          "verb": "post",
+          "url": "/ModelLifecycle/{modelId}/promote",
+          "params": "modelId: string, request: PromoteModelRequest"
+        },
+        {
+          "name": "fetchModelLifecycles",
+          "verb": "get",
+          "url": "/ModelLifecycle",
+          "params": "modelType?: string"
+        },
+        {
+          "name": "getProductionVersion",
+          "verb": "get",
+          "url": "/ModelLifecycle/production/{modelType}",
+          "params": "modelType: string"
+        },
+        {
+          "name": "compareModelVersions",
+          "verb": "post",
+          "url": "/ModelLifecycle/compare",
+          "params": "request: CompareModelsRequest"
+        },
+        {
+          "name": "getModelPerformance",
+          "verb": "get",
+          "url": "/ModelLifecycle/{modelId}/performance",
+          "params": "modelId: string"
+        }
+      ]
+    },
+    {
+      "name": "performanceMetrics.service",
+      "methods": [
+        {
+          "name": "getPerformanceMetrics",
+          "verb": "get",
+          "url": "/PerformanceMetrics?${params.toString()}",
+          "params": "filter: MetricsFilter = {}"
+        },
+        {
+          "name": "getPerformanceStatistics",
+          "verb": "get",
+          "url": "/PerformanceMetrics/statistics?${params.toString()}",
+          "params": "filter: MetricsFilter = {}"
+        },
+        {
+          "name": "getThresholdViolations",
+          "verb": "get",
+          "url": "/PerformanceMetrics/threshold-violations?${params.toString()}",
+          "params": "filter: MetricsFilter = {}"
+        }
+      ]
+    },
+    {
+      "name": "predictions.service",
+      "methods": [
+        {
+          "name": "getAllPredictions",
+          "verb": "get",
+          "url": "/Predictions",
+          "params": "params?: { page?: number; pageSize?: number }"
+        },
+        {
+          "name": "requestRulPrediction",
+          "verb": "post",
+          "url": "/Predictions/rul/{machineId}",
+          "params": "machineId: string"
+        },
+        {
+          "name": "getHealthPrediction",
+          "verb": "get",
+          "url": "/Predictions/health/{machineId}",
+          "params": "machineId: string"
+        },
+        {
+          "name": "getRulSummary",
+          "verb": "get",
+          "url": "/Predictions/rul/{machineId}/summary",
+          "params": "machineId: string"
+        },
+        {
+          "name": "getModelStatus",
+          "verb": "get",
+          "url": "/Predictions/status",
+          "params": ""
+        },
+        {
+          "name": "getRulHistory",
+          "verb": "get",
+          "url": "/Predictions/rul/{machineId}",
+          "params": "machineId: string, take = 100"
+        },
+        {
+          "name": "getAnomalyDetection",
+          "verb": "get",
+          "url": "/Predictions/anomaly/{machineId}",
+          "params": "machineId: string"
+        },
+        {
+          "name": "searchPredictions",
+          "verb": "get",
+          "url": "/Predictions/search",
+          "params": "params: PredictionSearchParams"
+        },
+        {
+          "name": "requestPrediction",
+          "verb": "post",
+          "url": "/Predictions",
+          "params": "machineId: string"
+        },
+        {
+          "name": "requestEnsemblePrediction",
+          "verb": "post",
+          "url": "/AdvancedAnalytics/predictions/{machineId}/ensemble",
+          "params": "machineId: string"
+        },
+        {
+          "name": "trainAIModel",
+          "verb": "post",
+          "url": "/Predictions/ai/train",
+          "params": "forceRetrain = false, modelType = 'all'"
+        },
+        {
+          "name": "retrainModels",
+          "verb": "post",
+          "url": "/Predictions/train",
+          "params": "forceRetrain = false, modelType = 'all'"
+        }
+      ]
+    },
+    {
+      "name": "prescriptive.service",
+      "methods": [
+        {
+          "name": "getAnalysis",
+          "verb": "get",
+          "url": "/Prescriptive/{machineId}/analysis",
+          "params": "machineId: string, days: number = 30"
+        },
+        {
+          "name": "getOptimal",
+          "verb": "get",
+          "url": "/Prescriptive/{machineId}/optimal",
+          "params": "machineId: string"
+        }
+      ]
+    },
+    {
+      "name": "productionLines.service",
+      "methods": [
+        {
+          "name": "fetchProductionLines",
+          "verb": "get",
+          "url": "/ProductionLines",
+          "params": ""
+        },
+        {
+          "name": "fetchProductionLine",
+          "verb": "get",
+          "url": "/ProductionLines/{id}",
+          "params": "id: string"
+        },
+        {
+          "name": "createProductionLine",
+          "verb": "post",
+          "url": "/ProductionLines",
+          "params": "payload: ProductionLineCreateDto"
+        },
+        {
+          "name": "updateProductionLine",
+          "verb": "put",
+          "url": "/ProductionLines/{id}",
+          "params": "id: string,\n  payload: ProductionLineUpdateDto"
+        },
+        {
+          "name": "deleteProductionLine",
+          "verb": "delete",
+          "url": "/ProductionLines/{id}",
+          "params": "id: string"
+        },
+        {
+          "name": "searchProductionLines",
+          "verb": "get",
+          "url": "/ProductionLines/search",
+          "params": "query: string"
+        }
+      ]
+    },
+    {
+      "name": "realtime-analytics.service",
+      "methods": []
+    },
+    {
+      "name": "reporting.service",
+      "methods": [
+        {
+          "name": "generateReport",
+          "verb": "post",
+          "url": "/Reports/generate",
+          "params": "request: ReportGenerationRequest"
+        },
+        {
+          "name": "exportData",
+          "verb": "post",
+          "url": "/Reports/export",
+          "params": "data: T[],\n  format: ExportFormat,\n  fileName?: string"
+        },
+        {
+          "name": "getReportTemplates",
+          "verb": "get",
+          "url": "/Reports/templates",
+          "params": ""
+        },
+        {
+          "name": "scheduleReport",
+          "verb": "post",
+          "url": "/Reports/schedule",
+          "params": "schedule: ReportSchedule"
+        }
+      ]
+    },
+    {
+      "name": "runToFailure.service",
+      "methods": [
+        {
+          "name": "runToFailureSimulation",
+          "verb": "post",
+          "url": "/RunToFailure/{machineId}",
+          "params": "machineId: string,\n  options?: RunToFailureOptions"
+        },
+        {
+          "name": "runToFailureSimulationAlt",
+          "verb": "post",
+          "url": "/RunToFailure/{machineId}",
+          "params": "machineId: string,\n  options?: RunToFailureOptions"
+        },
+        {
+          "name": "generateTrajectories",
+          "verb": "post",
+          "url": "/RunToFailure/generate-trajectories",
+          "params": "request: GenerateTrajectoriesRequest"
+        },
+        {
+          "name": "generateTrajectoriesAlt",
+          "verb": "post",
+          "url": "/RunToFailure/generate-trajectories",
+          "params": "request: GenerateTrajectoriesRequest"
+        },
+        {
+          "name": "getRunToFailureResults",
+          "verb": "get",
+          "url": "/RunToFailure/{machineId}/results",
+          "params": "machineId: string"
+        },
+        {
+          "name": "getRunToFailureResultsAlt",
+          "verb": "get",
+          "url": "/RunToFailure/{machineId}/results",
+          "params": "machineId: string"
+        },
+        {
+          "name": "getRunToFailureHistory",
+          "verb": "get",
+          "url": "/RunToFailure/{machineId}/results",
+          "params": "machineId: string"
+        }
+      ]
+    },
+    {
+      "name": "search.service",
+      "methods": [
+        {
+          "name": "search",
+          "verb": "post",
+          "url": "/Search",
+          "params": "request: SearchRequestDto"
+        },
+        {
+          "name": "getSuggestions",
+          "verb": "get",
+          "url": "/Search/suggestions?{params}",
+          "params": "query: string, entityType?: string, limit = 10"
+        },
+        {
+          "name": "getSavedSearches",
+          "verb": "get",
+          "url": "/Search/saved",
+          "params": ""
+        },
+        {
+          "name": "saveSearch",
+          "verb": "post",
+          "url": "/Search/saved",
+          "params": "request: SaveSearchRequestDto"
+        },
+        {
+          "name": "deleteSavedSearch",
+          "verb": "delete",
+          "url": "/Search/saved/{id}",
+          "params": "id: string"
+        }
+      ]
+    },
+    {
+      "name": "signalr.service",
+      "methods": []
+    },
+    {
+      "name": "simulation.service",
+      "methods": [
+        {
+          "name": "createSimulation",
+          "verb": "post",
+          "url": "/Simulation",
+          "params": "machineId: string,\n  parameters: Record<string, object> = {}"
+        },
+        {
+          "name": "getSimulation",
+          "verb": "get",
+          "url": "/Simulation/{simulationId}",
+          "params": "simulationId: string,\n  machineId: string"
+        },
+        {
+          "name": "runSimulationStep",
+          "verb": "post",
+          "url": "/Simulation/{simulationId}/run",
+          "params": "simulationId: string,\n  machineId: string"
+        },
+        {
+          "name": "pauseSimulation",
+          "verb": "post",
+          "url": "/Simulation/{simulationId}/pause",
+          "params": "simulationId: string,\n  machineId: string"
+        },
+        {
+          "name": "resumeSimulation",
+          "verb": "post",
+          "url": "/Simulation/{simulationId}/resume",
+          "params": "simulationId: string,\n  machineId: string"
+        },
+        {
+          "name": "cancelSimulation",
+          "verb": "post",
+          "url": "/Simulation/{simulationId}/cancel",
+          "params": "simulationId: string,\n  machineId: string"
+        },
+        {
+          "name": "cancelSimulationById",
+          "verb": "post",
+          "url": "/Simulation/{simulationId}/cancel",
+          "params": "simulationId: string,\n  machineId: string"
+        },
+        {
+          "name": "listSimulations",
+          "verb": "get",
+          "url": "/Simulation",
+          "params": "machineId: string"
+        },
+        {
+          "name": "getSimulationStatus",
+          "verb": "get",
+          "url": "/Simulation/status/{machineId}",
+          "params": "machineId: string"
+        },
+        {
+          "name": "getAllSimulationStatuses",
+          "verb": "get",
+          "url": "/Simulation/status",
+          "params": ""
+        }
+      ]
+    },
+    {
+      "name": "syntheticData.service",
+      "methods": [
+        {
+          "name": "generateSyntheticData",
+          "verb": "post",
+          "url": "/SyntheticData/generate",
+          "params": "request: GenerateDataRequest"
+        },
+        {
+          "name": "validateSyntheticData",
+          "verb": "post",
+          "url": "/SyntheticData/validate",
+          "params": "request: ValidateDataRequest"
+        },
+        {
+          "name": "getGenerationStatisticsByType",
+          "verb": "get",
+          "url": "/SyntheticData/statistics/{machineType}",
+          "params": "machineType: string"
+        },
+        {
+          "name": "getAllGenerationStatistics",
+          "verb": "get",
+          "url": "/SyntheticData/statistics",
+          "params": ""
+        }
+      ]
+    },
+    {
+      "name": "telemetry.service",
+      "methods": [
+        {
+          "name": "fetchTelemetryByMachine",
+          "verb": "get",
+          "url": "/Telemetry/{machineId}",
+          "params": "machineId: string,\n  params: MachineTelemetryParams = {}"
+        },
+        {
+          "name": "fetchRecentTelemetry",
+          "verb": "get",
+          "url": "/Telemetry/recent",
+          "params": "params: RecentTelemetryParams = {}"
+        },
+        {
+          "name": "ingestTelemetry",
+          "verb": "post",
+          "url": "/Telemetry",
+          "params": "payload: TelemetryIngestDto"
+        },
+        {
+          "name": "fetchLatestTelemetry",
+          "verb": "get",
+          "url": "/Telemetry/{machineId}/latest",
+          "params": "machineId: string"
+        },
+        {
+          "name": "fetchLatestMetrics",
+          "verb": "get",
+          "url": "/Telemetry/{machineId}/latest/metrics",
+          "params": "machineId: string"
+        },
+        {
+          "name": "searchTelemetry",
+          "verb": "get",
+          "url": "/Telemetry/search",
+          "params": "params: TelemetrySearchParams"
+        }
+      ]
+    },
+    {
+      "name": "tenants.service",
+      "methods": [
+        {
+          "name": "getAllTenants",
+          "verb": "get",
+          "url": "/Tenants",
+          "params": ""
+        },
+        {
+          "name": "getActiveTenants",
+          "verb": "get",
+          "url": "/Tenants/active",
+          "params": ""
+        },
+        {
+          "name": "getTenantById",
+          "verb": "get",
+          "url": "/Tenants/{id}",
+          "params": "id: string"
+        },
+        {
+          "name": "getTenantBySlug",
+          "verb": "get",
+          "url": "/Tenants/slug/{slug}",
+          "params": "slug: string"
+        },
+        {
+          "name": "createTenant",
+          "verb": "post",
+          "url": "/Tenants",
+          "params": "tenant: TenantCreateDto"
+        },
+        {
+          "name": "updateTenant",
+          "verb": "put",
+          "url": "/Tenants/{id}",
+          "params": "id: string, tenant: TenantUpdateDto"
+        },
+        {
+          "name": "deleteTenant",
+          "verb": "delete",
+          "url": "/Tenants/{id}",
+          "params": "id: string"
+        },
+        {
+          "name": "activateTenant",
+          "verb": "post",
+          "url": "/Tenants/{id}/activate",
+          "params": "id: string"
+        },
+        {
+          "name": "deactivateTenant",
+          "verb": "post",
+          "url": "/Tenants/{id}/deactivate",
+          "params": "id: string"
+        },
+        {
+          "name": "getTenantUsers",
+          "verb": "get",
+          "url": "/Tenants/{tenantId}/users",
+          "params": "tenantId: string"
+        },
+        {
+          "name": "addUserToTenant",
+          "verb": "post",
+          "url": "/Tenants/{tenantId}/users",
+          "params": "tenantId: string, user: TenantUserCreateDto"
+        },
+        {
+          "name": "removeUserFromTenant",
+          "verb": "delete",
+          "url": "/Tenants/{tenantId}/users/{userId}",
+          "params": "tenantId: string, userId: string"
+        },
+        {
+          "name": "updateTenantUserRole",
+          "verb": "put",
+          "url": "/Tenants/{tenantId}/users/{userId}/role",
+          "params": "tenantId: string, userId: string, role: UserRole"
+        },
+        {
+          "name": "getTenantSettings",
+          "verb": "get",
+          "url": "/Tenants/{tenantId}/settings",
+          "params": "tenantId: string"
+        },
+        {
+          "name": "createTenantSetting",
+          "verb": "post",
+          "url": "/Tenants/{tenantId}/settings",
+          "params": "tenantId: string, setting: TenantSettingCreateDto"
+        },
+        {
+          "name": "updateTenantSetting",
+          "verb": "put",
+          "url": "/Tenants/{tenantId}/settings/{settingId}",
+          "params": "tenantId: string, settingId: string, setting: TenantSettingUpdateDto"
+        },
+        {
+          "name": "deleteTenantSetting",
+          "verb": "delete",
+          "url": "/Tenants/{tenantId}/settings/{settingId}",
+          "params": "tenantId: string, settingId: string"
+        },
+        {
+          "name": "getTenantSettingByKey",
+          "verb": "get",
+          "url": "/Tenants/{tenantId}/settings/key/{key}",
+          "params": "tenantId: string, key: string"
+        }
+      ]
+    },
+    {
+      "name": "token.service",
+      "methods": [
+        {
+          "name": "refreshToken",
+          "verb": "post",
+          "url": "/Token/refresh",
+          "params": "request: RefreshTokenRequest"
+        },
+        {
+          "name": "revokeToken",
+          "verb": "post",
+          "url": "/Token/revoke",
+          "params": "request: RevokeTokenRequest = {}"
+        }
+      ]
+    },
+    {
+      "name": "uncertaintyQuantification.service",
+      "methods": [
+        {
+          "name": "monteCarloAnalysis",
+          "verb": "post",
+          "url": "/Uncertainty/{machineId}/monte-carlo",
+          "params": "machineId: string,\n  request: MonteCarloRequest"
+        },
+        {
+          "name": "bayesianAnalysis",
+          "verb": "post",
+          "url": "/Uncertainty/{machineId}/bayesian",
+          "params": "machineId: string,\n  request: BayesianRequest"
+        },
+        {
+          "name": "bootstrapIntervals",
+          "verb": "get",
+          "url": "/Uncertainty/{machineId}/bootstrap-intervals?samples={samples}&confidenceLevel={confidenceLevel}",
+          "params": "machineId: string,\n  samples: number = 1000,\n  confidenceLevel: number = 0.95"
+        },
+        {
+          "name": "modelUncertainty",
+          "verb": "post",
+          "url": "/Uncertainty/{machineId}/model-uncertainty",
+          "params": "machineId: string,\n  request: ModelUncertaintyRequest"
+        },
+        {
+          "name": "comprehensiveReport",
+          "verb": "get",
+          "url": "/Uncertainty/{machineId}/comprehensive-report",
+          "params": "machineId: string"
+        }
+      ]
+    },
+    {
+      "name": "workflows.service",
+      "methods": [
+        {
+          "name": "fetchAllWorkflows",
+          "verb": "get",
+          "url": "/Workflow",
+          "params": ""
+        },
+        {
+          "name": "fetchWorkflowById",
+          "verb": "get",
+          "url": "/Workflow/{id}",
+          "params": "id: string"
+        },
+        {
+          "name": "createWorkflow",
+          "verb": "post",
+          "url": "/Workflow",
+          "params": "workflowData: {\n  name: string\n  description: string\n  type: string\n  trigger: any\n  actions: any[]\n  target: any\n  tags: string[]\n  createdBy: string\n}"
+        },
+        {
+          "name": "updateWorkflow",
+          "verb": "put",
+          "url": "/Workflow/{id}",
+          "params": "id: string, \n  updates: Partial<{\n    name: string\n    description: string\n    type: string\n    enabled: boolean\n    trigger: any\n    actions: any[]\n    target: any\n    tags: string[]\n  }>"
+        },
+        {
+          "name": "deleteWorkflow",
+          "verb": "delete",
+          "url": "/Workflow/{id}",
+          "params": "id: string"
+        },
+        {
+          "name": "toggleWorkflow",
+          "verb": "post",
+          "url": "/Workflow/{id}/toggle",
+          "params": "id: string"
+        },
+        {
+          "name": "duplicateWorkflow",
+          "verb": "post",
+          "url": "/Workflow/{id}/duplicate",
+          "params": "id: string,\n  newName: string,\n  newDescription?: string"
+        },
+        {
+          "name": "executeWorkflow",
+          "verb": "post",
+          "url": "/Workflow/{id}/execute",
+          "params": "id: string,\n  context: Record<string, any> = {}"
+        },
+        {
+          "name": "fetchWorkflowExecutions",
+          "verb": "get",
+          "url": "/Workflow/{id}/executions",
+          "params": "id: string,\n  page: number = 1,\n  pageSize: number = 20"
+        },
+        {
+          "name": "fetchWorkflowStatistics",
+          "verb": "get",
+          "url": "/Workflow/{id}/statistics",
+          "params": "id: string"
+        },
+        {
+          "name": "fetchWorkflowTemplates",
+          "verb": "get",
+          "url": "/Workflow/templates",
+          "params": ""
+        },
+        {
+          "name": "validateWorkflow",
+          "verb": "post",
+          "url": "/Workflow/validate",
+          "params": "definition: any"
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "errorLogger": [
+      "api\\axiosClient.ts"
+    ],
+    "csrf": [
+      "api\\axiosClient.ts"
+    ],
+    "predictions": [
+      "components\\MLPredictions.vue",
+      "components\\PredictiveAnalytics.vue",
+      "components\\analytics\\PredictiveAnalyticsDashboard.vue",
+      "components\\visualizations\\PredictiveAnalyticsDashboard.vue",
+      "views\\EnhancedDashboardView.vue",
+      "views\\PredictionHistoryView.vue"
+    ],
+    "productionLines": [
+      "components\\PredictiveAnalytics.vue",
+      "components\\search\\AdvancedSearchInterface.vue",
+      "components\\visualizations\\FloorPlanHeatmap.vue"
+    ],
+    "machines": [
+      "components\\PredictiveAnalytics.vue",
+      "components\\analytics\\AdvancedAnalyticsVisualization.vue",
+      "components\\analytics\\AdvancedAnalyticsVisualizationDashboard.vue",
+      "components\\analytics\\AIModelManagement.vue",
+      "components\\machines\\AdvancedSearch.vue",
+      "components\\machines\\MachineDeleteDialog.vue",
+      "components\\machines\\MachineForm.vue",
+      "components\\machines\\WorkflowAutomation.vue",
+      "components\\monitoring\\AlertManagementDashboard.vue",
+      "components\\monitoring\\TelemetryMonitoringDashboard.vue",
+      "components\\production\\ProductionLineManagement.vue",
+      "components\\production\\ProductionLineManagementDashboard.vue",
+      "components\\search\\AdvancedSearchDashboard.vue",
+      "components\\search\\AdvancedSearchInterface.vue",
+      "components\\simulation\\SimulationManagementDashboard.vue",
+      "components\\telemetry\\TelemetryMonitoring.vue",
+      "components\\visualizations\\FloorPlanHeatmap.vue",
+      "components\\visualizations\\Machine3DViewer.vue",
+      "components\\visualizations\\ManualTelemetryForm.vue",
+      "components\\visualizations\\PredictiveAnalyticsDashboard.vue",
+      "components\\visualizations\\TelemetryDashboard.vue",
+      "stores\\machines.store.ts",
+      "stores\\machines.ts",
+      "views\\EnhancedDashboardView.vue",
+      "views\\HomeView.vue"
+    ],
+    "prediction": [
+      "components\\RULPrediction.vue"
+    ],
+    "telemetry": [
+      "components\\TelemetryCharts.vue",
+      "components\\search\\AdvancedSearchInterface.vue",
+      "components\\visualizations\\ManualTelemetryForm.vue",
+      "components\\visualizations\\TelemetryDashboard.vue",
+      "stores\\telemetry.ts"
+    ],
+    "tenants": [
+      "components\\admin\\TenantManagementDashboard.vue"
+    ],
+    "realtime-analytics": [
+      "components\\analytics\\RealTimeAnalyticsDashboard.vue"
+    ],
+    "health": [
+      "components\\health\\HealthStatusPanel.vue"
+    ],
+    "azureDigitalTwin": [
+      "components\\integration\\AzureDigitalTwinServiceDashboard.vue"
+    ],
+    "prescriptive": [
+      "components\\maintenance\\PrescriptiveMaintenanceDashboard.vue",
+      "components\\visualizations\\PrescriptiveAnalysis.vue"
+    ],
+    "benchmarkValidation": [
+      "components\\ml\\BenchmarkValidationServiceDashboard.vue"
+    ],
+    "search": [
+      "components\\search\\AdvancedSearchDashboard.vue"
+    ],
+    "alerts": [
+      "components\\search\\AdvancedSearchInterface.vue",
+      "stores\\alerts.store.ts",
+      "stores\\alerts.ts"
+    ],
+    "maintenance": [
+      "components\\search\\AdvancedSearchInterface.vue",
+      "stores\\maintenance.store.ts"
+    ],
+    "simulation": [
+      "components\\simulation\\SimulationControlPanel.vue",
+      "components\\simulation\\SimulationCreateDialog.vue",
+      "stores\\simulations.store.ts",
+      "views\\HomeView.vue"
+    ],
+    "advancedAnalytics": [
+      "components\\visualizations\\AnomalyDetectionCard.vue",
+      "components\\visualizations\\AnomalyDetectionCard.vue",
+      "components\\visualizations\\DeepLearningPredictionCard.vue",
+      "components\\visualizations\\EnsemblePredictionCard.vue",
+      "components\\visualizations\\ForecastingCard.vue",
+      "components\\visualizations\\PrescriptiveAnalyticsCard.vue",
+      "views\\AdvancedAnalyticsDashboardView.vue",
+      "views\\AdvancedAnalyticsDashboardView.vue"
+    ],
+    "auth": [
+      "views\\LoginView.vue"
+    ]
+  },
+  "types": {}
+}

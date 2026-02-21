@@ -1,0 +1,1375 @@
+{
+  "summary": {
+    "total_backend_endpoints": 220,
+    "total_frontend_calls": 260,
+    "matched_calls": 228,
+    "dead_endpoints_count": 0,
+    "broken_calls_count": 32,
+    "unimplemented_methods_count": 19,
+    "todos_count": 485
+  },
+  "broken_calls": [
+    {
+      "service": "alertRules.service",
+      "method": "deleteAlertRule",
+      "url": "api/alertrules/{param}",
+      "verb": "DELETE"
+    },
+    {
+      "service": "azureDigitalTwin.service",
+      "method": "syncAll",
+      "url": "api/azuredigitaltwin/sync-all",
+      "verb": "POST"
+    },
+    {
+      "service": "azureDigitalTwin.service",
+      "method": "getStatus",
+      "url": "api/azuredigitaltwin/status",
+      "verb": "GET"
+    },
+    {
+      "service": "azureDigitalTwin.service",
+      "method": "getTwinEntities",
+      "url": "api/azuredigitaltwin/entities",
+      "verb": "GET"
+    },
+    {
+      "service": "azureDigitalTwin.service",
+      "method": "getMachineTwin",
+      "url": "api/azuredigitaltwin/machines/{param}",
+      "verb": "GET"
+    },
+    {
+      "service": "azureDigitalTwin.service",
+      "method": "getLineTwin",
+      "url": "api/azuredigitaltwin/lines/{param}",
+      "verb": "GET"
+    },
+    {
+      "service": "azureDigitalTwin.service",
+      "method": "updateTwinProperties",
+      "url": "api/azuredigitaltwin/entities/{param}",
+      "verb": "PATCH"
+    },
+    {
+      "service": "azureDigitalTwin.service",
+      "method": "createRelationship",
+      "url": "api/azuredigitaltwin/relationships",
+      "verb": "POST"
+    },
+    {
+      "service": "azureDigitalTwin.service",
+      "method": "deleteTwin",
+      "url": "api/azuredigitaltwin/entities/{param}",
+      "verb": "DELETE"
+    },
+    {
+      "service": "azureDigitalTwin.service",
+      "method": "queryTwins",
+      "url": "api/azuredigitaltwin/query",
+      "verb": "POST"
+    },
+    {
+      "service": "benchmarkValidation.service",
+      "method": "getValidationResults",
+      "url": "api/benchmarkvalidation/results",
+      "verb": "GET"
+    },
+    {
+      "service": "benchmarkValidation.service",
+      "method": "getValidationResultById",
+      "url": "api/benchmarkvalidation/results/{param}",
+      "verb": "GET"
+    },
+    {
+      "service": "benchmarkValidation.service",
+      "method": "compareModels",
+      "url": "api/benchmarkvalidation/compare",
+      "verb": "POST"
+    },
+    {
+      "service": "benchmarkValidation.service",
+      "method": "generateValidationReport",
+      "url": "api/benchmarkvalidation/reports",
+      "verb": "POST"
+    },
+    {
+      "service": "benchmarkValidation.service",
+      "method": "getValidationReports",
+      "url": "api/benchmarkvalidation/reports",
+      "verb": "GET"
+    },
+    {
+      "service": "benchmarkValidation.service",
+      "method": "getValidationReportById",
+      "url": "api/benchmarkvalidation/reports/{param}",
+      "verb": "GET"
+    },
+    {
+      "service": "benchmarkValidation.service",
+      "method": "deleteValidationReport",
+      "url": "api/benchmarkvalidation/reports/{param}",
+      "verb": "DELETE"
+    },
+    {
+      "service": "benchmarkValidation.service",
+      "method": "uploadBenchmarkDataset",
+      "url": "api/benchmarkvalidation/datasets/upload",
+      "verb": "POST"
+    },
+    {
+      "service": "benchmarkValidation.service",
+      "method": "deleteBenchmarkDataset",
+      "url": "api/benchmarkvalidation/datasets/{param}",
+      "verb": "DELETE"
+    },
+    {
+      "service": "benchmarkValidation.service",
+      "method": "getValidationHistory",
+      "url": "api/benchmarkvalidation/history/{param}",
+      "verb": "GET"
+    },
+    {
+      "service": "benchmarkValidation.service",
+      "method": "cancelValidation",
+      "url": "api/benchmarkvalidation/results/{param}/cancel",
+      "verb": "POST"
+    },
+    {
+      "service": "benchmarkValidation.service",
+      "method": "retryValidation",
+      "url": "api/benchmarkvalidation/results/{param}/retry",
+      "verb": "POST"
+    },
+    {
+      "service": "csrf.service",
+      "method": "fetchToken",
+      "url": "api/antiforgery/tokens",
+      "verb": "GET"
+    },
+    {
+      "service": "dataArchival.service",
+      "method": "getArchivalStatus",
+      "url": "api/dataarchival/status/{param}",
+      "verb": "GET"
+    },
+    {
+      "service": "dataArchival.service",
+      "method": "getArchivalHistory",
+      "url": "api/dataarchival/history",
+      "verb": "GET"
+    },
+    {
+      "service": "external-systems.service",
+      "method": "cancelDataSynchronization",
+      "url": "api/externalsystems/synchronizations/{param}/cancel",
+      "verb": "POST"
+    },
+    {
+      "service": "external-systems.service",
+      "method": "retryFailedSynchronization",
+      "url": "api/externalsystems/synchronizations/{param}/retry",
+      "verb": "POST"
+    },
+    {
+      "service": "predictions.service",
+      "method": "fetchPredictionHistory",
+      "url": "api/predictions/{param}",
+      "verb": "GET"
+    },
+    {
+      "service": "reporting.service",
+      "method": "cancelScheduledReport",
+      "url": "api/reports/schedules/{param}",
+      "verb": "DELETE"
+    },
+    {
+      "service": "reporting.service",
+      "method": "getReportById",
+      "url": "api/reports/{param}",
+      "verb": "GET"
+    },
+    {
+      "service": "reporting.service",
+      "method": "deleteReport",
+      "url": "api/reports/{param}",
+      "verb": "DELETE"
+    },
+    {
+      "service": "reporting.service",
+      "method": "updateScheduledReport",
+      "url": "api/reports/schedules/{param}",
+      "verb": "PUT"
+    }
+  ],
+  "dead_endpoints": [],
+  "unimplemented_methods": [
+    {
+      "interface": "IMlExperimentLogger",
+      "implementation": "NONE",
+      "missing": [
+        "LogExperimentAsync"
+      ]
+    },
+    {
+      "interface": "IAlertRepository",
+      "implementation": "NONE",
+      "missing": [
+        "SearchAsync"
+      ]
+    },
+    {
+      "interface": "IMachineRepository",
+      "implementation": "NONE",
+      "missing": [
+        "GetByProductionLineAsync",
+        "SearchAsync"
+      ]
+    },
+    {
+      "interface": "IMaintenanceRepository",
+      "implementation": "NONE",
+      "missing": [
+        "SearchAsync"
+      ]
+    },
+    {
+      "interface": "IModelVersionRepository",
+      "implementation": "NONE",
+      "missing": [
+        "GetAsync",
+        "GetByVersionAsync",
+        "GetProductionVersionAsync",
+        "GetByModelTypeAsync",
+        "GetAllAsync",
+        "AddAsync",
+        "UpdateAsync",
+        "DeleteAsync"
+      ]
+    },
+    {
+      "interface": "IPredictionRepository",
+      "implementation": "NONE",
+      "missing": [
+        "GetByMachineIdAsync",
+        "SearchAsync"
+      ]
+    },
+    {
+      "interface": "IProductionLineRepository",
+      "implementation": "NONE",
+      "missing": [
+        "SearchAsync"
+      ]
+    },
+    {
+      "interface": "IRepository",
+      "implementation": "NONE",
+      "missing": [
+        "GetAsync",
+        "GetAllAsync",
+        "AddAsync",
+        "AddRangeAsync",
+        "UpdateAsync",
+        "DeleteAsync",
+        "DeleteRangeAsync",
+        "SaveChangesAsync"
+      ]
+    },
+    {
+      "interface": "ISavedSearchRepository",
+      "implementation": "NONE",
+      "missing": [
+        "GetByUserAsync"
+      ]
+    },
+    {
+      "interface": "ITelemetryRepository",
+      "implementation": "NONE",
+      "missing": [
+        "GetForMachineAsync",
+        "GetRecentAsync",
+        "SearchAsync"
+      ]
+    },
+    {
+      "interface": "IHubPublisher",
+      "implementation": "NONE",
+      "missing": [
+        "BroadcastTelemetryAsync",
+        "BroadcastPredictionAsync",
+        "BroadcastAlertAsync"
+      ]
+    },
+    {
+      "interface": "IMaintenanceService",
+      "implementation": "NONE",
+      "missing": [
+        "PlanMaintenanceAsync",
+        "StartMaintenanceAsync",
+        "CompleteMaintenanceAsync",
+        "CancelMaintenanceAsync",
+        "GetMaintenanceHistoryAsync",
+        "GetActiveMaintenanceAsync",
+        "SearchMaintenanceAsync"
+      ]
+    },
+    {
+      "interface": "IPredictionPublisher",
+      "implementation": "NONE",
+      "missing": [
+        "BroadcastPredictionAsync"
+      ]
+    },
+    {
+      "interface": "ITelemetryPublisher",
+      "implementation": "NONE",
+      "missing": [
+        "BroadcastTelemetryAsync"
+      ]
+    },
+    {
+      "interface": "ITwinEngineService",
+      "implementation": "NONE",
+      "missing": [
+        "UpdateTwinPredictionAsync",
+        "GetMachineWithStateAsync"
+      ]
+    },
+    {
+      "interface": "IUnitOfWork",
+      "implementation": "NONE",
+      "missing": [
+        "SaveChangesAsync",
+        "BeginTransactionAsync",
+        "CommitAsync",
+        "RollbackAsync"
+      ]
+    },
+    {
+      "interface": "IPrescriptiveService",
+      "implementation": "NONE",
+      "missing": [
+        "RunWhatIfAnalysisAsync",
+        "GetOptimalMaintenanceDateAsync"
+      ]
+    },
+    {
+      "interface": "IMachineConfigurationService",
+      "implementation": "MachineConfigurationService",
+      "missing": [
+        "ValidateConfigurationAsync",
+        "ConfigurationExistsAsync"
+      ]
+    },
+    {
+      "interface": "IMLModelService",
+      "implementation": "MLModelService",
+      "missing": [
+        "GetFeatureImportanceAsync"
+      ]
+    }
+  ],
+  "todos": [
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Controllers\\AuthController.cs",
+      "line": 452,
+      "content": "// For now, return a placeholder that can be used by the frontend"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Controllers\\DegradationModelingController.cs",
+      "line": 335,
+      "content": "// Create a mock problem for validation"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Controllers\\ReportsController.cs",
+      "line": 42,
+      "content": "// Log a warning that this is a mock implementation"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Controllers\\ReportsController.cs",
+      "line": 43,
+      "content": "_logger.LogWarning(\"Using mock report generation for template {TemplateId}. Production implementation required.\", request.TemplateId);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Controllers\\ReportsController.cs",
+      "line": 56,
+      "content": "FileSize = 1024 * 1024, // Mock size"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Controllers\\ReportsController.cs",
+      "line": 89,
+      "content": "// Mock implementation - return empty content with appropriate headers"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Controllers\\ReportsController.cs",
+      "line": 123,
+      "content": "// Mock templates - in real implementation, these would come from database"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Controllers\\ReportsController.cs",
+      "line": 211,
+      "content": "NextRun = DateTime.UtcNow.AddHours(24).ToString(\"o\") // Mock next run"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Controllers\\ReportsController.cs",
+      "line": 235,
+      "content": "// Mock history data"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Controllers\\ReportsController.cs",
+      "line": 286,
+      "content": "// Mock file content"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Controllers\\ReportsController.cs",
+      "line": 287,
+      "content": "var content = \"Mock report content\";"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Extensions\\ServiceCollectionExtensions.cs",
+      "line": 302,
+      "content": "// External System Integration: mock in development; use real implementation for production."
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Extensions\\ServiceCollectionExtensions.cs",
+      "line": 306,
+      "content": "services.AddScoped<IExternalSystemService, MockExternalSystemService>();"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Extensions\\ServiceCollectionExtensions.cs",
+      "line": 307,
+      "content": "// Use mock tenant service for development"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Extensions\\ServiceCollectionExtensions.cs",
+      "line": 308,
+      "content": "services.AddScoped<Application.Tenants.Services.ITenantService, MockTenantService>();"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Extensions\\ServiceCollectionExtensions.cs",
+      "line": 333,
+      "content": "/// <param name=\"environment\">Hosting environment; when not Development, TelemetryMockHostedService is not registered.</param>"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Extensions\\ServiceCollectionExtensions.cs",
+      "line": 345,
+      "content": "// Only seed mock telemetry in Development; production should use real ingestion only."
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Extensions\\ServiceCollectionExtensions.cs",
+      "line": 348,
+      "content": "services.AddHostedService<TelemetryMockHostedService>();"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Hubs\\RealTimeAnalyticsHub.cs",
+      "line": 54,
+      "content": "_logger.LogDebug(\"Client {ConnectionId} subscribed to predictions for {MachineId}\", connectionId, machineId);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Hubs\\RealTimeAnalyticsHub.cs",
+      "line": 99,
+      "content": "_logger.LogDebug(\"Client {ConnectionId} subscribed to alerts\", connectionId);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Hubs\\RealTimeAnalyticsHub.cs",
+      "line": 215,
+      "content": "_logger.LogDebug(\"Broadcasted prediction for machine {MachineId}\", machineId);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Hubs\\TelemetryHub.cs",
+      "line": 61,
+      "content": "_logger.LogDebug(\"Client {ConnectionId} subscribed to machine {MachineId}\", connectionId, machineId);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Hubs\\TelemetryHub.cs",
+      "line": 102,
+      "content": "_logger.LogDebug(\"Client {ConnectionId} unsubscribed from machine {MachineId}\", connectionId, machineId);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Hubs\\TelemetryHub.cs",
+      "line": 114,
+      "content": "_logger.LogDebug(\"Telemetry received from {ConnectionId}: {MachineId}\", connectionId, telemetry.MachineId);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Infrastructure\\HealthChecksConfiguration.cs",
+      "line": 54,
+      "content": "_logger.LogDebug(\"Running application health check\");"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Infrastructure\\LoggingConfiguration.cs",
+      "line": 15,
+      "content": "builder.AddDebug();"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Infrastructure\\MetricsConfiguration.cs",
+      "line": 57,
+      "content": "// This is a placeholder for future implementation"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Infrastructure\\MetricsConfiguration.cs",
+      "line": 63,
+      "content": "// This is a placeholder for future implementation"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Infrastructure\\MetricsConfiguration.cs",
+      "line": 69,
+      "content": "// This is a placeholder for future implementation"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Analytics\\DataDriftService.cs",
+      "line": 332,
+      "content": "// For now, we'll return an empty dictionary, but we'll log that this is a placeholder"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Analytics\\DataDriftService.cs",
+      "line": 333,
+      "content": "_logger.LogWarning(\"Historical data retrieval for model {ModelName} is not implemented - this is a placeholder\", modelName);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Analytics\\PredictiveXaiService.cs",
+      "line": 68,
+      "content": "logger.LogDebug(\"Using perturbation-based XAI method\");"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Analytics\\Advanced\\AdvancedPredictiveService.cs",
+      "line": 327,
+      "content": "Debug.Assert(t.Pressure != null);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Analytics\\Advanced\\AdvancedPredictiveService.cs",
+      "line": 398,
+      "content": "Debug.Assert(t.Pressure != null);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Core\\NotificationService.cs",
+      "line": 125,
+      "content": "// For now, we'll try to post to a placeholder if it were configured"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Core\\NotificationService.cs",
+      "line": 137,
+      "content": "// This is a placeholder. If configured, we would do:"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Infrastructure\\HubPublisher.cs",
+      "line": 34,
+      "content": "_logger.LogDebug(\"Broadcasting telemetry for machine {MachineId}\", machineId);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Infrastructure\\HubPublisher.cs",
+      "line": 55,
+      "content": "_logger.LogDebug(\"Broadcasting prediction for machine {MachineId}\", machineId);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Infrastructure\\HubPublisher.cs",
+      "line": 74,
+      "content": "_logger.LogDebug(\"Broadcasting alert for machine {MachineId}: {Message}\", machineId, alert.Message);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Integration\\AzureDigitalTwinService.cs",
+      "line": 98,
+      "content": "_logger.LogDebug(\"Successfully upserted twin {TwinId} with model {ModelId}\", twinId, modelId);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Integration\\AzureDigitalTwinService.cs",
+      "line": 337,
+      "content": "values.Add(Convert.ToDouble(decimalValue));"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Simulation\\RunToFailureOrchestrator.cs",
+      "line": 141,
+      "content": "_logger.LogDebug(\"Run-to-failure step {Step}/{MaxSteps}. Degradation: {Degradation:F4}\","
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Simulation\\RunToFailureOrchestrator.cs",
+      "line": 334,
+      "content": "_logger.LogDebug(\"Generating trajectory {Index}/{Count}\", i + 1, count);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Simulation\\SimulationEngine.cs",
+      "line": 31,
+      "content": "logger.LogDebug(\"Running simulation step {Step} for simulation {SimulationId}\", step, state.Id);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Simulation\\SimulationEngine.cs",
+      "line": 73,
+      "content": "logger.LogDebug(\"Completed simulation step {Step} for simulation {SimulationId}\", step, state.Id);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Simulation\\SimulationHostedService.cs",
+      "line": 81,
+      "content": "_logger.LogDebug(\"Simulation step completed for machine {MachineId}. Step: {Step}\","
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Simulation\\SimulationSchedulerService.cs",
+      "line": 95,
+      "content": "_logger.LogDebug(\"Scheduled machine {MachineId} for simulation at {NextRun}\","
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Simulation\\SimulationSchedulerService.cs",
+      "line": 220,
+      "content": "_logger.LogDebug(\"Unscheduled machine {MachineId} from simulation scheduling\", machineId);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Simulation\\SyntheticDataGenerator.cs",
+      "line": 100,
+      "content": "_logger.LogDebug("
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Simulation\\SyntheticDataGenerator.cs",
+      "line": 409,
+      "content": "// Placeholder - would load actual benchmark statistics"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Simulation\\TransferFunctionEvaluator.cs",
+      "line": 138,
+      "content": "return Convert.ToDouble(result);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Simulation\\DegradationModels\\MarkovChainDegradationModel.cs",
+      "line": 37,
+      "content": "? Convert.ToDouble(ts)"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Telemetry\\TelemetryMockHostedService.cs",
+      "line": 7,
+      "content": "public class TelemetryMockHostedService("
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Telemetry\\TelemetryMockHostedService.cs",
+      "line": 9,
+      "content": "ILogger<TelemetryMockHostedService> logger)"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Telemetry\\TelemetryMockHostedService.cs",
+      "line": 37,
+      "content": "logger.LogWarning(\"TelemetryMockHostedService found no machines to seed telemetry for.\");"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Telemetry\\TelemetryMockHostedService.cs",
+      "line": 46,
+      "content": "\"Mock telemetry generated for machine {machineName}: {Count} records\","
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Telemetry\\TelemetryMockHostedService.cs",
+      "line": 66,
+      "content": "\"Mock telemetry batch {BatchNumber}  {Count} records\","
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Telemetry\\TelemetryMockHostedService.cs",
+      "line": 73,
+      "content": "\"TelemetryMockHostedService error when inserting telemetry batch {BatchNumber}  Batch skipped.\","
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Telemetry\\TelemetryMockHostedService.cs",
+      "line": 84,
+      "content": "\"TelemetryMockHostedService concurrency conflict when inserting telemetry for tenant. Batch skipped.\");"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.API\\Services\\Telemetry\\TelemetryMockHostedService.cs",
+      "line": 93,
+      "content": "logger.LogError(ex, \"TelemetryMockHostedService iteration failed\");"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\Behaviors\\AuthorizationBehavior.cs",
+      "line": 24,
+      "content": "logger.LogDebug(\"Command {CommandName} has no role requirement\", commandName);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\Behaviors\\PerformanceBehavior.cs",
+      "line": 35,
+      "content": "logger.LogDebug("
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\Configuration\\EnvironmentConfigurationService.cs",
+      "line": 61,
+      "content": "//             _logger.LogDebug(\"Environment value not found for key: {Key}, using default value\", key);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\Configuration\\EnvironmentConfigurationService.cs",
+      "line": 81,
+      "content": "//         _logger.LogDebug(\"Feature {FeatureName} is {Enabled}\", featureName, isEnabled ? \"enabled\" : \"disabled\");"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\Configuration\\EnvironmentConfigurationService.cs",
+      "line": 97,
+      "content": "//             _logger.LogDebug(\"Using development database connection\");"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\ExternalSystems\\Services\\MockExternalSystemService.cs",
+      "line": 7,
+      "content": "public class MockExternalSystemService : IExternalSystemService"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\ExternalSystems\\Services\\MockExternalSystemService.cs",
+      "line": 13,
+      "content": "public MockExternalSystemService()"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\ML\\FastForestPredictor.cs",
+      "line": 102,
+      "content": "// Log when mock importance is returned"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\ML\\FeatureImportanceExtractor.cs",
+      "line": 64,
+      "content": "// For simplicity in this implementation, we return mock importance based on a stable seed"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\ML\\ShapExplainer.cs",
+      "line": 32,
+      "content": "// Log that mock SHAP values are being generated"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\ML\\ShapExplainer.cs",
+      "line": 33,
+      "content": "_logger.LogWarning(\"Generating mock SHAP values as proper SHAP library not available\");"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\ML\\ShapExplainer.cs",
+      "line": 35,
+      "content": "// Generate mock SHAP values based on feature importance"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\ML\\Handlers\\AIModelCommandHandlers.cs",
+      "line": 40,
+      "content": "// Save model file logic (mocked path for now if file handling is not fully set up)"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\ML\\Handlers\\AIModelQueryHandlers.cs",
+      "line": 73,
+      "content": "Description = \"Mock model returned by ID\","
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\ML\\Handlers\\AIModelQueryHandlers.cs",
+      "line": 85,
+      "content": "Tags = new List<string> { \"mock\" },"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\Services\\PerformanceCacheService.cs",
+      "line": 40,
+      "content": "_logger.LogDebug(\"Cache HIT for key: {Key}\", key);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\Services\\PerformanceCacheService.cs",
+      "line": 44,
+      "content": "_logger.LogDebug(\"Cache MISS for key: {Key}, fetching from source\", key);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\Services\\PerformanceCacheService.cs",
+      "line": 110,
+      "content": "_logger.LogDebug(\"Cache entry evicted: {Key} - Reason: {Reason}\", cacheKey, reason);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\Services\\PredictionService.cs",
+      "line": 79,
+      "content": "FeatureContributions = mlResult.FeatureImportance.ToDictionary(k => k.Key, v => Convert.ToDouble(v.Value)) ?? features,"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\Services\\SyntheticDataGenerator.cs",
+      "line": 422,
+      "content": "// Mock benchmark data (e.g. from NASA CMAPSS)"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\Services\\TelemetryService.cs",
+      "line": 70,
+      "content": "_logger.LogDebug(\"Telemetry processed in {ProcessingTime}ms for machine {MachineId}\","
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\Simulations\\Services\\SimulationService.cs",
+      "line": 79,
+      "content": "0.0, // Duration placeholder"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\Tenants\\Services\\DbTenantService.cs",
+      "line": 13,
+      "content": "/// Replaces MockTenantService for production use."
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\Tenants\\Services\\MockTenantService.cs",
+      "line": 6,
+      "content": "public class MockTenantService : ITenantService"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\Tenants\\Services\\MockTenantService.cs",
+      "line": 12,
+      "content": "public MockTenantService()"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\Workflows\\Handlers\\WorkflowCommandHandlers.cs",
+      "line": 64,
+      "content": "// For demo purposes, return a modified mock workflow"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\Workflows\\Handlers\\WorkflowQueryHandlers.cs",
+      "line": 25,
+      "content": "// Return mock workflows for demonstration"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\Workflows\\Handlers\\WorkflowQueryHandlers.cs",
+      "line": 175,
+      "content": "// For now, return one of the mock workflows based on ID"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Application\\Workflows\\Services\\IWorkflowService.cs",
+      "line": 397,
+      "content": "private WorkflowExecutionDto CreateMockExecution(string workflowId, Dictionary<string, object> context)"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 13,
+      "content": "private readonly Mock<ILogger<MLModelService>> _mockLogger;"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 14,
+      "content": "private readonly Mock<FastForestPredictor> _mockFastForest;"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 15,
+      "content": "private readonly Mock<QuantileRegression> _mockQuantileRegression;"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 16,
+      "content": "private readonly Mock<ShapExplainer> _mockShapExplainer;"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 17,
+      "content": "private readonly Mock<FeatureImportanceExtractor> _mockImportanceExtractor;"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 22,
+      "content": "_mockLogger = new Mock<ILogger<MLModelService>>();"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 23,
+      "content": "_mockFastForest = new Mock<FastForestPredictor>();"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 24,
+      "content": "_mockQuantileRegression = new Mock<QuantileRegression>();"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 25,
+      "content": "_mockShapExplainer = new Mock<ShapExplainer>();"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 26,
+      "content": "_mockImportanceExtractor = new Mock<FeatureImportanceExtractor>();"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 29,
+      "content": "_mockFastForest.Object,"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 30,
+      "content": "_mockQuantileRegression.Object,"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 31,
+      "content": "_mockShapExplainer.Object,"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 32,
+      "content": "_mockImportanceExtractor.Object,"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 33,
+      "content": "_mockLogger.Object"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 43,
+      "content": "_mockFastForest.Setup(x => x.Train(It.IsAny<IEnumerable<ModelTrainingData>>()));"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 44,
+      "content": "_mockFastForest.Setup(x => x.Predict(It.IsAny<ModelInputData>()))"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 50,
+      "content": "_mockQuantileRegression.Setup(x => x.Train(It.IsAny<IEnumerable<ModelTrainingData>>()));"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 101,
+      "content": "var mockModel = new Mock<ML.Model>();"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 102,
+      "content": "_mockFastForest.Setup(x => x.Model).Returns(mockModel.Object);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 103,
+      "content": "_mockFastForest.Setup(x => x.Predict(It.IsAny<ModelInputData>()))"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 117,
+      "content": "_mockQuantileRegression.Setup(x => x.PredictInterval(It.IsAny<ModelInputData>()))"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\MLModelServiceTests.cs",
+      "line": 120,
+      "content": "_mockShapExplainer.Setup(x => x.GetExplainerValues(It.IsAny<ML.Model>(), It.IsAny<ModelInputData>()))"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\SyntheticDataGeneratorTests.cs",
+      "line": 14,
+      "content": "private readonly Mock<ILogger<SyntheticDataGenerator>> _mockLogger;"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\SyntheticDataGeneratorTests.cs",
+      "line": 15,
+      "content": "private readonly Mock<IUnitOfWork> _mockUnitOfWork;"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\SyntheticDataGeneratorTests.cs",
+      "line": 16,
+      "content": "private readonly Mock<ISyntheticDataGeneratorRepository> _mockRepository;"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\SyntheticDataGeneratorTests.cs",
+      "line": 21,
+      "content": "_mockLogger = new Mock<ILogger<SyntheticDataGenerator>>();"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\SyntheticDataGeneratorTests.cs",
+      "line": 22,
+      "content": "_mockUnitOfWork = new Mock<IUnitOfWork>();"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\SyntheticDataGeneratorTests.cs",
+      "line": 23,
+      "content": "_mockRepository = new Mock<ISyntheticDataGeneratorRepository>();"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\SyntheticDataGeneratorTests.cs",
+      "line": 25,
+      "content": "_mockUnitOfWork.Setup(x => x.Repository<Domain.Entities.SyntheticDataGeneration>())"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\SyntheticDataGeneratorTests.cs",
+      "line": 26,
+      "content": ".Returns(_mockRepository.Object);"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\SyntheticDataGeneratorTests.cs",
+      "line": 29,
+      "content": "_mockUnitOfWork.Object,"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\SyntheticDataGeneratorTests.cs",
+      "line": 30,
+      "content": "_mockLogger.Object"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\SyntheticDataGeneratorTests.cs",
+      "line": 46,
+      "content": "_mockRepository.Setup(x => x.AddAsync(It.IsAny<Domain.Entities.SyntheticDataGeneration>(), It.IsAny<CancellationToken>()))"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\SyntheticDataGeneratorTests.cs",
+      "line": 48,
+      "content": "_mockUnitOfWork.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\SyntheticDataGeneratorTests.cs",
+      "line": 78,
+      "content": "_mockRepository.Setup(x => x.AddAsync(It.IsAny<Domain.Entities.SyntheticDataGeneration>(), It.IsAny<CancellationToken>()))"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\SyntheticDataGeneratorTests.cs",
+      "line": 80,
+      "content": "_mockUnitOfWork.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\SyntheticDataGeneratorTests.cs",
+      "line": 100,
+      "content": "_mockRepository.Setup(x => x.AddAsync(It.IsAny<Domain.Entities.DataValidationReport>(), It.IsAny<CancellationToken>()))"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\Simulation\\SimulationTest.cs",
+      "line": 15,
+      "content": "private readonly Mock<ILogger<SimulationEngine>> _loggerMock;"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\Simulation\\SimulationTest.cs",
+      "line": 16,
+      "content": "private readonly Mock<IDataValidationService> _validationServiceMock;"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\Simulation\\SimulationTest.cs",
+      "line": 21,
+      "content": "_loggerMock = new Mock<ILogger<SimulationEngine>>();"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\Simulation\\SimulationTest.cs",
+      "line": 22,
+      "content": "_validationServiceMock = new Mock<IDataValidationService>();"
+    },
+    {
+      "file": "api\\DigitalTwinPlatform.Tests\\Services\\Simulation\\SimulationTest.cs",
+      "line": 23,
+      "content": "_simulationEngine = new SimulationEngine(_loggerMock.Object, _validationServiceMock.Object);"
+    },
+    {
+      "file": "frontend\\src\\components\\alerts\\AlertListPanel.vue",
+      "line": 184,
+      "content": "placeholder=\"Search alerts...\""
+    },
+    {
+      "file": "frontend\\src\\components\\alerts\\AlertRulesConfig.vue",
+      "line": 204,
+      "content": "placeholder=\"e.g., High Vibration Alert\""
+    },
+    {
+      "file": "frontend\\src\\components\\alerts\\AlertRulesConfig.vue",
+      "line": 215,
+      "content": "placeholder=\"Describe when this alert triggers...\""
+    },
+    {
+      "file": "frontend\\src\\components\\auth\\LoginForm.vue",
+      "line": 87,
+      "content": "placeholder=\"you@example.com\""
+    },
+    {
+      "file": "frontend\\src\\components\\auth\\LoginForm.vue",
+      "line": 118,
+      "content": "placeholder=\"Enter your password\""
+    },
+    {
+      "file": "frontend\\src\\components\\auth\\PasswordResetForm.vue",
+      "line": 153,
+      "content": "placeholder=\"you@example.com\""
+    },
+    {
+      "file": "frontend\\src\\components\\auth\\PasswordResetForm.vue",
+      "line": 190,
+      "content": "placeholder=\"you@example.com\""
+    },
+    {
+      "file": "frontend\\src\\components\\auth\\PasswordResetForm.vue",
+      "line": 211,
+      "content": "placeholder=\"Enter new password\""
+    },
+    {
+      "file": "frontend\\src\\components\\auth\\PasswordResetForm.vue",
+      "line": 255,
+      "content": "placeholder=\"Confirm new password\""
+    },
+    {
+      "file": "frontend\\src\\components\\auth\\RegisterForm.vue",
+      "line": 131,
+      "content": "placeholder=\"John Doe\""
+    },
+    {
+      "file": "frontend\\src\\components\\auth\\RegisterForm.vue",
+      "line": 158,
+      "content": "placeholder=\"you@example.com\""
+    },
+    {
+      "file": "frontend\\src\\components\\auth\\RegisterForm.vue",
+      "line": 185,
+      "content": "placeholder=\"Create a strong password\""
+    },
+    {
+      "file": "frontend\\src\\components\\auth\\RegisterForm.vue",
+      "line": 246,
+      "content": "placeholder=\"Confirm your password\""
+    },
+    {
+      "file": "frontend\\src\\components\\charts\\AlertsTimelineChart.vue",
+      "line": 130,
+      "content": "generateMockData()"
+    },
+    {
+      "file": "frontend\\src\\components\\charts\\AlertsTimelineChart.vue",
+      "line": 139,
+      "content": "function generateMockData() {"
+    },
+    {
+      "file": "frontend\\src\\components\\charts\\AlertsTimelineChart.vue",
+      "line": 142,
+      "content": "const mockAlerts: AlertTimelineItem[] = []"
+    },
+    {
+      "file": "frontend\\src\\components\\charts\\AlertsTimelineChart.vue",
+      "line": 148,
+      "content": "mockAlerts.push({"
+    },
+    {
+      "file": "frontend\\src\\components\\charts\\AlertsTimelineChart.vue",
+      "line": 157,
+      "content": "alerts.value = mockAlerts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())"
+    },
+    {
+      "file": "frontend\\src\\components\\charts\\HealthTrendChart.vue",
+      "line": 187,
+      "content": "generateMockData()"
+    },
+    {
+      "file": "frontend\\src\\components\\charts\\HealthTrendChart.vue",
+      "line": 205,
+      "content": "function generateMockData() {"
+    },
+    {
+      "file": "frontend\\src\\components\\charts\\PredictionVsActualChart.vue",
+      "line": 73,
+      "content": "generateMockData()"
+    },
+    {
+      "file": "frontend\\src\\components\\charts\\PredictionVsActualChart.vue",
+      "line": 82,
+      "content": "function generateMockData() {"
+    },
+    {
+      "file": "frontend\\src\\components\\charts\\SensorDistributionChart.vue",
+      "line": 166,
+      "content": "generateMockData()"
+    },
+    {
+      "file": "frontend\\src\\components\\charts\\SensorDistributionChart.vue",
+      "line": 198,
+      "content": "function generateMockData() {"
+    },
+    {
+      "file": "frontend\\src\\components\\dashboard\\HeaderBar.vue",
+      "line": 51,
+      "content": "<input v-model=\"searchQuery\" type=\"text\" placeholder=\"Search machines, alerts...\" class=\"w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent\" @keydown.esc=\"isSearchOpen = false\" />"
+    },
+    {
+      "file": "frontend\\src\\components\\predictions\\RulTimelineChart.vue",
+      "line": 38,
+      "content": "const generateMockData = () => {"
+    },
+    {
+      "file": "frontend\\src\\components\\predictions\\RulTimelineChart.vue",
+      "line": 119,
+      "content": "generateMockData()"
+    },
+    {
+      "file": "frontend\\src\\components\\predictions\\RulTimelineChart.vue",
+      "line": 169,
+      "content": "<!-- Chart placeholder -->"
+    },
+    {
+      "file": "frontend\\src\\views\\Alerts.vue",
+      "line": 19,
+      "content": "// Use alerts from store instead of mock data"
+    },
+    {
+      "file": "frontend\\src\\views\\Alerts.vue",
+      "line": 51,
+      "content": "// Alert rules: empty until backend AlertRules API is used; show empty state instead of mock data"
+    },
+    {
+      "file": "frontend\\src\\views\\Machines.vue",
+      "line": 111,
+      "content": "placeholder=\"Search machines...\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\vite.config.optimized.ts",
+      "line": 98,
+      "content": "drop_debugger: true,"
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\vite.config.optimized.ts",
+      "line": 99,
+      "content": "pure_funcs: ['console.info', 'console.debug', 'console.warn']"
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\App.vue",
+      "line": 52,
+      "content": "// Debug auth state on mount"
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\vite-env.d.ts",
+      "line": 11,
+      "content": "readonly VITE_DEBUG: string"
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\MachineCard.vue",
+      "line": 130,
+      "content": "// Mock health calculation based on status and RUL"
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\PredictiveAnalytics.vue",
+      "line": 54,
+      "content": "placeholder=\"Search equipment by serial, model or line...\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\PredictiveAnalytics.vue",
+      "line": 55,
+      "content": "class=\"w-full bg-transparent h-16 pl-16 pr-8 text-[13px] font-black tracking-tight placeholder:text-secondary-alt focus:outline-none\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\admin\\DataArchivalManagement.vue",
+      "line": 268,
+      "content": "placeholder=\"Enter number of days to retain data\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\admin\\ExternalSystemIntegrationDashboard.vue",
+      "line": 530,
+      "content": "placeholder=\"Enter system name\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\admin\\ExternalSystemIntegrationDashboard.vue",
+      "line": 544,
+      "content": "placeholder=\"https://api.example.com\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\admin\\ExternalSystemIntegrationDashboard.vue",
+      "line": 551,
+      "content": "placeholder=\"Enter API key (optional)\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\admin\\ExternalSystemIntegrationDashboard.vue",
+      "line": 557,
+      "content": "placeholder=\"Enter username (optional)\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\admin\\ExternalSystemIntegrationDashboard.vue",
+      "line": 564,
+      "content": "placeholder=\"Enter password (optional)\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\admin\\TenantManagementDashboard.vue",
+      "line": 360,
+      "content": "placeholder=\"Enter tenant name\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\admin\\TenantManagementDashboard.vue",
+      "line": 367,
+      "content": "placeholder=\"Enter tenant slug (lowercase, no spaces)\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\admin\\TenantManagementDashboard.vue",
+      "line": 374,
+      "content": "placeholder=\"Enter tenant description\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\admin\\TenantManagementDashboard.vue",
+      "line": 381,
+      "content": "placeholder=\"Enter database connection string\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\alerts\\AlertManagement.vue",
+      "line": 294,
+      "content": "placeholder=\"Search alerts...\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\alerts\\AlertManagement.vue",
+      "line": 462,
+      "content": "placeholder=\"Add any notes about this acknowledgment...\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\analytics\\AdvancedAnalyticsVisualizationDashboard.vue",
+      "line": 74,
+      "content": "// Mock analytics data"
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\analytics\\AdvancedAnalyticsVisualizationDashboard.vue",
+      "line": 468,
+      "content": "<BaseSkeleton v-for=\"i in 4\" :key=\"i\" height=\"300px\" class=\"chart-placeholder\" />"
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\analytics\\AdvancedAnalyticsVisualizationDashboard.vue",
+      "line": 646,
+      "content": ".chart-placeholder {"
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\analytics\\AIModelManagement.vue",
+      "line": 166,
+      "content": "placeholder=\"e.g., CNC Degradation Predictor v2\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\analytics\\AIModelManagement.vue",
+      "line": 175,
+      "content": "placeholder=\"Describe the model's purpose and capabilities...\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\analytics\\AIModelManagement.vue",
+      "line": 182,
+      "content": "placeholder=\"e.g., 2.1.0\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\analytics\\AIModelManagement.vue",
+      "line": 189,
+      "content": "placeholder=\"predictive, cnc, degradation\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\analytics\\AIModelManagement.vue",
+      "line": 215,
+      "content": "placeholder=\"Number of training samples\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\analytics\\AIModelManagement.vue",
+      "line": 222,
+      "content": "placeholder=\"temperature,vibration,pressure,current\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\analytics\\AIModelManagement.vue",
+      "line": 239,
+      "content": "placeholder=\"0.95\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\analytics\\AIModelManagement.vue",
+      "line": 250,
+      "content": "placeholder=\"0.92\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\analytics\\AIModelManagement.vue",
+      "line": 260,
+      "content": "placeholder=\"0.88\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\analytics\\AIModelManagement.vue",
+      "line": 270,
+      "content": "placeholder=\"0.90\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\analytics\\AIModelManagement.vue",
+      "line": 283,
+      "content": "placeholder=\"Select machines to deploy this model to...\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\analytics\\AIModelManagement.vue",
+      "line": 380,
+      "content": "placeholder=\"Enter value...\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\analytics\\PredictiveAnalyticsDashboard.vue",
+      "line": 424,
+      "content": "placeholder=\"Enter machine UUID\""
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\analytics\\RealTimeAnalyticsDashboard.vue",
+      "line": 329,
+      "content": "<div class=\"chart-placeholder\">"
+    },
+    {
+      "file": "ui\\digital-twin-dashboard\\src\\components\\analytics\\RealTimeAnalyticsDashboard.vue",
+      "line": 330,
+      "content": "<Activity class=\"placeholder-icon\" />"
+    }
+  ]
+}

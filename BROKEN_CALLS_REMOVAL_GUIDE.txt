@@ -1,0 +1,99 @@
+BROKEN CALLS REMOVAL GUIDE
+================================================================================
+
+36 broken calls have been identified and need to be removed from frontend services.
+These methods call backend endpoints that don't exist.
+
+STATUS: 
+  - alertRules.service.ts: PARTIALLY DONE (need to check deleteAlertRule)
+  - alerts.service.ts: PARTIALLY DONE (acknowledgeAlert, resolveAlert, escalateAlert fixed)
+  - antiForgery.service.ts: DONE (getToken removed)
+  - azureDigitalTwin.service.ts: TODO (9 methods need removal/replacement)
+  - benchmarkValidation.service.ts: TODO (12 methods need removal)
+  - csrf.service.ts: TODO (fetchToken)
+  - dataArchival.service.ts: TODO (2 methods)
+  - external-systems.service.ts: TODO (2 methods)
+  - predictions.service.ts: TODO (fetchPredictionHistory)
+  - reporting.service.ts: TODO (4 methods)
+
+MANUAL REMOVAL STEPS FOR EACH SERVICE:
+================================================================================
+
+1. For each broken method:
+   a) Remove the entire function/method declaration
+   b) Remove from the service export object
+   c) If it's a class method, just stub it out to throw NotImplementedError
+
+2. After removal:
+   a) Run: python scan_frontend.py
+   b) Run: python scan_backend_v2.py
+   c) Run: python analyze_integrity.py
+   d) Verify broken_calls count decreases
+
+PENDING REMOVALS BY SERVICE:
+================================================================================
+
+azureDigitalTwin.service.ts:
+  - syncAll (line 72-80)
+  - getStatus (line 82-90)
+  - getTwinEntities (line 92-100)
+  - getMachineTwin (line 102-110)
+  - getLineTwin (line 112-120)
+  - updateTwinProperties (line 122-130)
+  - createRelationship (line 132-144)
+  - deleteTwin (line 146-154)
+  - queryTwins (line 156-164)
+  Also remove from composable: fetchStatus, fetchEntities, syncAll
+
+benchmarkValidation.service.ts:
+  - getValidationResults
+  - getValidationResultById
+  - compareModels
+  - generateValidationReport
+  - getValidationReports
+  - getValidationReportById
+  - deleteValidationReport
+  - uploadBenchmarkDataset
+  - deleteBenchmarkDataset
+  - getValidationHistory
+  - cancelValidation
+  - retryValidation
+
+csrf.service.ts:
+  - fetchToken
+
+dataArchival.service.ts:
+  - getArchivalStatus
+  - getArchivalHistory
+
+external-systems.service.ts:
+  - cancelDataSynchronization
+  - retryFailedSynchronization
+
+predictions.service.ts:
+  - fetchPredictionHistory
+
+reporting.service.ts:
+  - cancelScheduledReport
+  - getReportById
+  - deleteReport
+  - updateScheduledReport
+
+NEXT STEPS:
+================================================================================
+After all broken calls are removed:
+1. Re-run audit scripts to confirm broken_calls count = 0
+2. Begin implementation of 19 unimplemented backend interface methods
+3. Implement any additional backend endpoints that are needed
+
+COMPLETION CHECKLIST:
+================================================================================
+[ ] azureDigitalTwin.service.ts - 9 methods removed
+[ ] benchmarkValidation.service.ts - 12 methods removed
+[ ] csrf.service.ts - 1 method removed
+[ ] dataArchival.service.ts - 2 methods removed
+[ ] external-systems.service.ts - 2 methods removed
+[ ] predictions.service.ts - 1 method removed
+[ ] reporting.service.ts - 4 methods removed
+[ ] Audit scripts re-run
+[ ] broken_calls count verified as 0

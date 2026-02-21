@@ -1,0 +1,2496 @@
+{
+  "controllers": [
+    {
+      "name": "AdvancedAnalyticsController",
+      "base_route": "api/AdvancedAnalytics",
+      "services": [
+        "IPrescriptiveAnalyticsService",
+        "IAdvancedPredictiveService"
+      ],
+      "endpoints": [
+        {
+          "method": "EnsemblePrediction",
+          "http_method": "HttpPost",
+          "route": "/api/AdvancedAnalytics/predictions/{machineId}/ensemble",
+          "request_dto": "None",
+          "response_dto": "PredictionDto"
+        },
+        {
+          "method": "DeepLearningPrediction",
+          "http_method": "HttpPost",
+          "route": "/api/AdvancedAnalytics/predictions/{machineId}/deep-learning",
+          "request_dto": "None",
+          "response_dto": "PredictionDto"
+        },
+        {
+          "method": "DetectAnomalies",
+          "http_method": "HttpPost",
+          "route": "/api/AdvancedAnalytics/anomaly-detection/{machineId}",
+          "request_dto": "AnomalyDetectionRequest",
+          "response_dto": "AnomalyDetectionResult"
+        },
+        {
+          "method": "ForecastTimeSeries",
+          "http_method": "HttpPost",
+          "route": "/api/AdvancedAnalytics/forecasting/{machineId}/{metric}",
+          "request_dto": "ForecastRequest",
+          "response_dto": "ForecastResult"
+        },
+        {
+          "method": "GenerateMaintenanceRecommendation",
+          "http_method": "HttpPost",
+          "route": "/api/AdvancedAnalytics/prescriptive/maintenance/{machineId}",
+          "request_dto": "MaintenanceRecommendationRequest",
+          "response_dto": "PrescriptiveRecommendation"
+        },
+        {
+          "method": "OptimizeProductionSchedule",
+          "http_method": "HttpPost",
+          "route": "/api/AdvancedAnalytics/prescriptive/scheduling",
+          "request_dto": "SchedulingOptimizationRequest",
+          "response_dto": "SchedulingRecommendation"
+        },
+        {
+          "method": "OptimizeResourceAllocation",
+          "http_method": "HttpPost",
+          "route": "/api/AdvancedAnalytics/prescriptive/resource-allocation",
+          "request_dto": "ResourceAllocationRequest",
+          "response_dto": "ResourceAllocationPlan"
+        },
+        {
+          "method": "OptimizeMaintenanceCosts",
+          "http_method": "HttpPost",
+          "route": "/api/AdvancedAnalytics/prescriptive/cost-optimization",
+          "request_dto": "CostOptimizationRequest",
+          "response_dto": "CostOptimizationResult"
+        },
+        {
+          "method": "GetAdvancedAnalyticsDashboard",
+          "http_method": "HttpGet",
+          "route": "/api/AdvancedAnalytics/dashboard/{machineId}",
+          "request_dto": "None",
+          "response_dto": "AdvancedAnalyticsDashboard"
+        }
+      ]
+    },
+    {
+      "name": "AIModelController",
+      "base_route": "api/AIModel",
+      "services": [
+        "IMediator",
+        "IAIService"
+      ],
+      "endpoints": [
+        {
+          "method": "GetAllModels",
+          "http_method": "HttpGet",
+          "route": "/api/AIModel",
+          "request_dto": "None",
+          "response_dto": "IEnumerable<AIModelDto"
+        },
+        {
+          "method": "GetModel",
+          "http_method": "HttpGet",
+          "route": "/api/AIModel/{id}",
+          "request_dto": "None",
+          "response_dto": "AIModelDto"
+        },
+        {
+          "method": "DeployModel",
+          "http_method": "HttpPost",
+          "route": "/api/AIModel",
+          "request_dto": "None",
+          "response_dto": "AIModelDto"
+        },
+        {
+          "method": "UpdateModel",
+          "http_method": "HttpPut",
+          "route": "/api/AIModel/{id}",
+          "request_dto": "UpdateAIModelCommand",
+          "response_dto": "AIModelDto"
+        },
+        {
+          "method": "DeleteModel",
+          "http_method": "HttpDelete",
+          "route": "/api/AIModel/{id}",
+          "request_dto": "None",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "Predict",
+          "http_method": "HttpPost",
+          "route": "/api/AIModel/{id}/predict",
+          "request_dto": "ModelInputDto",
+          "response_dto": "ModelPredictionDto"
+        },
+        {
+          "method": "GetModelMetrics",
+          "http_method": "HttpGet",
+          "route": "/api/AIModel/{id}/metrics",
+          "request_dto": "None",
+          "response_dto": "ModelMetricsDto"
+        },
+        {
+          "method": "RetrainModel",
+          "http_method": "HttpPost",
+          "route": "/api/AIModel/{id}/retrain",
+          "request_dto": "RetrainModelCommand",
+          "response_dto": "AIModelDto"
+        },
+        {
+          "method": "GetCompatibleMachines",
+          "http_method": "HttpGet",
+          "route": "/api/AIModel/{id}/compatible-machines",
+          "request_dto": "None",
+          "response_dto": "IEnumerable<string"
+        },
+        {
+          "method": "DeployToMachines",
+          "http_method": "HttpPost",
+          "route": "/api/AIModel/{id}/deploy-to-machines",
+          "request_dto": "DeployToMachinesDto",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "GetDeploymentStatus",
+          "http_method": "HttpGet",
+          "route": "/api/AIModel/{id}/deployment-status",
+          "request_dto": "None",
+          "response_dto": "DeploymentStatusDto"
+        },
+        {
+          "method": "ValidateModel",
+          "http_method": "HttpPost",
+          "route": "/api/AIModel/validate-model",
+          "request_dto": "None",
+          "response_dto": "ModelValidationResultDto"
+        }
+      ]
+    },
+    {
+      "name": "AlertRulesController",
+      "base_route": "api/AlertRules",
+      "services": [],
+      "endpoints": [
+        {
+          "method": "GetAllRules",
+          "http_method": "HttpGet",
+          "route": "/api/AlertRules",
+          "request_dto": "None",
+          "response_dto": "None"
+        },
+        {
+          "method": "GetRule",
+          "http_method": "HttpGet",
+          "route": "/api/AlertRules/{id:int}",
+          "request_dto": "None",
+          "response_dto": "None"
+        },
+        {
+          "method": "CreateRule",
+          "http_method": "HttpPost",
+          "route": "/api/AlertRules",
+          "request_dto": "AlertRuleCreateDto",
+          "response_dto": "None"
+        },
+        {
+          "method": "UpdateRule",
+          "http_method": "HttpPut",
+          "route": "/api/AlertRules/{id:int}",
+          "request_dto": "AlertRuleUpdateDto",
+          "response_dto": "None"
+        },
+        {
+          "method": "ToggleRule",
+          "http_method": "HttpPatch",
+          "route": "/api/AlertRules/{id:int}/toggle",
+          "request_dto": "ToggleRuleRequest",
+          "response_dto": "None"
+        }
+      ]
+    },
+    {
+      "name": "AlertsController",
+      "base_route": "api/Alerts",
+      "services": [
+        "IAlertService"
+      ],
+      "endpoints": [
+        {
+          "method": "GetActiveAlerts",
+          "http_method": "HttpGet",
+          "route": "/api/Alerts",
+          "request_dto": "None",
+          "response_dto": "IEnumerable<AlertDto"
+        },
+        {
+          "method": "GetAlert",
+          "http_method": "HttpGet",
+          "route": "/api/Alerts/{id:guid}",
+          "request_dto": "None",
+          "response_dto": "AlertDto"
+        },
+        {
+          "method": "Acknowledge",
+          "http_method": "HttpPut",
+          "route": "/api/Alerts/{id:guid}/acknowledge",
+          "request_dto": "None",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "Delete",
+          "http_method": "HttpDelete",
+          "route": "/api/Alerts/{id:guid}",
+          "request_dto": "None",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "GetAllAlerts",
+          "http_method": "HttpGet",
+          "route": "/api/Alerts/all",
+          "request_dto": "None",
+          "response_dto": "IEnumerable<AlertDto"
+        },
+        {
+          "method": "GetStats",
+          "http_method": "HttpGet",
+          "route": "/api/Alerts/stats",
+          "request_dto": "None",
+          "response_dto": "AlertStatsDto"
+        },
+        {
+          "method": "Search",
+          "http_method": "HttpGet",
+          "route": "/api/Alerts/search",
+          "request_dto": "Query:string",
+          "response_dto": "IEnumerable<AlertDto"
+        }
+      ]
+    },
+    {
+      "name": "AntiForgeryController",
+      "base_route": "api/AntiForgery",
+      "services": [],
+      "endpoints": [
+        {
+          "method": "ValidateToken",
+          "http_method": "HttpPost",
+          "route": "/api/AntiForgery/validate",
+          "request_dto": "ValidateTokenRequest",
+          "response_dto": "IActionResult"
+        }
+      ]
+    },
+    {
+      "name": "AuthController",
+      "base_route": "api/Auth",
+      "services": [],
+      "endpoints": [
+        {
+          "method": "Register",
+          "http_method": "HttpPost",
+          "route": "/api/Auth/register",
+          "request_dto": "RegisterRequest",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "Login",
+          "http_method": "HttpPost",
+          "route": "/api/Auth/login",
+          "request_dto": "LoginRequest",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "Refresh",
+          "http_method": "HttpPost",
+          "route": "/api/Auth/refresh",
+          "request_dto": "RefreshTokenRequest",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "Revoke",
+          "http_method": "HttpPost",
+          "route": "/api/Auth/revoke",
+          "request_dto": "RefreshTokenRequest",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "GetCurrentUser",
+          "http_method": "HttpGet",
+          "route": "/api/Auth/me",
+          "request_dto": "None",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "UpdateProfile",
+          "http_method": "HttpPut",
+          "route": "/api/Auth/profile",
+          "request_dto": "UpdateProfileRequest",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "ChangePassword",
+          "http_method": "HttpPost",
+          "route": "/api/Auth/change-password",
+          "request_dto": "ChangePasswordRequest",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "ForgotPassword",
+          "http_method": "HttpPost",
+          "route": "/api/Auth/forgot-password",
+          "request_dto": "ForgotPasswordRequest",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "ResetPassword",
+          "http_method": "HttpPost",
+          "route": "/api/Auth/reset-password",
+          "request_dto": "ResetPasswordRequest",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "Logout",
+          "http_method": "HttpPost",
+          "route": "/api/Auth/logout",
+          "request_dto": "None",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "EnableTwoFactor",
+          "http_method": "HttpPost",
+          "route": "/api/Auth/2fa/enable",
+          "request_dto": "None",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "VerifyTwoFactor",
+          "http_method": "HttpPost",
+          "route": "/api/Auth/2fa/verify",
+          "request_dto": "VerifyTwoFactorRequest",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "DisableTwoFactor",
+          "http_method": "HttpPost",
+          "route": "/api/Auth/2fa/disable",
+          "request_dto": "VerifyTwoFactorRequest",
+          "response_dto": "IActionResult"
+        }
+      ]
+    },
+    {
+      "name": "AzureDigitalTwinController",
+      "base_route": "api/AzureDigitalTwin",
+      "services": [
+        "IAzureDigitalTwinService"
+      ],
+      "endpoints": [
+        {
+          "method": "SyncMachine",
+          "http_method": "HttpPost",
+          "route": "/api/AzureDigitalTwin/machines/{machineId:guid}/sync",
+          "request_dto": "None",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "SyncProductionLine",
+          "http_method": "HttpPost",
+          "route": "/api/AzureDigitalTwin/production-lines/{lineId:guid}/sync",
+          "request_dto": "None",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "UpsertTwin",
+          "http_method": "HttpPost",
+          "route": "/api/AzureDigitalTwin/twins/upsert",
+          "request_dto": "None",
+          "response_dto": "IActionResult"
+        }
+      ]
+    },
+    {
+      "name": "BenchmarkValidationController",
+      "base_route": "api/BenchmarkValidation",
+      "services": [
+        "IBenchmarkValidationService"
+      ],
+      "endpoints": [
+        {
+          "method": "ValidateModel",
+          "http_method": "HttpPost",
+          "route": "/api/BenchmarkValidation/validate",
+          "request_dto": "ValidateModelRequest",
+          "response_dto": "BenchmarkValidationResult"
+        },
+        {
+          "method": "GetAvailableBenchmarks",
+          "http_method": "HttpGet",
+          "route": "/api/BenchmarkValidation/benchmarks",
+          "request_dto": "None",
+          "response_dto": "List<string"
+        },
+        {
+          "method": "GetBenchmarkInfo",
+          "http_method": "HttpGet",
+          "route": "/api/BenchmarkValidation/benchmarks/{datasetName}",
+          "request_dto": "None",
+          "response_dto": "BenchmarkDatasetInfo"
+        }
+      ]
+    },
+    {
+      "name": "DashboardController",
+      "base_route": "api/Dashboard",
+      "services": [
+        "IAlertService",
+        "IMachineRepository"
+      ],
+      "endpoints": [
+        {
+          "method": "GetStats",
+          "http_method": "HttpGet",
+          "route": "/api/Dashboard/stats",
+          "request_dto": "None",
+          "response_dto": "DashboardStatsDto"
+        }
+      ]
+    },
+    {
+      "name": "DataArchivalController",
+      "base_route": "api/DataArchival",
+      "services": [
+        "IDataArchivalService"
+      ],
+      "endpoints": [
+        {
+          "method": "Archive",
+          "http_method": "HttpPost",
+          "route": "/api/DataArchival",
+          "request_dto": "None",
+          "response_dto": "IActionResult"
+        }
+      ]
+    },
+    {
+      "name": "DegradationModelingController",
+      "base_route": "api/DegradationModeling",
+      "services": [],
+      "endpoints": [
+        {
+          "method": "SolveExponentialDegradation",
+          "http_method": "HttpPost",
+          "route": "/api/DegradationModeling/solve/exponential",
+          "request_dto": "ExponentialDegradationRequest",
+          "response_dto": "ODESolution"
+        },
+        {
+          "method": "SolvePowerLawDegradation",
+          "http_method": "HttpPost",
+          "route": "/api/DegradationModeling/solve/powerlaw",
+          "request_dto": "PowerLawDegradationRequest",
+          "response_dto": "ODESolution"
+        },
+        {
+          "method": "SolveMultiVariableDegradation",
+          "http_method": "HttpPost",
+          "route": "/api/DegradationModeling/solve/multivariable",
+          "request_dto": "MultiVariableDegradationRequest",
+          "response_dto": "ODESolution"
+        },
+        {
+          "method": "SolveStochasticDegradation",
+          "http_method": "HttpPost",
+          "route": "/api/DegradationModeling/solve/stochastic",
+          "request_dto": "StochasticDegradationRequest",
+          "response_dto": "StochasticSolutionResult"
+        },
+        {
+          "method": "EstimateExponentialParameters",
+          "http_method": "HttpPost",
+          "route": "/api/DegradationModeling/estimate/exponential",
+          "request_dto": "ParameterEstimationRequest",
+          "response_dto": "ParameterEstimationResult"
+        },
+        {
+          "method": "EstimatePowerLawParameters",
+          "http_method": "HttpPost",
+          "route": "/api/DegradationModeling/estimate/powerlaw",
+          "request_dto": "ParameterEstimationRequest",
+          "response_dto": "ParameterEstimationResult"
+        },
+        {
+          "method": "EstimateMultiVariableParameters",
+          "http_method": "HttpPost",
+          "route": "/api/DegradationModeling/estimate/multivariable",
+          "request_dto": "MultiVariableEstimationRequest",
+          "response_dto": "ParameterEstimationResult"
+        },
+        {
+          "method": "CompareModels",
+          "http_method": "HttpPost",
+          "route": "/api/DegradationModeling/compare",
+          "request_dto": "ModelComparisonRequest",
+          "response_dto": "ModelComparisonResult"
+        },
+        {
+          "method": "ValidateParameters",
+          "http_method": "HttpPost",
+          "route": "/api/DegradationModeling/validate",
+          "request_dto": "ParameterValidationRequest",
+          "response_dto": "ParameterValidationResult"
+        },
+        {
+          "method": "ValidateSolution",
+          "http_method": "HttpPost",
+          "route": "/api/DegradationModeling/validate/solution",
+          "request_dto": "SolutionValidationRequest",
+          "response_dto": "None"
+        }
+      ]
+    },
+    {
+      "name": "DriftController",
+      "base_route": "api/Drift",
+      "services": [
+        "IDataDriftService"
+      ],
+      "endpoints": [
+        {
+          "method": "GetCurrentDriftStatus",
+          "http_method": "HttpGet",
+          "route": "/api/Drift/status",
+          "request_dto": "None",
+          "response_dto": "Dictionary<string, DriftDetectionResult"
+        },
+        {
+          "method": "GetDriftHistory",
+          "http_method": "HttpGet",
+          "route": "/api/Drift/history/{modelName}",
+          "request_dto": "Query:int",
+          "response_dto": "IEnumerable<DriftMetrics"
+        },
+        {
+          "method": "GetThresholds",
+          "http_method": "HttpGet",
+          "route": "/api/Drift/thresholds/{modelName}",
+          "request_dto": "None",
+          "response_dto": "DriftThresholds"
+        },
+        {
+          "method": "ConfigureThresholds",
+          "http_method": "HttpPut",
+          "route": "/api/Drift/thresholds/{modelName}",
+          "request_dto": "DriftThresholds",
+          "response_dto": "None"
+        },
+        {
+          "method": "GenerateReport",
+          "http_method": "HttpGet",
+          "route": "/api/Drift/report",
+          "request_dto": "Query:int",
+          "response_dto": "DriftReport"
+        },
+        {
+          "method": "DetectDrift",
+          "http_method": "HttpPost",
+          "route": "/api/Drift/detect",
+          "request_dto": "DriftDetectionRequest",
+          "response_dto": "DriftDetectionResult"
+        },
+        {
+          "method": "GetMonitoringConfig",
+          "http_method": "HttpGet",
+          "route": "/api/Drift/monitoring/config",
+          "request_dto": "None",
+          "response_dto": "None"
+        }
+      ]
+    },
+    {
+      "name": "ExternalSystemsController",
+      "base_route": "api/ExternalSystems",
+      "services": [
+        "IExternalSystemService"
+      ],
+      "endpoints": [
+        {
+          "method": "GetAllExternalSystems",
+          "http_method": "HttpGet",
+          "route": "/api/ExternalSystems",
+          "request_dto": "None",
+          "response_dto": "List<ExternalSystemDto"
+        },
+        {
+          "method": "GetConnectedExternalSystems",
+          "http_method": "HttpGet",
+          "route": "/api/ExternalSystems/connected",
+          "request_dto": "None",
+          "response_dto": "List<ExternalSystemDto"
+        },
+        {
+          "method": "GetExternalSystemsByType",
+          "http_method": "HttpGet",
+          "route": "/api/ExternalSystems/type/{systemType}",
+          "request_dto": "None",
+          "response_dto": "List<ExternalSystemDto"
+        },
+        {
+          "method": "GetExternalSystemById",
+          "http_method": "HttpGet",
+          "route": "/api/ExternalSystems/{id:guid}",
+          "request_dto": "None",
+          "response_dto": "ExternalSystemDto"
+        },
+        {
+          "method": "GetExternalSystemStatus",
+          "http_method": "HttpGet",
+          "route": "/api/ExternalSystems/{id:guid}/status",
+          "request_dto": "None",
+          "response_dto": "ExternalSystemStatus"
+        },
+        {
+          "method": "CreateExternalSystem",
+          "http_method": "HttpPost",
+          "route": "/api/ExternalSystems",
+          "request_dto": "ExternalSystemCreateDto",
+          "response_dto": "ExternalSystemDto"
+        },
+        {
+          "method": "UpdateExternalSystem",
+          "http_method": "HttpPut",
+          "route": "/api/ExternalSystems/{id:guid}",
+          "request_dto": "ExternalSystemUpdateDto",
+          "response_dto": "ExternalSystemDto"
+        },
+        {
+          "method": "DeleteExternalSystem",
+          "http_method": "HttpDelete",
+          "route": "/api/ExternalSystems/{id:guid}",
+          "request_dto": "None",
+          "response_dto": "None"
+        },
+        {
+          "method": "ConnectExternalSystem",
+          "http_method": "HttpPost",
+          "route": "/api/ExternalSystems/{id:guid}/connect",
+          "request_dto": "None",
+          "response_dto": "None"
+        },
+        {
+          "method": "DisconnectExternalSystem",
+          "http_method": "HttpPost",
+          "route": "/api/ExternalSystems/{id:guid}/disconnect",
+          "request_dto": "None",
+          "response_dto": "None"
+        },
+        {
+          "method": "TestExternalSystemConnection",
+          "http_method": "HttpPost",
+          "route": "/api/ExternalSystems/{id:guid}/test",
+          "request_dto": "None",
+          "response_dto": "bool"
+        },
+        {
+          "method": "GetSystemIntegrations",
+          "http_method": "HttpGet",
+          "route": "/api/ExternalSystems/integrations",
+          "request_dto": "None",
+          "response_dto": "List<SystemIntegrationDto"
+        },
+        {
+          "method": "GetSystemIntegrationsBySystem",
+          "http_method": "HttpGet",
+          "route": "/api/ExternalSystems/{systemId:guid}/integrations",
+          "request_dto": "None",
+          "response_dto": "List<SystemIntegrationDto"
+        },
+        {
+          "method": "GetActiveSystemIntegrations",
+          "http_method": "HttpGet",
+          "route": "/api/ExternalSystems/integrations/active",
+          "request_dto": "None",
+          "response_dto": "List<SystemIntegrationDto"
+        },
+        {
+          "method": "CreateSystemIntegration",
+          "http_method": "HttpPost",
+          "route": "/api/ExternalSystems/integrations",
+          "request_dto": "SystemIntegrationCreateDto",
+          "response_dto": "SystemIntegrationDto"
+        },
+        {
+          "method": "UpdateSystemIntegration",
+          "http_method": "HttpPut",
+          "route": "/api/ExternalSystems/integrations/{id:guid}",
+          "request_dto": "SystemIntegrationUpdateDto",
+          "response_dto": "SystemIntegrationDto"
+        },
+        {
+          "method": "DeleteSystemIntegration",
+          "http_method": "HttpDelete",
+          "route": "/api/ExternalSystems/integrations/{id:guid}",
+          "request_dto": "None",
+          "response_dto": "None"
+        },
+        {
+          "method": "EnableSystemIntegration",
+          "http_method": "HttpPost",
+          "route": "/api/ExternalSystems/integrations/{id:guid}/enable",
+          "request_dto": "None",
+          "response_dto": "None"
+        },
+        {
+          "method": "DisableSystemIntegration",
+          "http_method": "HttpPost",
+          "route": "/api/ExternalSystems/integrations/{id:guid}/disable",
+          "request_dto": "None",
+          "response_dto": "None"
+        },
+        {
+          "method": "GetDataSynchronizations",
+          "http_method": "HttpGet",
+          "route": "/api/ExternalSystems/synchronizations",
+          "request_dto": "None",
+          "response_dto": "List<DataSynchronizationDto"
+        },
+        {
+          "method": "GetPendingSynchronizations",
+          "http_method": "HttpGet",
+          "route": "/api/ExternalSystems/synchronizations/pending",
+          "request_dto": "None",
+          "response_dto": "List<DataSynchronizationDto"
+        },
+        {
+          "method": "GetFailedSynchronizations",
+          "http_method": "HttpGet",
+          "route": "/api/ExternalSystems/synchronizations/failed",
+          "request_dto": "None",
+          "response_dto": "List<DataSynchronizationDto"
+        },
+        {
+          "method": "GetRecentSynchronizations",
+          "http_method": "HttpGet",
+          "route": "/api/ExternalSystems/synchronizations/recent",
+          "request_dto": "Query:int",
+          "response_dto": "List<DataSynchronizationDto"
+        },
+        {
+          "method": "CreateDataSynchronization",
+          "http_method": "HttpPost",
+          "route": "/api/ExternalSystems/synchronizations",
+          "request_dto": "DataSynchronizationCreateDto",
+          "response_dto": "DataSynchronizationDto"
+        },
+        {
+          "method": "ProcessPendingSynchronizations",
+          "http_method": "HttpPost",
+          "route": "/api/ExternalSystems/synchronizations/process",
+          "request_dto": "None",
+          "response_dto": "int"
+        }
+      ]
+    },
+    {
+      "name": "HealthController",
+      "base_route": "api/Health",
+      "services": [],
+      "endpoints": [
+        {
+          "method": "Get",
+          "http_method": "HttpGet",
+          "route": "/api/Health",
+          "request_dto": "None",
+          "response_dto": "HealthStatusDto"
+        },
+        {
+          "method": "Ready",
+          "http_method": "HttpGet",
+          "route": "/api/Health/ready",
+          "request_dto": "None",
+          "response_dto": "ReadinessResponse"
+        }
+      ]
+    },
+    {
+      "name": "MachineConfigurationController",
+      "base_route": "api/MachineConfiguration",
+      "services": [
+        "IMachineConfigurationService"
+      ],
+      "endpoints": [
+        {
+          "method": "GetAllConfigurations",
+          "http_method": "HttpGet",
+          "route": "/api/MachineConfiguration",
+          "request_dto": "None",
+          "response_dto": "List<MachineConfiguration"
+        },
+        {
+          "method": "GetConfiguration",
+          "http_method": "HttpGet",
+          "route": "/api/MachineConfiguration/{machineType}",
+          "request_dto": "None",
+          "response_dto": "MachineConfiguration"
+        },
+        {
+          "method": "CreateOrUpdateConfiguration",
+          "http_method": "HttpPost",
+          "route": "/api/MachineConfiguration",
+          "request_dto": "MachineConfiguration",
+          "response_dto": "None"
+        },
+        {
+          "method": "DeleteConfiguration",
+          "http_method": "HttpDelete",
+          "route": "/api/MachineConfiguration/{machineType}",
+          "request_dto": "None",
+          "response_dto": "None"
+        },
+        {
+          "method": "ValidateConfiguration",
+          "http_method": "HttpPost",
+          "route": "/api/MachineConfiguration/validate",
+          "request_dto": "string",
+          "response_dto": "None"
+        }
+      ]
+    },
+    {
+      "name": "MachinesController",
+      "base_route": "api/Machines",
+      "services": [
+        "IMediator"
+      ],
+      "endpoints": [
+        {
+          "method": "GetMachines",
+          "http_method": "HttpGet",
+          "route": "/api/Machines",
+          "request_dto": "None",
+          "response_dto": "IEnumerable<MachineDto"
+        },
+        {
+          "method": "GetMachine",
+          "http_method": "HttpGet",
+          "route": "/api/Machines/{id:guid}",
+          "request_dto": "None",
+          "response_dto": "MachineDto"
+        },
+        {
+          "method": "Create",
+          "http_method": "HttpPost",
+          "route": "/api/Machines",
+          "request_dto": "MachineCreateDto",
+          "response_dto": "MachineDto"
+        },
+        {
+          "method": "Update",
+          "http_method": "HttpPut",
+          "route": "/api/Machines/{id:guid}",
+          "request_dto": "MachineUpdateDto",
+          "response_dto": "MachineDto"
+        },
+        {
+          "method": "Delete",
+          "http_method": "HttpDelete",
+          "route": "/api/Machines/{id:guid}",
+          "request_dto": "None",
+          "response_dto": "IActionResult"
+        }
+      ]
+    },
+    {
+      "name": "MaintenanceController",
+      "base_route": "api/Maintenance",
+      "services": [
+        "IMaintenanceService"
+      ],
+      "endpoints": [
+        {
+          "method": "Plan",
+          "http_method": "HttpPost",
+          "route": "/api/Maintenance/plan",
+          "request_dto": "None",
+          "response_dto": "MaintenanceRecord"
+        },
+        {
+          "method": "Start",
+          "http_method": "HttpPost",
+          "route": "/api/Maintenance/{id:guid}/start",
+          "request_dto": "None",
+          "response_dto": "MaintenanceRecord"
+        },
+        {
+          "method": "Complete",
+          "http_method": "HttpPost",
+          "route": "/api/Maintenance/{id:guid}/complete",
+          "request_dto": "None",
+          "response_dto": "MaintenanceRecord"
+        },
+        {
+          "method": "Cancel",
+          "http_method": "HttpPost",
+          "route": "/api/Maintenance/{id:guid}/cancel",
+          "request_dto": "string",
+          "response_dto": "MaintenanceRecord"
+        },
+        {
+          "method": "GetHistory",
+          "http_method": "HttpGet",
+          "route": "/api/Maintenance/machine/{machineId:guid}",
+          "request_dto": "None",
+          "response_dto": "IEnumerable<MaintenanceRecord"
+        },
+        {
+          "method": "GetActive",
+          "http_method": "HttpGet",
+          "route": "/api/Maintenance/active",
+          "request_dto": "None",
+          "response_dto": "IEnumerable<MaintenanceRecord"
+        },
+        {
+          "method": "Search",
+          "http_method": "HttpGet",
+          "route": "/api/Maintenance/search",
+          "request_dto": "Query:string",
+          "response_dto": "IEnumerable<MaintenanceRecord"
+        }
+      ]
+    },
+    {
+      "name": "MathematicalModelingController",
+      "base_route": "api/MathematicalModeling",
+      "services": [
+        "IOptimizationService"
+      ],
+      "endpoints": [
+        {
+          "method": "SolveOde",
+          "http_method": "HttpPost",
+          "route": "/api/MathematicalModeling/ode/solve",
+          "request_dto": "OdeSolveRequest",
+          "response_dto": "OdeSolutionDto"
+        },
+        {
+          "method": "SolveSystemDynamics",
+          "http_method": "HttpPost",
+          "route": "/api/MathematicalModeling/system-dynamics/solve",
+          "request_dto": "SystemDynamicsRequest",
+          "response_dto": "SystemDynamicsSolutionDto"
+        },
+        {
+          "method": "GradientOptimization",
+          "http_method": "HttpPost",
+          "route": "/api/MathematicalModeling/optimization/gradient",
+          "request_dto": "GradientOptimizationRequest",
+          "response_dto": "OptimizationResultDto"
+        },
+        {
+          "method": "GeneticOptimization",
+          "http_method": "HttpPost",
+          "route": "/api/MathematicalModeling/optimization/genetic",
+          "request_dto": "GeneticOptimizationRequest",
+          "response_dto": "OptimizationResultDto"
+        },
+        {
+          "method": "MultiObjectiveOptimization",
+          "http_method": "HttpPost",
+          "route": "/api/MathematicalModeling/optimization/multi-objective",
+          "request_dto": "MultiObjectiveOptimizationRequest",
+          "response_dto": "MultiObjectiveResultDto"
+        },
+        {
+          "method": "GetSystemModels",
+          "http_method": "HttpGet",
+          "route": "/api/MathematicalModeling/models",
+          "request_dto": "None",
+          "response_dto": "None"
+        }
+      ]
+    },
+    {
+      "name": "ModelLifecycleController",
+      "base_route": "api/ModelLifecycle",
+      "services": [
+        "IModelLifecycleService"
+      ],
+      "endpoints": [
+        {
+          "method": "RegisterModelVersion",
+          "http_method": "HttpPost",
+          "route": "/api/ModelLifecycle/register",
+          "request_dto": "RegisterModelVersionRequest",
+          "response_dto": "ModelVersionDto"
+        },
+        {
+          "method": "PromoteModel",
+          "http_method": "HttpPost",
+          "route": "/api/ModelLifecycle/{id}/promote",
+          "request_dto": "PromoteModelRequest",
+          "response_dto": "ModelVersionDto"
+        },
+        {
+          "method": "GetModelVersions",
+          "http_method": "HttpGet",
+          "route": "/api/ModelLifecycle",
+          "request_dto": "None",
+          "response_dto": "List<ModelVersionDto"
+        },
+        {
+          "method": "GetProductionVersion",
+          "http_method": "HttpGet",
+          "route": "/api/ModelLifecycle/production/{modelType}",
+          "request_dto": "None",
+          "response_dto": "ModelVersionDto"
+        },
+        {
+          "method": "CompareModels",
+          "http_method": "HttpPost",
+          "route": "/api/ModelLifecycle/compare",
+          "request_dto": "CompareModelsRequest",
+          "response_dto": "ModelComparisonResult"
+        },
+        {
+          "method": "GetModelPerformance",
+          "http_method": "HttpGet",
+          "route": "/api/ModelLifecycle/{id}/performance",
+          "request_dto": "None",
+          "response_dto": "ModelPerformanceSummary"
+        }
+      ]
+    },
+    {
+      "name": "PerformanceMetricsController",
+      "base_route": "api/PerformanceMetrics",
+      "services": [],
+      "endpoints": [
+        {
+          "method": "GetMetrics",
+          "http_method": "HttpGet",
+          "route": "/api/PerformanceMetrics",
+          "request_dto": "None",
+          "response_dto": "List<PerformanceMetrics"
+        },
+        {
+          "method": "GetStatistics",
+          "http_method": "HttpGet",
+          "route": "/api/PerformanceMetrics/statistics",
+          "request_dto": "None",
+          "response_dto": "PerformanceStatistics"
+        },
+        {
+          "method": "GetThresholdViolations",
+          "http_method": "HttpGet",
+          "route": "/api/PerformanceMetrics/threshold-violations",
+          "request_dto": "None",
+          "response_dto": "List<PerformanceMetrics"
+        }
+      ]
+    },
+    {
+      "name": "PredictionsController",
+      "base_route": "api/Predictions",
+      "services": [
+        "IMediator",
+        "ITelemetryRepository",
+        "IFeatureExtractionService",
+        "IAdvancedPredictiveService",
+        "IPredictionService"
+      ],
+      "endpoints": [
+        {
+          "method": "GetRulPrediction",
+          "http_method": "HttpPost",
+          "route": "/api/Predictions/rul/{machineId}",
+          "request_dto": "None",
+          "response_dto": "RulPredictionResult"
+        },
+        {
+          "method": "GetHealthClassification",
+          "http_method": "HttpGet",
+          "route": "/api/Predictions/health/{machineId}",
+          "request_dto": "None",
+          "response_dto": "HealthClassificationResult"
+        },
+        {
+          "method": "GetRulSummary",
+          "http_method": "HttpGet",
+          "route": "/api/Predictions/rul/{machineId}/summary",
+          "request_dto": "None",
+          "response_dto": "object"
+        },
+        {
+          "method": "TrainModels",
+          "http_method": "HttpPost",
+          "route": "/api/Predictions/train",
+          "request_dto": "None",
+          "response_dto": "TrainingResultDto"
+        },
+        {
+          "method": "TrainModelsAiEndpoint",
+          "http_method": "HttpPost",
+          "route": "/api/Predictions/ai/train",
+          "request_dto": "None",
+          "response_dto": "TrainingResultDto"
+        },
+        {
+          "method": "GetModelStatus",
+          "http_method": "HttpGet",
+          "route": "/api/Predictions/status",
+          "request_dto": "None",
+          "response_dto": "None"
+        },
+        {
+          "method": "RequestPrediction",
+          "http_method": "HttpPost",
+          "route": "/api/Predictions",
+          "request_dto": "PredictionRequestDto",
+          "response_dto": "PredictionDto"
+        },
+        {
+          "method": "GetPredictions",
+          "http_method": "HttpGet",
+          "route": "/api/Predictions",
+          "request_dto": "Query:int",
+          "response_dto": "IEnumerable<PredictionDto"
+        },
+        {
+          "method": "GetRulPredictionGet",
+          "http_method": "HttpGet",
+          "route": "/api/Predictions/rul/{machineId}",
+          "request_dto": "None",
+          "response_dto": "RulPredictionResult"
+        },
+        {
+          "method": "GetAnomalyPrediction",
+          "http_method": "HttpGet",
+          "route": "/api/Predictions/anomaly/{machineId}",
+          "request_dto": "None",
+          "response_dto": "DigitalTwinPlatform.API.Services.Analytics.Advanced.AnomalyDetectionResult"
+        },
+        {
+          "method": "Search",
+          "http_method": "HttpGet",
+          "route": "/api/Predictions/search",
+          "request_dto": "Query:string",
+          "response_dto": "IEnumerable<RulPredictionResult"
+        },
+        {
+          "method": "RequestPrediction",
+          "http_method": "HttpPost",
+          "route": "/api/Predictions",
+          "request_dto": "PredictionRequestDto",
+          "response_dto": "PredictionDto"
+        }
+      ]
+    },
+    {
+      "name": "PrescriptiveController",
+      "base_route": "api/Prescriptive",
+      "services": [
+        "IPrescriptiveService"
+      ],
+      "endpoints": [
+        {
+          "method": "GetAnalysis",
+          "http_method": "HttpGet",
+          "route": "/api/Prescriptive/{machineId}/analysis",
+          "request_dto": "Query:int",
+          "response_dto": "IEnumerable<MaintenanceWindow"
+        },
+        {
+          "method": "GetOptimal",
+          "http_method": "HttpGet",
+          "route": "/api/Prescriptive/{machineId}/optimal",
+          "request_dto": "None",
+          "response_dto": "MaintenanceWindow"
+        }
+      ]
+    },
+    {
+      "name": "ProductionLinesController",
+      "base_route": "api/ProductionLines",
+      "services": [
+        "IMediator"
+      ],
+      "endpoints": [
+        {
+          "method": "Get",
+          "http_method": "HttpGet",
+          "route": "/api/ProductionLines",
+          "request_dto": "None",
+          "response_dto": "IEnumerable<ProductionLineDto"
+        },
+        {
+          "method": "Get",
+          "http_method": "HttpGet",
+          "route": "/api/ProductionLines/{id:guid}",
+          "request_dto": "None",
+          "response_dto": "ProductionLineDto"
+        },
+        {
+          "method": "Create",
+          "http_method": "HttpPost",
+          "route": "/api/ProductionLines",
+          "request_dto": "None",
+          "response_dto": "ProductionLineDto"
+        },
+        {
+          "method": "Update",
+          "http_method": "HttpPut",
+          "route": "/api/ProductionLines/{id:guid}",
+          "request_dto": "None",
+          "response_dto": "ProductionLineDto"
+        },
+        {
+          "method": "Delete",
+          "http_method": "HttpDelete",
+          "route": "/api/ProductionLines/{id:guid}",
+          "request_dto": "None",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "Search",
+          "http_method": "HttpGet",
+          "route": "/api/ProductionLines/search",
+          "request_dto": "Query:string",
+          "response_dto": "IEnumerable<ProductionLineDto"
+        }
+      ]
+    },
+    {
+      "name": "ReportsController",
+      "base_route": "api/Reports",
+      "services": [
+        "IServiceProvider"
+      ],
+      "endpoints": [
+        {
+          "method": "GenerateReport",
+          "http_method": "HttpPost",
+          "route": "/api/Reports/generate",
+          "request_dto": "ReportGenerationRequest",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "ExportData",
+          "http_method": "HttpPost",
+          "route": "/api/Reports/export",
+          "request_dto": "ExportDataRequest",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "GetTemplates",
+          "http_method": "HttpGet",
+          "route": "/api/Reports/templates",
+          "request_dto": "None",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "ScheduleReport",
+          "http_method": "HttpPost",
+          "route": "/api/Reports/schedule",
+          "request_dto": "ReportSchedule",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "GetHistory",
+          "http_method": "HttpGet",
+          "route": "/api/Reports/history",
+          "request_dto": "Query:int",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "DownloadReport",
+          "http_method": "HttpGet",
+          "route": "/api/Reports/download/{reportId}",
+          "request_dto": "None",
+          "response_dto": "IActionResult"
+        }
+      ]
+    },
+    {
+      "name": "RunToFailureController",
+      "base_route": "api/RunToFailure",
+      "services": [],
+      "endpoints": [
+        {
+          "method": "RunSimulation",
+          "http_method": "HttpPost",
+          "route": "/api/RunToFailure/{machineId:guid}",
+          "request_dto": "None",
+          "response_dto": "RunToFailureResult"
+        },
+        {
+          "method": "GenerateTrajectories",
+          "http_method": "HttpPost",
+          "route": "/api/RunToFailure/generate-trajectories",
+          "request_dto": "GenerateTrajectoriesRequest",
+          "response_dto": "List<DegradationTrajectory"
+        },
+        {
+          "method": "GetResults",
+          "http_method": "HttpGet",
+          "route": "/api/RunToFailure/{machineId:guid}/results",
+          "request_dto": "None",
+          "response_dto": "List<RunToFailureResult"
+        }
+      ]
+    },
+    {
+      "name": "SearchController",
+      "base_route": "api/Search",
+      "services": [
+        "IMediator"
+      ],
+      "endpoints": [
+        {
+          "method": "Search",
+          "http_method": "HttpPost",
+          "route": "/api/Search",
+          "request_dto": "SearchRequestDto",
+          "response_dto": "SearchResultDto"
+        },
+        {
+          "method": "GetSuggestions",
+          "http_method": "HttpGet",
+          "route": "/api/Search/suggestions",
+          "request_dto": "Query:string",
+          "response_dto": "IEnumerable<SearchSuggestionDto"
+        },
+        {
+          "method": "GetSavedSearches",
+          "http_method": "HttpGet",
+          "route": "/api/Search/saved",
+          "request_dto": "None",
+          "response_dto": "IEnumerable<SavedSearchDto"
+        },
+        {
+          "method": "SaveSearch",
+          "http_method": "HttpPost",
+          "route": "/api/Search/saved",
+          "request_dto": "SaveSearchRequestDto",
+          "response_dto": "SavedSearchDto"
+        },
+        {
+          "method": "DeleteSavedSearch",
+          "http_method": "HttpDelete",
+          "route": "/api/Search/saved/{id:guid}",
+          "request_dto": "None",
+          "response_dto": "IActionResult"
+        }
+      ]
+    },
+    {
+      "name": "SimulationController",
+      "base_route": "api/Simulation",
+      "services": [
+        "IMediator"
+      ],
+      "endpoints": [
+        {
+          "method": "CreateSimulation",
+          "http_method": "HttpPost",
+          "route": "/api/Simulation",
+          "request_dto": "None",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "GetSimulation",
+          "http_method": "HttpGet",
+          "route": "/api/Simulation/{id}",
+          "request_dto": "Query:Guid",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "RunSimulation",
+          "http_method": "HttpPost",
+          "route": "/api/Simulation/{id}/run",
+          "request_dto": "Query:Guid",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "PauseSimulation",
+          "http_method": "HttpPost",
+          "route": "/api/Simulation/{id}/pause",
+          "request_dto": "Query:Guid",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "ResumeSimulation",
+          "http_method": "HttpPost",
+          "route": "/api/Simulation/{id}/resume",
+          "request_dto": "Query:Guid",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "CancelSimulation",
+          "http_method": "HttpPost",
+          "route": "/api/Simulation/{id}/cancel",
+          "request_dto": "Query:Guid",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "ListSimulations",
+          "http_method": "HttpGet",
+          "route": "/api/Simulation",
+          "request_dto": "Query:Guid",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "GetSimulationStatus",
+          "http_method": "HttpGet",
+          "route": "/api/Simulation/status/{machineId:guid}",
+          "request_dto": "None",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "GetAllSimulationStatuses",
+          "http_method": "HttpGet",
+          "route": "/api/Simulation/status",
+          "request_dto": "None",
+          "response_dto": "IActionResult"
+        }
+      ]
+    },
+    {
+      "name": "SyntheticDataController",
+      "base_route": "api/SyntheticData",
+      "services": [],
+      "endpoints": [
+        {
+          "method": "GenerateSyntheticData",
+          "http_method": "HttpPost",
+          "route": "/api/SyntheticData/generate",
+          "request_dto": "SyntheticDataGenerationRequest",
+          "response_dto": "DigitalTwinPlatform.Domain.Entities.SyntheticDataGeneration"
+        },
+        {
+          "method": "ValidateSyntheticData",
+          "http_method": "HttpPost",
+          "route": "/api/SyntheticData/validate",
+          "request_dto": "ValidateSyntheticDataRequest",
+          "response_dto": "DigitalTwinPlatform.Domain.Entities.DataValidationReport"
+        },
+        {
+          "method": "GetGenerationStatistics",
+          "http_method": "HttpGet",
+          "route": "/api/SyntheticData/statistics/{machineType}",
+          "request_dto": "None",
+          "response_dto": "DigitalTwinPlatform.Domain.Entities.GenerationStatistics"
+        },
+        {
+          "method": "GetAllGenerationStatistics",
+          "http_method": "HttpGet",
+          "route": "/api/SyntheticData/statistics",
+          "request_dto": "None",
+          "response_dto": "List<DigitalTwinPlatform.Domain.Entities.GenerationStatistics"
+        }
+      ]
+    },
+    {
+      "name": "TelemetryController",
+      "base_route": "api/Telemetry",
+      "services": [
+        "IMediator"
+      ],
+      "endpoints": [
+        {
+          "method": "Ingest",
+          "http_method": "HttpPost",
+          "route": "/api/Telemetry",
+          "request_dto": "TelemetryIngestDto",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "GetForMachine",
+          "http_method": "HttpGet",
+          "route": "/api/Telemetry/{machineId:guid}",
+          "request_dto": "Query:int",
+          "response_dto": "IEnumerable<TelemetryDto"
+        },
+        {
+          "method": "GetRecent",
+          "http_method": "HttpGet",
+          "route": "/api/Telemetry/recent",
+          "request_dto": "Query:int",
+          "response_dto": "IEnumerable<TelemetryDto"
+        },
+        {
+          "method": "GetLatest",
+          "http_method": "HttpGet",
+          "route": "/api/Telemetry/{machineId:guid}/latest",
+          "request_dto": "None",
+          "response_dto": "TelemetryDto"
+        },
+        {
+          "method": "GetLatestMetrics",
+          "http_method": "HttpGet",
+          "route": "/api/Telemetry/{machineId:guid}/latest/metrics",
+          "request_dto": "None",
+          "response_dto": "TelemetryMetricsDto"
+        },
+        {
+          "method": "Search",
+          "http_method": "HttpGet",
+          "route": "/api/Telemetry/search",
+          "request_dto": "Query:string",
+          "response_dto": "IEnumerable<TelemetryDto"
+        }
+      ]
+    },
+    {
+      "name": "TenantsController",
+      "base_route": "api/Tenants",
+      "services": [
+        "IMediator",
+        "ITenantService"
+      ],
+      "endpoints": [
+        {
+          "method": "GetAllTenants",
+          "http_method": "HttpGet",
+          "route": "/api/Tenants",
+          "request_dto": "None",
+          "response_dto": "List<TenantDto"
+        },
+        {
+          "method": "GetActiveTenants",
+          "http_method": "HttpGet",
+          "route": "/api/Tenants/active",
+          "request_dto": "None",
+          "response_dto": "List<TenantDto"
+        },
+        {
+          "method": "GetTenantById",
+          "http_method": "HttpGet",
+          "route": "/api/Tenants/{id:guid}",
+          "request_dto": "None",
+          "response_dto": "TenantDto"
+        },
+        {
+          "method": "GetTenantBySlug",
+          "http_method": "HttpGet",
+          "route": "/api/Tenants/slug/{slug}",
+          "request_dto": "None",
+          "response_dto": "TenantDto"
+        },
+        {
+          "method": "CreateTenant",
+          "http_method": "HttpPost",
+          "route": "/api/Tenants",
+          "request_dto": "TenantCreateDto",
+          "response_dto": "TenantDto"
+        },
+        {
+          "method": "UpdateTenant",
+          "http_method": "HttpPut",
+          "route": "/api/Tenants/{id:guid}",
+          "request_dto": "TenantUpdateDto",
+          "response_dto": "TenantDto"
+        },
+        {
+          "method": "DeleteTenant",
+          "http_method": "HttpDelete",
+          "route": "/api/Tenants/{id:guid}",
+          "request_dto": "None",
+          "response_dto": "None"
+        },
+        {
+          "method": "ActivateTenant",
+          "http_method": "HttpPost",
+          "route": "/api/Tenants/{id:guid}/activate",
+          "request_dto": "None",
+          "response_dto": "None"
+        },
+        {
+          "method": "DeactivateTenant",
+          "http_method": "HttpPost",
+          "route": "/api/Tenants/{id:guid}/deactivate",
+          "request_dto": "None",
+          "response_dto": "None"
+        },
+        {
+          "method": "GetTenantUsers",
+          "http_method": "HttpGet",
+          "route": "/api/Tenants/{tenantId:guid}/users",
+          "request_dto": "None",
+          "response_dto": "List<TenantUserDto"
+        },
+        {
+          "method": "AddUserToTenant",
+          "http_method": "HttpPost",
+          "route": "/api/Tenants/{tenantId:guid}/users",
+          "request_dto": "TenantUserCreateDto",
+          "response_dto": "TenantUserDto"
+        },
+        {
+          "method": "RemoveUserFromTenant",
+          "http_method": "HttpDelete",
+          "route": "/api/Tenants/{tenantId:guid}/users/{userId:guid}",
+          "request_dto": "None",
+          "response_dto": "None"
+        },
+        {
+          "method": "UpdateTenantUserRole",
+          "http_method": "HttpPut",
+          "route": "/api/Tenants/{tenantId:guid}/users/{userId:guid}/role",
+          "request_dto": "UserRole",
+          "response_dto": "None"
+        },
+        {
+          "method": "GetTenantSettings",
+          "http_method": "HttpGet",
+          "route": "/api/Tenants/{tenantId:guid}/settings",
+          "request_dto": "None",
+          "response_dto": "List<TenantSettingDto"
+        },
+        {
+          "method": "CreateTenantSetting",
+          "http_method": "HttpPost",
+          "route": "/api/Tenants/{tenantId:guid}/settings",
+          "request_dto": "TenantSettingCreateDto",
+          "response_dto": "TenantSettingDto"
+        },
+        {
+          "method": "UpdateTenantSetting",
+          "http_method": "HttpPut",
+          "route": "/api/Tenants/{tenantId:guid}/settings/{settingId:guid}",
+          "request_dto": "TenantSettingUpdateDto",
+          "response_dto": "TenantSettingDto"
+        },
+        {
+          "method": "DeleteTenantSetting",
+          "http_method": "HttpDelete",
+          "route": "/api/Tenants/{tenantId:guid}/settings/{settingId:guid}",
+          "request_dto": "None",
+          "response_dto": "None"
+        },
+        {
+          "method": "GetTenantSettingByKey",
+          "http_method": "HttpGet",
+          "route": "/api/Tenants/{tenantId:guid}/settings/key/{key}",
+          "request_dto": "None",
+          "response_dto": "TenantSettingDto"
+        }
+      ]
+    },
+    {
+      "name": "TokenController",
+      "base_route": "api/Token",
+      "services": [],
+      "endpoints": [
+        {
+          "method": "RefreshToken",
+          "http_method": "HttpPost",
+          "route": "/api/Token/refresh",
+          "request_dto": "RefreshTokenRequest",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "RevokeToken",
+          "http_method": "HttpPost",
+          "route": "/api/Token/revoke",
+          "request_dto": "RevokeTokenRequest",
+          "response_dto": "IActionResult"
+        }
+      ]
+    },
+    {
+      "name": "UncertaintyController",
+      "base_route": "api/Uncertainty",
+      "services": [
+        "IUncertaintyQuantificationService"
+      ],
+      "endpoints": [
+        {
+          "method": "MonteCarloAnalysis",
+          "http_method": "HttpPost",
+          "route": "/api/Uncertainty/{machineId}/monte-carlo",
+          "request_dto": "MonteCarloRequest",
+          "response_dto": "UncertaintyAnalysisResponse"
+        },
+        {
+          "method": "BayesianAnalysis",
+          "http_method": "HttpPost",
+          "route": "/api/Uncertainty/{machineId}/bayesian",
+          "request_dto": "BayesianRequest",
+          "response_dto": "UncertaintyAnalysisResponse"
+        },
+        {
+          "method": "BootstrapIntervals",
+          "http_method": "HttpGet",
+          "route": "/api/Uncertainty/{machineId}/bootstrap-intervals",
+          "request_dto": "Query:int",
+          "response_dto": "ConfidenceIntervalDto"
+        },
+        {
+          "method": "ModelUncertainty",
+          "http_method": "HttpPost",
+          "route": "/api/Uncertainty/{machineId}/model-uncertainty",
+          "request_dto": "ModelUncertaintyRequest",
+          "response_dto": "ModelUncertaintyResponse"
+        },
+        {
+          "method": "ComprehensiveReport",
+          "http_method": "HttpGet",
+          "route": "/api/Uncertainty/{machineId}/comprehensive-report",
+          "request_dto": "None",
+          "response_dto": "ComprehensiveUncertaintyReport"
+        }
+      ]
+    },
+    {
+      "name": "WorkflowController",
+      "base_route": "api/Workflow",
+      "services": [
+        "IMediator",
+        "IWorkflowService"
+      ],
+      "endpoints": [
+        {
+          "method": "GetAllWorkflows",
+          "http_method": "HttpGet",
+          "route": "/api/Workflow",
+          "request_dto": "None",
+          "response_dto": "IEnumerable<WorkflowDefinitionDto"
+        },
+        {
+          "method": "GetWorkflow",
+          "http_method": "HttpGet",
+          "route": "/api/Workflow/{id}",
+          "request_dto": "None",
+          "response_dto": "WorkflowDefinitionDto"
+        },
+        {
+          "method": "CreateWorkflow",
+          "http_method": "HttpPost",
+          "route": "/api/Workflow",
+          "request_dto": "CreateWorkflowCommand",
+          "response_dto": "WorkflowDefinitionDto"
+        },
+        {
+          "method": "UpdateWorkflow",
+          "http_method": "HttpPut",
+          "route": "/api/Workflow/{id}",
+          "request_dto": "UpdateWorkflowCommand",
+          "response_dto": "WorkflowDefinitionDto"
+        },
+        {
+          "method": "DeleteWorkflow",
+          "http_method": "HttpDelete",
+          "route": "/api/Workflow/{id}",
+          "request_dto": "None",
+          "response_dto": "IActionResult"
+        },
+        {
+          "method": "ToggleWorkflow",
+          "http_method": "HttpPost",
+          "route": "/api/Workflow/{id}/toggle",
+          "request_dto": "None",
+          "response_dto": "WorkflowDefinitionDto"
+        },
+        {
+          "method": "ExecuteWorkflow",
+          "http_method": "HttpPost",
+          "route": "/api/Workflow/{id}/execute",
+          "request_dto": "ExecuteWorkflowDto",
+          "response_dto": "WorkflowExecutionDto"
+        },
+        {
+          "method": "GetWorkflowExecutions",
+          "http_method": "HttpGet",
+          "route": "/api/Workflow/{id}/executions",
+          "request_dto": "Query:int",
+          "response_dto": "IEnumerable<WorkflowExecutionDto"
+        },
+        {
+          "method": "GetWorkflowStatistics",
+          "http_method": "HttpGet",
+          "route": "/api/Workflow/{id}/statistics",
+          "request_dto": "None",
+          "response_dto": "WorkflowStatisticsDto"
+        },
+        {
+          "method": "ValidateWorkflow",
+          "http_method": "HttpPost",
+          "route": "/api/Workflow/validate",
+          "request_dto": "ValidateWorkflowDto",
+          "response_dto": "WorkflowValidationResultDto"
+        },
+        {
+          "method": "GetWorkflowTemplates",
+          "http_method": "HttpGet",
+          "route": "/api/Workflow/templates",
+          "request_dto": "None",
+          "response_dto": "IEnumerable<WorkflowTemplateDto"
+        },
+        {
+          "method": "DuplicateWorkflow",
+          "http_method": "HttpPost",
+          "route": "/api/Workflow/{id}/duplicate",
+          "request_dto": "DuplicateWorkflowDto",
+          "response_dto": "WorkflowDefinitionDto"
+        }
+      ]
+    }
+  ],
+  "dtos": {
+    "AlertDto": {},
+    "ExternalSystemDto": {},
+    "GetAllAIModelsQuery": {},
+    "GetAIModelByIdQuery": {
+      "Id": "string"
+    },
+    "DeployAIModelCommand": {
+      "Name": "string"
+    },
+    "UpdateAIModelCommand": {
+      "Id": "string"
+    },
+    "DeleteAIModelCommand": {
+      "Id": "string"
+    },
+    "RetrainModelCommand": {
+      "ModelId": "string"
+    },
+    "TrainModelCommand": {
+      "ForceRetrain": "bool"
+    },
+    "DeployAIModelHandler": {},
+    "UpdateAIModelHandler": {},
+    "DeleteAIModelHandler": {},
+    "RetrainModelHandler": {},
+    "TrainModelCommandHandler": {},
+    "GetAllAIModelsHandler": {},
+    "GetAIModelByIdHandler": {},
+    "AIModelDto": {
+      "Id": "string"
+    },
+    "ModelPredictionDto": {
+      "RemainingUsefulLife": "double"
+    },
+    "ModelMetricsDto": {
+      "Accuracy": "double"
+    },
+    "ModelInputDto": {},
+    "ModelValidationResultDto": {
+      "IsValid": "bool"
+    },
+    "ModelCompatibilityDto": {
+      "IsCompatible": "bool"
+    },
+    "DeploymentStatusDto": {
+      "Status": "string"
+    },
+    "MachineDeploymentStatus": {
+      "MachineId": "string"
+    },
+    "TrainingResultDto": {
+      "Success": "bool"
+    },
+    "TrainModelRequestDto": {
+      "ForceRetrain": "bool"
+    },
+    "ModelStatusDto": {
+      "RulModelLoaded": "bool"
+    },
+    "SearchRequestDto": {
+      "Query": "string"
+    },
+    "AdvancedFiltersDto": {
+      "MinTemperature": "double?"
+    },
+    "SearchResultDto": {
+      "Items": "List<SearchResultItemDto>"
+    },
+    "SearchResultItemDto": {
+      "Id": "string"
+    },
+    "SearchSuggestionDto": {
+      "Text": "string"
+    },
+    "SavedSearchDto": {
+      "Id": "string"
+    },
+    "SaveSearchRequestDto": {
+      "Name": "string"
+    },
+    "MLModelService": {},
+    "TelemetryDto": {},
+    "TelemetryIngestDto": {},
+    "TenantDto": {},
+    "WorkflowDefinitionDto": {
+      "Id": "string"
+    },
+    "WorkflowTriggerDto": {
+      "Type": "string"
+    },
+    "WorkflowConditionDto": {
+      "Field": "string"
+    },
+    "WorkflowActionDto": {
+      "Type": "string"
+    },
+    "WorkflowTargetDto": {
+      "Type": "string"
+    },
+    "WorkflowExecutionDto": {
+      "Id": "string"
+    },
+    "WorkflowActionExecutionDto": {
+      "ActionOrder": "int"
+    },
+    "WorkflowStatisticsDto": {
+      "WorkflowId": "string"
+    },
+    "WorkflowValidationResultDto": {
+      "IsValid": "bool"
+    },
+    "WorkflowCompatibilityDto": {
+      "IsCompatible": "bool"
+    },
+    "WorkflowTemplateDto": {
+      "Id": "string"
+    }
+  },
+  "interfaces": {
+    "IMlExperimentLogger": [
+      "LogExperimentAsync"
+    ],
+    "IAlertRepository": [
+      "SearchAsync"
+    ],
+    "IMachineRepository": [
+      "GetByProductionLineAsync",
+      "SearchAsync"
+    ],
+    "IMaintenanceRepository": [
+      "SearchAsync"
+    ],
+    "IModelVersionRepository": [
+      "GetAsync",
+      "GetByVersionAsync",
+      "GetProductionVersionAsync",
+      "GetByModelTypeAsync",
+      "GetAllAsync",
+      "AddAsync",
+      "UpdateAsync",
+      "DeleteAsync"
+    ],
+    "IPredictionRepository": [
+      "GetByMachineIdAsync",
+      "SearchAsync"
+    ],
+    "IProductionLineRepository": [
+      "SearchAsync"
+    ],
+    "IRepository": [
+      "GetAsync",
+      "GetAllAsync",
+      "AddAsync",
+      "AddRangeAsync",
+      "UpdateAsync",
+      "DeleteAsync",
+      "DeleteRangeAsync",
+      "SaveChangesAsync"
+    ],
+    "ISavedSearchRepository": [
+      "GetByUserAsync"
+    ],
+    "ITelemetryRepository": [
+      "GetForMachineAsync",
+      "GetRecentAsync",
+      "SearchAsync"
+    ],
+    "IExporter": [],
+    "IHubPublisher": [
+      "BroadcastTelemetryAsync",
+      "BroadcastPredictionAsync",
+      "BroadcastAlertAsync"
+    ],
+    "IMaintenanceService": [
+      "PlanMaintenanceAsync",
+      "StartMaintenanceAsync",
+      "CompleteMaintenanceAsync",
+      "CancelMaintenanceAsync",
+      "GetMaintenanceHistoryAsync",
+      "GetActiveMaintenanceAsync",
+      "SearchMaintenanceAsync"
+    ],
+    "IRulPredictor": [],
+    "IHealthClassifier": [],
+    "IPredictionPublisher": [
+      "BroadcastPredictionAsync"
+    ],
+    "IPredictionService": [
+      "PredictAsync",
+      "CreatePredictionAsync",
+      "GetLatestPredictionAsync",
+      "GetPredictionHistoryAsync",
+      "GetHighConfidencePredictionsAsync",
+      "CleanupOldPredictionsAsync",
+      "SearchPredictionsAsync"
+    ],
+    "ITelemetryPublisher": [
+      "BroadcastTelemetryAsync"
+    ],
+    "ITwinEngineService": [
+      "UpdateTwinPredictionAsync",
+      "GetMachineWithStateAsync"
+    ],
+    "ITenantService": [
+      "CreateTenantAsync",
+      "UpdateTenantAsync",
+      "DeleteTenantAsync",
+      "GetTenantByIdAsync",
+      "GetAllTenantsAsync",
+      "GetActiveTenantsAsync",
+      "GetTenantBySlugAsync",
+      "ActivateTenantAsync",
+      "DeactivateTenantAsync",
+      "AddUserToTenantAsync",
+      "RemoveUserFromTenantAsync",
+      "UpdateTenantUserRoleAsync",
+      "GetTenantUsersAsync",
+      "GetUserTenantsAsync",
+      "GetTenantUserAsync",
+      "CreateTenantSettingAsync",
+      "UpdateTenantSettingAsync",
+      "DeleteTenantSettingAsync",
+      "GetTenantSettingsAsync",
+      "GetTenantSettingAsync",
+      "GetTenantSettingByKeyAsync"
+    ],
+    "IUnitOfWork": [
+      "SaveChangesAsync",
+      "BeginTransactionAsync",
+      "CommitAsync",
+      "RollbackAsync"
+    ],
+    "IAuditableCommand": [],
+    "IAuthorizableCommand": [],
+    "ICacheableQuery": [],
+    "IEnvironmentConfigurationService": [],
+    "IExternalSystemService": [
+      "CreateExternalSystemAsync",
+      "UpdateExternalSystemAsync",
+      "DeleteExternalSystemAsync",
+      "GetExternalSystemByIdAsync",
+      "GetAllExternalSystemsAsync",
+      "GetConnectedExternalSystemsAsync",
+      "GetExternalSystemsByTypeAsync",
+      "GetExternalSystemStatusAsync",
+      "ConnectExternalSystemAsync",
+      "DisconnectExternalSystemAsync",
+      "TestExternalSystemConnectionAsync",
+      "CreateSystemIntegrationAsync",
+      "UpdateSystemIntegrationAsync",
+      "DeleteSystemIntegrationAsync",
+      "GetSystemIntegrationByIdAsync",
+      "GetSystemIntegrationsAsync",
+      "GetSystemIntegrationsBySystemAsync",
+      "GetSystemIntegrationsByEntityAsync",
+      "GetActiveSystemIntegrationsAsync",
+      "EnableSystemIntegrationAsync",
+      "DisableSystemIntegrationAsync",
+      "CreateDataSynchronizationAsync",
+      "GetDataSynchronizationByIdAsync",
+      "GetDataSynchronizationsAsync",
+      "GetPendingSynchronizationsAsync",
+      "GetFailedSynchronizationsAsync",
+      "GetDataSynchronizationsBySystemAsync",
+      "GetDataSynchronizationsByEntityAsync",
+      "GetRecentSynchronizationsAsync",
+      "ProcessPendingSynchronizationsAsync",
+      "CancelDataSynchronizationAsync",
+      "RetryFailedSynchronizationAsync"
+    ],
+    "IPrescriptiveService": [
+      "RunWhatIfAnalysisAsync",
+      "GetOptimalMaintenanceDateAsync"
+    ],
+    "INumericalODESolver": [
+      "SolveAsync"
+    ],
+    "IAIService": [
+      "Predict",
+      "GetModelMetrics",
+      "GetCompatibleMachines",
+      "DeployModelToMachines",
+      "GetDeploymentStatus",
+      "ValidateModel",
+      "RetrainModel",
+      "MonitorModelPerformance",
+      "ArchiveModel"
+    ],
+    "IFeatureExtractionService": [],
+    "IMachineConfigurationService": [
+      "LoadConfigurationAsync",
+      "LoadAllConfigurationsAsync",
+      "ValidateConfigurationAsync",
+      "SaveConfigurationAsync",
+      "ConfigurationExistsAsync"
+    ],
+    "IMLModelService": [
+      "PredictRulAsync",
+      "TrainModelsAsync",
+      "GetFeatureImportanceAsync"
+    ],
+    "IODESolver": [
+      "SolveODEAsync",
+      "SolveSystemAsync",
+      "SolveSDEAsync"
+    ],
+    "IParameterEstimation": [
+      "EstimateExponentialParametersAsync",
+      "EstimatePowerLawParametersAsync",
+      "EstimateMultiVariableParametersAsync",
+      "CompareModelsAsync",
+      "ValidateParametersAsync"
+    ],
+    "IPerformanceCacheService": [
+      "RemoveAsync",
+      "RemoveByPatternAsync"
+    ],
+    "ISyntheticDataGenerator": [
+      "GenerateSyntheticDataAsync",
+      "ValidateSyntheticDataAsync",
+      "GetGenerationStatisticsAsync"
+    ],
+    "ITelemetryService": [
+      "AddTelemetryAsync",
+      "GetRecentTelemetryAsync",
+      "GetTelemetryByTimeRangeAsync",
+      "CleanupOldTelemetryAsync"
+    ],
+    "ISimulationService": [
+      "RunSimulation",
+      "GetSimulationStatus",
+      "StopSimulation",
+      "GetSimulationResults"
+    ],
+    "IWorkflowService": [
+      "ExecuteWorkflow",
+      "GetWorkflowExecutions",
+      "GetWorkflowStatistics",
+      "ValidateWorkflow",
+      "GetWorkflowTemplates",
+      "ScheduleWorkflow",
+      "CancelScheduledExecution",
+      "MonitorWorkflowHealth",
+      "ExportWorkflow",
+      "ImportWorkflow"
+    ]
+  },
+  "implementations": {
+    "ExternalSystemService": {
+      "interfaces": [
+        "IExternalSystemService"
+      ],
+      "methods": [
+        "CreateExternalSystemAsync",
+        "UpdateExternalSystemAsync",
+        "DeleteExternalSystemAsync",
+        "GetExternalSystemByIdAsync",
+        "GetAllExternalSystemsAsync",
+        "GetConnectedExternalSystemsAsync",
+        "GetExternalSystemsByTypeAsync",
+        "GetExternalSystemStatusAsync",
+        "ConnectExternalSystemAsync",
+        "DisconnectExternalSystemAsync",
+        "TestExternalSystemConnectionAsync",
+        "CreateSystemIntegrationAsync",
+        "UpdateSystemIntegrationAsync",
+        "DeleteSystemIntegrationAsync",
+        "GetSystemIntegrationByIdAsync",
+        "GetSystemIntegrationsAsync",
+        "GetSystemIntegrationsBySystemAsync",
+        "GetSystemIntegrationsByEntityAsync",
+        "GetActiveSystemIntegrationsAsync",
+        "EnableSystemIntegrationAsync",
+        "DisableSystemIntegrationAsync",
+        "CreateDataSynchronizationAsync",
+        "GetDataSynchronizationByIdAsync",
+        "GetDataSynchronizationsAsync",
+        "GetPendingSynchronizationsAsync",
+        "GetFailedSynchronizationsAsync",
+        "GetDataSynchronizationsBySystemAsync",
+        "GetDataSynchronizationsByEntityAsync",
+        "GetRecentSynchronizationsAsync",
+        "ProcessPendingSynchronizationsAsync",
+        "CancelDataSynchronizationAsync",
+        "RetryFailedSynchronizationAsync"
+      ]
+    },
+    "MockExternalSystemService": {
+      "interfaces": [
+        "IExternalSystemService"
+      ],
+      "methods": [
+        "CreateExternalSystemAsync",
+        "UpdateExternalSystemAsync",
+        "DeleteExternalSystemAsync",
+        "GetExternalSystemByIdAsync",
+        "GetAllExternalSystemsAsync",
+        "GetConnectedExternalSystemsAsync",
+        "GetExternalSystemsByTypeAsync",
+        "GetExternalSystemStatusAsync",
+        "ConnectExternalSystemAsync",
+        "DisconnectExternalSystemAsync",
+        "TestExternalSystemConnectionAsync",
+        "CreateSystemIntegrationAsync",
+        "UpdateSystemIntegrationAsync",
+        "DeleteSystemIntegrationAsync",
+        "GetSystemIntegrationByIdAsync",
+        "GetSystemIntegrationsAsync",
+        "GetSystemIntegrationsBySystemAsync",
+        "GetSystemIntegrationsByEntityAsync",
+        "GetActiveSystemIntegrationsAsync",
+        "EnableSystemIntegrationAsync",
+        "DisableSystemIntegrationAsync",
+        "CreateDataSynchronizationAsync",
+        "GetDataSynchronizationByIdAsync",
+        "GetDataSynchronizationsAsync",
+        "GetPendingSynchronizationsAsync",
+        "GetFailedSynchronizationsAsync",
+        "GetDataSynchronizationsBySystemAsync",
+        "GetDataSynchronizationsByEntityAsync",
+        "GetRecentSynchronizationsAsync",
+        "ProcessPendingSynchronizationsAsync",
+        "CancelDataSynchronizationAsync",
+        "RetryFailedSynchronizationAsync"
+      ]
+    },
+    "EulerMaruyama": {
+      "interfaces": [
+        "INumericalODESolver"
+      ],
+      "methods": [
+        "SolveAsync",
+        "SolveAsync",
+        "SolveCoupledSDEAsync"
+      ]
+    },
+    "RungeKutta": {
+      "interfaces": [
+        "INumericalODESolver"
+      ],
+      "methods": [
+        "SolveAsync",
+        "SolveAdaptiveAsync"
+      ]
+    },
+    "SDEProblem": {
+      "interfaces": [
+        "ODEProblem"
+      ],
+      "methods": []
+    },
+    "FeatureContributionPrediction": {
+      "interfaces": [
+        "RulPrediction"
+      ],
+      "methods": []
+    },
+    "DeleteAIModelCommand": {
+      "interfaces": [
+        "IRequest"
+      ],
+      "methods": []
+    },
+    "AIService": {
+      "interfaces": [
+        "IAIService"
+      ],
+      "methods": [
+        "Predict",
+        "GetModelMetrics",
+        "GetCompatibleMachines",
+        "DeployModelToMachines",
+        "GetDeploymentStatus",
+        "ValidateModel",
+        "RetrainModel",
+        "MonitorModelPerformance",
+        "ArchiveModel"
+      ]
+    },
+    "MachineConfigurationService": {
+      "interfaces": [
+        "IMachineConfigurationService"
+      ],
+      "methods": [
+        "LoadConfigurationAsync",
+        "LoadAllConfigurationsAsync",
+        "SaveConfigurationAsync"
+      ]
+    },
+    "MLModelService": {
+      "interfaces": [
+        "IMLModelService"
+      ],
+      "methods": [
+        "PredictRulAsync",
+        "TrainModelsAsync"
+      ]
+    },
+    "ODESolverService": {
+      "interfaces": [
+        "IODESolver"
+      ],
+      "methods": [
+        "SolveODEAsync",
+        "SolveSystemAsync",
+        "SolveSDEAsync"
+      ]
+    },
+    "ParameterEstimationService": {
+      "interfaces": [
+        "IParameterEstimation"
+      ],
+      "methods": [
+        "EstimateExponentialParametersAsync",
+        "EstimatePowerLawParametersAsync",
+        "EstimateMultiVariableParametersAsync",
+        "CompareModelsAsync",
+        "ValidateParametersAsync"
+      ]
+    },
+    "PerformanceCacheService": {
+      "interfaces": [
+        "IPerformanceCacheService"
+      ],
+      "methods": [
+        "RemoveAsync",
+        "RemoveByPatternAsync"
+      ]
+    },
+    "PredictionService": {
+      "interfaces": [
+        "IPredictionService"
+      ],
+      "methods": [
+        "CreatePredictionAsync",
+        "PredictAsync",
+        "GetLatestPredictionAsync",
+        "GetPredictionHistoryAsync",
+        "GetHighConfidencePredictionsAsync",
+        "CleanupOldPredictionsAsync",
+        "SearchPredictionsAsync",
+        "BroadcastPredictionAsync"
+      ]
+    },
+    "SyntheticDataGenerator": {
+      "interfaces": [
+        "ISyntheticDataGenerator"
+      ],
+      "methods": [
+        "GenerateSyntheticDataAsync",
+        "ValidateSyntheticDataAsync",
+        "GetGenerationStatisticsAsync"
+      ]
+    },
+    "TelemetryService": {
+      "interfaces": [
+        "ITelemetryService"
+      ],
+      "methods": [
+        "AddTelemetryAsync",
+        "GetRecentTelemetryAsync",
+        "GetTelemetryByTimeRangeAsync",
+        "CleanupOldTelemetryAsync"
+      ]
+    },
+    "SimulationService": {
+      "interfaces": [
+        "ISimulationService"
+      ],
+      "methods": [
+        "RunSimulation",
+        "GetSimulationStatus",
+        "StopSimulation",
+        "GetSimulationResults"
+      ]
+    },
+    "DbTenantService": {
+      "interfaces": [
+        "ITenantService"
+      ],
+      "methods": [
+        "CreateTenantAsync",
+        "UpdateTenantAsync",
+        "DeleteTenantAsync",
+        "GetTenantByIdAsync",
+        "GetAllTenantsAsync",
+        "GetActiveTenantsAsync",
+        "GetTenantBySlugAsync",
+        "ActivateTenantAsync",
+        "DeactivateTenantAsync",
+        "AddUserToTenantAsync",
+        "RemoveUserFromTenantAsync",
+        "UpdateTenantUserRoleAsync",
+        "GetTenantUsersAsync",
+        "GetUserTenantsAsync",
+        "GetTenantUserAsync",
+        "CreateTenantSettingAsync",
+        "UpdateTenantSettingAsync",
+        "DeleteTenantSettingAsync",
+        "GetTenantSettingsAsync",
+        "GetTenantSettingAsync",
+        "GetTenantSettingByKeyAsync"
+      ]
+    },
+    "MockTenantService": {
+      "interfaces": [
+        "ITenantService"
+      ],
+      "methods": [
+        "CreateTenantAsync",
+        "UpdateTenantAsync",
+        "DeleteTenantAsync",
+        "GetTenantByIdAsync",
+        "GetAllTenantsAsync",
+        "GetActiveTenantsAsync",
+        "GetTenantBySlugAsync",
+        "ActivateTenantAsync",
+        "DeactivateTenantAsync",
+        "AddUserToTenantAsync",
+        "RemoveUserFromTenantAsync",
+        "UpdateTenantUserRoleAsync",
+        "GetTenantUsersAsync",
+        "GetUserTenantsAsync",
+        "GetTenantUserAsync",
+        "CreateTenantSettingAsync",
+        "UpdateTenantSettingAsync",
+        "DeleteTenantSettingAsync",
+        "GetTenantSettingsAsync",
+        "GetTenantSettingAsync",
+        "GetTenantSettingByKeyAsync"
+      ]
+    },
+    "DeleteWorkflowCommand": {
+      "interfaces": [
+        "IRequest"
+      ],
+      "methods": []
+    },
+    "WorkflowService": {
+      "interfaces": [
+        "IWorkflowService"
+      ],
+      "methods": [
+        "ExecuteWorkflow",
+        "GetWorkflowExecutions",
+        "GetWorkflowStatistics",
+        "ValidateWorkflow",
+        "GetWorkflowTemplates",
+        "ScheduleWorkflow",
+        "CancelScheduledExecution",
+        "MonitorWorkflowHealth",
+        "ExportWorkflow",
+        "ImportWorkflow"
+      ]
+    }
+  }
+}
