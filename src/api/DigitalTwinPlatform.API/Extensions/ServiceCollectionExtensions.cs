@@ -1,3 +1,7 @@
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Collections.Generic;
 using DigitalTwinPlatform.API.Services.Analytics;
 using DigitalTwinPlatform.API.Services.Analytics.ML;
 using DigitalTwinPlatform.API.Services.Core;
@@ -13,23 +17,16 @@ using DigitalTwinPlatform.Application.Maintenance;
 using DigitalTwinPlatform.Application.Services;
 using DigitalTwinPlatform.Application.Tenants.Services;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using DigitalTwinPlatform.Domain.Entities.Auth;
 using DigitalTwinPlatform.Infrastructure.Persistence;
-using Azure.DigitalTwins.Core;
-using Azure.Identity;
-using Azure.Storage.Blobs;
 using Asp.Versioning;
 using DigitalTwinPlatform.API.Hubs;
-using Microsoft.AspNetCore.CookiePolicy;
 using DigitalTwinPlatform.API.Services.MathematicalModeling;
 using DigitalTwinPlatform.API.Services.Analytics.Advanced;
 using DigitalTwinPlatform.Application.ExternalSystems.Services;
-using DigitalTwinPlatform.Application.Abstractions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using IHubPublisher = DigitalTwinPlatform.API.Services.Infrastructure.IHubPublisher;
-using Microsoft.Extensions.Hosting;
 
 namespace DigitalTwinPlatform.API.Extensions;
 
@@ -45,15 +42,15 @@ public static class ServiceCollectionExtensions
     {
         // Configure Identity
         services.AddIdentity<ApplicationUser, IdentityRole>(options =>
-        {
-            options.Password.RequireDigit = false;
-            options.Password.RequiredLength = 6;
-            options.Password.RequireNonAlphanumeric = false;
-            options.Password.RequireUppercase = false;
-            options.Password.RequireLowercase = false;
-        })
-        .AddEntityFrameworkStores<DigitalTwinDbContext>()
-        .AddDefaultTokenProviders();
+            {
+                options.Password.RequireDigit = false;
+                options.Password.RequiredLength = 6;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireLowercase = false;
+            })
+            .AddEntityFrameworkStores<DigitalTwinDbContext>()
+            .AddDefaultTokenProviders();
 
         // Configure JWT Authentication
         ConfigureJwtAuthentication(services, configuration);
@@ -73,27 +70,76 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Configures CORS policies.
+    /// Configures CORS policies with dynamic origin detection.
+    /// Allows flexible origins in development and Docker environments.
     /// </summary>
-    public static IServiceCollection AddCorsConfiguration(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddCorsConfiguration(this IServiceCollection services,
+        IConfiguration configuration)
     {
-        var allowedOrigins = configuration
-            .GetSection("Cors:AllowedOrigins")
-            .Get<string[]>() ??
-            [
-                "http://localhost:3000",
-                "http://127.0.0.1:3000"
-            ];
-
         services.AddCors(options =>
         {
             options.AddPolicy("DefaultCorsPolicy", policy =>
             {
-                policy
-                    .WithOrigins(allowedOrigins)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod()
-                    .AllowCredentials();
+                var environment = configuration.GetSection("Environment").Value?.ToLower() ?? "development";
+                
+                if (environment == "development" || environment == "staging")
+                {
+                    // Use configured origins for development
+                    var allowedOrigins = configuration
+                                             .GetSection("Cors:AllowedOrigins")
+                                             .Get<string[]>() ??
+                                         [
+                                             "http://localhost:3000",
+                                             "http://127.0.0.1:3000",
+                                             "http://localhost:5173",
+                                             "http://localhost:5174",
+                                             "http://127.0.0.1:5173",
+                                             "http://127.0.0.1:5174",
+                                             "http://localhost:7000",
+                                             "http://127.0.0.1:7000"
+                                         ];
+                    
+                    policy.WithOrigins(allowedOrigins);
+                }
+                else
+                {
+                    // For production-like environments, allow origins based on environment variable
+                    // This allows Docker containers on the same network to communicate
+                    var corsPolicy = configuration.GetSection("Cors:Policy").Value?.ToLower();
+                    
+                    if (corsPolicy == "permissive" || corsPolicy == "docker")
+                    {
+                        // Permissive CORS policy for Docker/swarm environments
+                        policy.SetIsOriginAllowed(origin => true); // Allow any origin
+                    }
+                    else
+                    {
+                        // Strict CORS policy for true production
+                        policy.SetIsOriginAllowed(origin =>
+                        {
+                            // Allow localhost and 127.0.0.1 for development/testing
+                            if (origin.StartsWith("http://localhost") || 
+                                origin.StartsWith("http://127.0.0.1") ||
+                                origin.StartsWith("https://localhost") || 
+                                origin.StartsWith("https://127.0.0.1"))
+                            {
+                                return true;
+                            }
+                            
+                            // Allow origins from environment configuration
+                            var allowedOrigins = configuration
+                                                     .GetSection("Cors:AllowedOrigins")
+                                                     .Get<string[]>();
+                            
+                            return allowedOrigins != null && 
+                                   allowedOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase);
+                        });
+                    }
+                }
+                
+                policy.AllowAnyHeader()
+                       .AllowAnyMethod()
+                       .AllowCredentials();
             });
         });
 
@@ -109,21 +155,25 @@ public static class ServiceCollectionExtensions
             .AddJsonProtocol(options =>
             {
                 options.PayloadSerializerOptions.PropertyNamingPolicy = null;
-                options.PayloadSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+                options.PayloadSerializerOptions.DefaultIgnoreCondition =
+                    System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
                 options.PayloadSerializerOptions.WriteIndented = false;
             })
             .AddHubOptions<RealTimeAnalyticsHub>(options =>
             {
                 options.EnableDetailedErrors = configuration.GetValue<bool>("SignalR:EnableDetailedErrors", false);
-                options.KeepAliveInterval = TimeSpan.FromSeconds(configuration.GetValue("SignalR:KeepAliveInterval", 15));
+                options.KeepAliveInterval =
+                    TimeSpan.FromSeconds(configuration.GetValue("SignalR:KeepAliveInterval", 15));
                 options.HandshakeTimeout = TimeSpan.FromSeconds(configuration.GetValue("SignalR:HandshakeTimeout", 15));
                 options.MaximumReceiveMessageSize = configuration.GetValue("SignalR:MaxMessageSize", 64) * 1024;
-                options.MaximumParallelInvocationsPerClient = configuration.GetValue("SignalR:MaxParallelInvocations", 10);
+                options.MaximumParallelInvocationsPerClient =
+                    configuration.GetValue("SignalR:MaxParallelInvocations", 10);
             })
             .AddHubOptions<TelemetryHub>(options =>
             {
                 options.EnableDetailedErrors = configuration.GetValue<bool>("SignalR:EnableDetailedErrors", false);
-                options.KeepAliveInterval = TimeSpan.FromSeconds(configuration.GetValue("SignalR:KeepAliveInterval", 15));
+                options.KeepAliveInterval =
+                    TimeSpan.FromSeconds(configuration.GetValue("SignalR:KeepAliveInterval", 15));
                 options.HandshakeTimeout = TimeSpan.FromSeconds(configuration.GetValue("SignalR:HandshakeTimeout", 15));
                 options.MaximumReceiveMessageSize = configuration.GetValue("SignalR:MaxMessageSize", 64) * 1024;
             });
@@ -194,7 +244,8 @@ https://api.digitaltwin.example.com/v1
             // Add JWT Bearer authentication to Swagger
             options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
             {
-                Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token.",
+                Description =
+                    "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token.",
                 Name = "Authorization",
                 In = Microsoft.OpenApi.Models.ParameterLocation.Header,
                 Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
@@ -230,7 +281,8 @@ https://api.digitaltwin.example.com/v1
     /// <summary>
     /// Registers application-specific services.
     /// </summary>
-    public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddApplicationServices(this IServiceCollection services,
+        IConfiguration configuration)
     {
         // Machine configuration service
         services.Configure<ConfigurationOptions>(configuration.GetSection("Configuration"));
@@ -255,7 +307,9 @@ https://api.digitaltwin.example.com/v1
         // ML services
         services.Configure<MlOptions>(configuration.GetSection("ML"));
         services.AddSingleton<IRulPredictor, RulPredictor>();
+        services.AddSingleton<RulPredictor>(sp => (RulPredictor)sp.GetRequiredService<IRulPredictor>());
         services.AddSingleton<IHealthClassifier, HealthClassifier>();
+        services.AddSingleton<HealthClassifier>(sp => (HealthClassifier)sp.GetRequiredService<IHealthClassifier>());
         services.AddScoped<ModelTrainer>();
 
         // SHAP service for XAI
@@ -268,8 +322,10 @@ https://api.digitaltwin.example.com/v1
         services.AddScoped<IMaintenanceService, MaintenanceService>();
         // Twin Engine Service (used by both API and Application layers)
         services.AddScoped<TwinEngineService>();
-        services.AddScoped<DigitalTwinPlatform.Application.Abstractions.Services.ITwinEngineService>(sp => sp.GetRequiredService<TwinEngineService>());
+        services.AddScoped<DigitalTwinPlatform.Application.Abstractions.Services.ITwinEngineService>(sp =>
+            sp.GetRequiredService<TwinEngineService>());
         services.AddScoped<IPredictiveAnalyticsService, PredictiveAnalyticsService>();
+        services.AddScoped<PredictionService>();
         services.AddScoped<IPredictionService, PredictionServiceAdapter>();
         services.AddScoped<IModelRetrainingService, ModelRetrainingService>();
         services.AddScoped<IMlExperimentLogger, MlExperimentLogger>();
@@ -297,7 +353,9 @@ https://api.digitaltwin.example.com/v1
         // Advanced analytics services
         services.AddScoped<IAdvancedPredictiveService, AdvancedPredictiveService>();
         services.AddScoped<IPrescriptiveAnalyticsService, PrescriptiveAnalyticsService>();
-        services.AddScoped<Application.Workflows.Services.IWorkflowService, Application.Workflows.Services.WorkflowService>();
+        services
+            .AddScoped<Application.Workflows.Services.IWorkflowService,
+                Application.Workflows.Services.WorkflowService>();
 
         // External System Integration: mock in development; use real implementation for production.
         var environment = configuration.GetSection("Environment").Value?.ToLower() ?? "development";
@@ -313,18 +371,65 @@ https://api.digitaltwin.example.com/v1
             services.AddHttpClient<IExternalSystemService, ExternalSystemService>(client =>
             {
                 // Configure base address from configuration
-                client.BaseAddress = new Uri(configuration["ExternalSystems:BaseUrl"] ?? 
-                                            configuration.GetConnectionString("ExternalSystemsApi") ?? 
-                                            "https://localhost:8080/api/");
+                client.BaseAddress = new Uri(configuration["ExternalSystems:BaseUrl"] ??
+                                             configuration.GetConnectionString("ExternalSystemsApi") ??
+                                             "https://localhost:8080/api/");
             });
             services.AddScoped<IExternalSystemService, ExternalSystemService>();
             // Use mock tenant service
-            services.AddScoped<Application.Tenants.Services.ITenantService, Application.Tenants.Services.MockTenantService>();
+            services
+                .AddScoped<ITenantService,
+                    MockTenantService>();
         }
 
         return services;
     }
 
+    /// <summary>
+    /// Validates JWT configuration and throws appropriate exceptions.
+    /// </summary>
+    private static void ValidateJwtConfiguration(IConfiguration configuration)
+    {
+        var jwtKey = configuration["Jwt:Key"];
+        if (string.IsNullOrWhiteSpace(jwtKey))
+        {
+            throw new InvalidOperationException("JWT Key is not configured. Please set Jwt:Key in configuration or environment variables.");
+        }
+
+        if (jwtKey.Length < 32)
+        {
+            throw new InvalidOperationException("JWT Key must be at least 32 characters long for security.");
+        }
+    }
+    /// <summary>
+    /// Configures JWT authentication.
+    /// </summary>
+    private static void ConfigureJwtAuthentication(IServiceCollection services, IConfiguration configuration)
+    {
+        ValidateJwtConfiguration(configuration);
+
+        var jwtKey = configuration["Jwt:Key"];
+
+        services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = configuration["Jwt:Issuer"],
+                    ValidAudience = configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!))
+                };
+            });
+    }
+    
     /// <summary>
     /// Configures infrastructure services.
     /// </summary>
@@ -348,75 +453,6 @@ https://api.digitaltwin.example.com/v1
             services.AddHostedService<TelemetryMockHostedService>();
         }
 
-        // Azure services
-        //ConfigureAzureServices(services, configuration);
-
         return services;
-    }
-
-    /// <summary>
-    /// Validates JWT configuration and throws appropriate exceptions.
-    /// </summary>
-    private static void ValidateJwtConfiguration(IConfiguration configuration)
-    {
-        var jwtKey = configuration["Jwt:Key"];
-        if (string.IsNullOrWhiteSpace(jwtKey))
-        {
-            throw new InvalidOperationException("JWT Key is not configured. Please set Jwt:Key in configuration or environment variables.");
-        }
-
-        if (jwtKey.Length < 32)
-        {
-            throw new InvalidOperationException("JWT Key must be at least 32 characters long for security.");
-        }
-    }
-
-    /// <summary>
-    /// Configures JWT authentication.
-    /// </summary>
-    private static void ConfigureJwtAuthentication(IServiceCollection services, IConfiguration configuration)
-    {
-        ValidateJwtConfiguration(configuration);
-
-        var jwtKey = configuration["Jwt:Key"];
-
-        services.AddAuthentication(options =>
-        {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        })
-        .AddJwtBearer(options =>
-        {
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = configuration["Jwt:Issuer"],
-                ValidAudience = configuration["Jwt:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!))
-            };
-        });
-    }
-
-    /// <summary>
-    /// Configures Azure-related services.
-    /// </summary>
-    private static void ConfigureAzureServices(IServiceCollection services, IConfiguration configuration)
-    {
-        // Azure Blob Storage
-        var blobConnectionString = configuration.GetConnectionString("AzureBlobStorage");
-        if (!string.IsNullOrEmpty(blobConnectionString))
-        {
-            services.AddSingleton(new BlobServiceClient(blobConnectionString));
-        }
-
-        // Azure Digital Twins
-        var digitalTwinsUrl = configuration["Azure:DigitalTwins:Url"];
-        if (!string.IsNullOrWhiteSpace(digitalTwinsUrl))
-        {
-            services.AddSingleton(new DigitalTwinsClient(new Uri(digitalTwinsUrl!), new DefaultAzureCredential()));
-        }
     }
 }

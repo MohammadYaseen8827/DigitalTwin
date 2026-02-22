@@ -1,5 +1,6 @@
 using DigitalTwinPlatform.Application.Abstractions.Services;
 using DigitalTwinPlatform.Application.Predictions.Models;
+using DigitalTwinPlatform.Application.Services;
 
 namespace DigitalTwinPlatform.API.Services.Analytics;
 
@@ -9,11 +10,11 @@ namespace DigitalTwinPlatform.API.Services.Analytics;
 public class PredictionServiceAdapter : IPredictionService
 {
     private readonly IPredictiveAnalyticsService _predictiveAnalyticsService;
-    private readonly IPredictionService _predictionService;
+    private readonly PredictionService _predictionService;
 
     public PredictionServiceAdapter(
         IPredictiveAnalyticsService predictiveAnalyticsService,
-        IPredictionService predictionService)
+        PredictionService predictionService)
     {
         _predictiveAnalyticsService = predictiveAnalyticsService;
         _predictionService = predictionService;

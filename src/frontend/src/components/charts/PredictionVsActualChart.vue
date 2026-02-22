@@ -42,7 +42,7 @@ const chartOptions = computed<ApexOptions>(() => ({
         fontFamily: 'inherit',
         toolbar: { show: true, tools: { download: true, selection: true, zoom: true, zoomin: true, zoomout: true, pan: true, reset: true } },
         zoom: { enabled: true },
-        animations: { enabled: true, easing: 'linear', dynamicAnimation: { speed: 1000 } }
+        animations: { enabled: false }
     },
     colors: ['#3B82F6', '#10B981', '#93C5FD', '#93C5FD'],
     stroke: { curve: 'smooth', width: [2, 2, 1, 1], dashArray: [0, 0, 5, 5] },
@@ -55,7 +55,7 @@ const chartOptions = computed<ApexOptions>(() => ({
     },
     yaxis: { title: { text: 'Remaining Useful Life (hours)', style: { color: '#6B7280' } }, labels: { style: { colors: '#6B7280' }, formatter: (val: number) => val.toFixed(0) } },
     grid: { borderColor: '#E5E7EB', strokeDashArray: 4 },
-    theme: { mode: 'light' },
+    theme: { mode: 'dark' },
     fill: props.showConfidenceBand ? { type: 'solid', opacity: 0.1 } : undefined,
     dataLabels: { enabled: false },
     tooltip: { x: { format: 'MMM dd, yyyy HH:mm' }, y: { formatter: (val: number) => `${val.toFixed(1)} hrs` } },

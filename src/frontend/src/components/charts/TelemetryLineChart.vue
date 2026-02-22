@@ -32,12 +32,9 @@ const chartOptions = computed<ApexOptions>(() => ({
         type: 'line',
         height: props.height,
         width: props.width,
+        // PERFORMANCE: Disable animations for real-time streaming
         animations: {
-            enabled: true,
-            easing: 'linear',
-            dynamicAnimation: {
-                speed: 1000
-            }
+            enabled: false
         },
         toolbar: {
             show: true,
@@ -97,7 +94,7 @@ const chartOptions = computed<ApexOptions>(() => ({
         strokeDashArray: 4
     },
     theme: {
-        mode: 'light'
+        mode: 'dark'
     },
     annotations: props.showThresholds ? {
         yaxis: [
@@ -131,6 +128,7 @@ const chartOptions = computed<ApexOptions>(() => ({
         enabled: false
     },
     tooltip: {
+        theme: 'dark',
         x: {
             format: 'HH:mm:ss'
         },
@@ -162,16 +160,16 @@ function getUnit(sensorType: string): string {
     return units[sensorType] || ''
 }
 
-// Watch for data changes and update series
-watch(sensorData, (newData) => {
+// Watch for data changes - use shallow watch for performance
+watch(sensorData, () => {
     series.value = [{
         name: props.sensorType,
-        data: newData.map(d => ({
+        data: sensorData.value.map((d: { timestamp: string | Date; value: number }) => ({
             x: new Date(d.timestamp),
             y: d.value
         }))
     }]
-}, { deep: true })
+}, { deep: false })
 
 // Initial data load
 onMounted(async () => {

@@ -59,24 +59,25 @@ const cardClasses = computed(() => [
 <style scoped>
 .base-card {
   position: relative;
-  background: var(--color-surface-alt);
+  background: var(--color-surface);
   border-radius: var(--radius-lg);
   padding: var(--space-24);
   border: 1px solid var(--color-border-subtle);
-  box-shadow: var(--shadow-subtle);
+  box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
   gap: var(--space-16);
   transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease,
-    border-color 0.25s ease,
-    background 0.25s ease;
+    transform var(--transition-normal),
+    box-shadow var(--transition-normal),
+    border-color var(--transition-normal),
+    background var(--transition-normal);
 }
 
 .base-card.has-hover:hover {
   transform: translateY(-3px);
-  box-shadow: var(--shadow-medium);
+  box-shadow: var(--shadow-elevated);
+  border-color: var(--color-border);
 }
 
 .card-header {
@@ -85,7 +86,7 @@ const cardClasses = computed(() => [
   justify-content: space-between;
   gap: var(--space-12);
   padding-bottom: var(--space-12);
-  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  border-bottom: 1px solid var(--color-border-subtle);
   font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--color-text-primary);
@@ -97,13 +98,14 @@ const cardClasses = computed(() => [
   gap: var(--space-16);
   color: var(--color-text-secondary);
   font-size: var(--font-size-base);
-  line-height: var(--font-lineheight-normal);
+  line-height: 1.5;
 }
 
 .card-overlay {
   position: absolute;
   inset: 0;
-  background: color-mix(in srgb, var(--color-surface) 68%, transparent 32%);
+  background: var(--color-surface);
+  opacity: 0.85;
   backdrop-filter: blur(8px);
   display: grid;
   place-items: center;
@@ -123,7 +125,7 @@ const cardClasses = computed(() => [
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 3px solid color-mix(in srgb, var(--color-border-subtle) 60%, transparent);
+  border: 3px solid var(--color-border-subtle);
   border-top-color: var(--color-primary);
   animation: spin 0.9s linear infinite;
 }
@@ -140,54 +142,40 @@ const cardClasses = computed(() => [
 
 .card-footer {
   padding-top: var(--space-16);
-  border-top: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  border-top: 1px solid var(--color-border-subtle);
   display: flex;
   justify-content: flex-end;
   gap: var(--space-12);
 }
 
 .variant-solid {
-  background: linear-gradient(160deg, color-mix(in srgb, var(--color-primary) 15%, #020617), #020617);
-  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+  background: var(--gradient-card);
+  border-color: var(--color-primary);
   color: var(--color-text-primary);
 }
 
 .variant-soft {
-  background: color-mix(in srgb, var(--color-surface-alt) 80%, var(--color-primary) 20%);
+  background: var(--color-surface);
 }
 
 .variant-glass {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-glass);
   border: 1px solid rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  box-shadow: var(--shadow-overlay);
 }
 
 .variant-premium {
-  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--gradient-card);
+  border: 1px solid var(--color-border);
   backdrop-filter: blur(20px);
-  box-shadow: 0 0 20px rgba(var(--color-primary-rgb), 0.1);
-}
-
-.variant-premium::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent, rgba(var(--color-primary-rgb), 0.3));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+  box-shadow: var(--glow-primary);
 }
 
 .variant-bordered {
   background: transparent;
-  border-color: color-mix(in srgb, var(--color-border) 60%, var(--color-primary) 40%);
+  border-color: var(--color-border);
   box-shadow: none;
 }
 

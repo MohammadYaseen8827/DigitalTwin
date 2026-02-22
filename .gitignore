@@ -81,3 +81,7 @@ secrets/
 # Models
 models/**/*.onnx
 models/**/*.zip
+
+**/.agents
+**/.qoder
+**/.resources

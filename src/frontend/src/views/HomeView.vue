@@ -47,78 +47,12 @@ const loadMachines = async () => {
     error.value = null
     page.value = 1
     
-    // For development without backend, use mock data
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Development mode: Using mock machines data')
-      const mockMachines: MachineDto[] = [
-        {
-          id: '1',
-          name: 'Production Line A',
-          type: 'CNC Machine',
-          status: 'Running',
-          healthScore: 85,
-          lastMaintenance: '2024-01-15T00:00:00Z',
-          operatingHours: 1250,
-          temperature: 72.5,
-          vibration: 0.02,
-          powerConsumption: 15.3
-        },
-        {
-          id: '2',
-          name: 'Production Line B',
-          type: '3D Printer',
-          status: 'Idle',
-          healthScore: 92,
-          lastMaintenance: '2024-01-10T00:00:00Z',
-          operatingHours: 890,
-          temperature: 68.2,
-          vibration: 0.01,
-          powerConsumption: 8.7
-        },
-        {
-          id: '3',
-          name: 'Assembly Station',
-          type: 'Robot Arm',
-          status: 'Maintenance',
-          healthScore: 67,
-          lastMaintenance: '2024-01-20T00:00:00Z',
-          operatingHours: 2100,
-          temperature: 75.8,
-          vibration: 0.05,
-          powerConsumption: 22.1
-        }
-      ]
-      
-      machines.value = mockMachines
-      total.value = mockMachines.length
-      loading.value = false
-      return
-    }
-    
-    // Try real API in production
     await fetchPage(1, false)
   } catch (err) {
     console.error('Failed to fetch machines:', err)
-    error.value = 'Failed to load machines. Showing mock data for development.'
-    
-    // Fallback to mock data if API fails
-    const mockMachines: MachineDto[] = [
-      {
-        id: '1',
-        name: 'Production Line A',
-        type: 'CNC Machine',
-        status: 'Running',
-        healthScore: 85,
-        lastMaintenance: '2024-01-15T00:00:00Z',
-        operatingHours: 1250,
-        temperature: 72.5,
-        vibration: 0.02,
-        powerConsumption: 15.3
-      }
-    ]
-    
-    machines.value = mockMachines
-    total.value = mockMachines.length
+    error.value = 'Failed to load machines. Please check your connection and try again.'
+    machines.value = []
+    total.value = 0
   } finally {
     loading.value = false
   }
@@ -126,32 +60,6 @@ const loadMachines = async () => {
 
 const loadMore = async () => {
   if (loading.value || loadingMore.value || !hasMore.value) return
-
-  // In development mode, just add more mock data
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Development mode: Adding more mock machines')
-    loadingMore.value = true
-    
-    const moreMockMachines: MachineDto[] = [
-      {
-        id: `${Date.now()}`,
-        name: `Machine ${machines.value.length + 1}`,
-        type: 'Test Machine',
-        status: 'Running',
-        healthScore: Math.floor(Math.random() * 40) + 60,
-        lastMaintenance: new Date().toISOString(),
-        operatingHours: Math.floor(Math.random() * 2000) + 500,
-        temperature: Math.random() * 20 + 60,
-        vibration: Math.random() * 0.05,
-        powerConsumption: Math.random() * 15 + 5
-      }
-    ]
-    
-    machines.value = [...machines.value, ...moreMockMachines]
-    total.value = machines.value.length
-    loadingMore.value = false
-    return
-  }
 
   const nextPage = page.value + 1
 
@@ -216,10 +124,6 @@ const handleCancelSchedule = async (machineId: string) => {
   console.log(`Cancelling schedule for machine ${machineId}`)
 }
 
-const goToEnhancedDashboard = () => {
-  router.push('/enhanced-dashboard')
-}
-
 onMounted(async () => {
   await loadMachines()
 })
@@ -227,9 +131,6 @@ onMounted(async () => {
 
 <template>
   <SectionContainer title="Digital Twin Dashboard" eyebrow="Overview" maxWidth="xl" bordered>
-    <template #actions>
-      <BaseButton variant="primary" @click="goToEnhancedDashboard">Go to Enhanced Dashboard</BaseButton>
-    </template>
 
     <BaseCard v-if="error" variant="bordered" class="state-card">
       <template #header>Something went wrong</template>

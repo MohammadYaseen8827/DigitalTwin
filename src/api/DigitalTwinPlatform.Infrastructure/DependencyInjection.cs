@@ -40,6 +40,7 @@ public static class DependencyInjection
         services.AddScoped<IAlertRepository, AlertRepository>();
         services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
         services.AddScoped<IProductionLineRepository, ProductionLineRepository>();
+        services.AddScoped<ISavedSearchRepository, SavedSearchRepository>();
 
         return services;
     }

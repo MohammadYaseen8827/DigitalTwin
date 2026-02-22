@@ -1,10 +1,18 @@
 import * as signalR from '@microsoft/signalr'
+import { ref } from 'vue'
 import { useMachinesStore } from '@/stores/machines.store'
 
 class SignalRService {
     private connection: signalR.HubConnection | null = null
     private apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
     private hubUrl = this.apiUrl.replace('/api', '/hubs/telemetry')
+    
+    // Connection status as reactive ref
+    public isConnected = ref(false)
+
+    public async connect(): Promise<void> {
+        return this.start()
+    }
 
     public async start(): Promise<void> {
         if (this.connection) return
@@ -27,7 +35,9 @@ class SignalRService {
 
         try {
             await this.connection.start()
+            this.isConnected.value = true
         } catch (err) {
+            this.isConnected.value = false
             setTimeout(() => this.start(), 5000)
         }
     }
@@ -54,6 +64,7 @@ class SignalRService {
 
     public stop(): Promise<void> {
         if (!this.connection) return Promise.resolve()
+        this.isConnected.value = false
         return this.connection.stop()
     }
 }

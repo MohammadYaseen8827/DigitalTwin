@@ -91,7 +91,7 @@ export async function updateAlertRule(id: number, request: AlertRuleUpdateDto): 
  * Delete an alert rule.
  */
 export async function deleteAlertRule(id: number): Promise<void> {
-  await axiosClient.delete(`/AlertRules/${id}`)
+  await axiosClient.delete(`/api/AlertRules/${id}`)
 }
 
 /**

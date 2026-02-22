@@ -1,5 +1,6 @@
 using DigitalTwinPlatform.Domain.Entities.Auth;
 using DigitalTwinPlatform.Infrastructure.Persistence;
+using DigitalTwinPlatform.Infrastructure.Persistence.DataSeeding;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,8 +29,7 @@ public static class DatabaseExtensions
     {
         using var scope = serviceProvider.CreateScope();
         
-        await SeedIdentityDataAsync(scope.ServiceProvider, logger, cancellationToken);
-        await ExecuteSeedScriptAsync(scope.ServiceProvider, logger, cancellationToken);
+        await serviceProvider.SeedIdentityAsync(logger, cancellationToken);
     }
 
     /// <summary>
@@ -37,8 +37,12 @@ public static class DatabaseExtensions
     /// </summary>
     public static async Task InitializeDatabaseAsync(this IServiceProvider serviceProvider, ILogger logger, CancellationToken cancellationToken = default)
     {
-        await serviceProvider.ApplyDatabaseMigrationsAsync(logger, cancellationToken);
-        await serviceProvider.SeedDatabaseAsync(logger, cancellationToken);
+        using var scope = serviceProvider.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<DigitalTwinDbContext>();
+        var initializer = new DbContextInitializer(dbContext, scope.ServiceProvider.GetRequiredService<ILogger<DbContextInitializer>>());
+        
+        await initializer.InitializeAsync();
+        await serviceProvider.SeedIdentityAsync(logger, cancellationToken);
     }
 
     /// <summary>
@@ -74,9 +78,9 @@ public static class DatabaseExtensions
     }
 
     /// <summary>
-    /// Seeds identity roles and users.
+    /// Seeds identity roles and users only.
     /// </summary>
-    private static async Task SeedIdentityDataAsync(IServiceProvider serviceProvider, ILogger logger, CancellationToken cancellationToken)
+    private static async Task SeedIdentityAsync(this IServiceProvider serviceProvider, ILogger logger, CancellationToken cancellationToken)
     {
         var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();

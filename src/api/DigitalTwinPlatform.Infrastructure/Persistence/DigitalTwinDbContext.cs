@@ -38,6 +38,7 @@ public class DigitalTwinDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<SystemIntegration> SystemIntegrations => Set<SystemIntegration>();
     public DbSet<SyntheticDataGeneration> SyntheticDataGenerations => Set<SyntheticDataGeneration>();
     public DbSet<SimulationResult> SimulationResults => Set<SimulationResult>();
+    public DbSet<SavedSearch> SavedSearches => Set<SavedSearch>();
     
     // Multi-tenancy entities
     public DbSet<Tenant> Tenants => Set<Tenant>();

@@ -1,46 +1,58 @@
 <template>
   <div class="login-container">
-    <div class="login-box">
-      <h1>Digital Twin Platform</h1>
-      <p>Please login to continue</p>
+    <div class="login-box glass-panel">
+      <div class="login-header">
+        <div class="logo-icon">🏭</div>
+        <h1>Digital Twin Platform</h1>
+        <p>Sign in to continue</p>
+      </div>
       
-      <form @submit.prevent="handleLogin">
+      <form @submit.prevent="handleLogin" class="login-form">
         <div class="form-group">
           <label for="email">Email</label>
-          <input 
-            type="email" 
-            id="email" 
-            v-model="email" 
-            required 
-            placeholder="admin@example.com"
-          />
+          <div class="input-wrapper">
+            <input 
+              type="email" 
+              id="email" 
+              v-model="email" 
+              required 
+              placeholder="admin@example.com"
+              :class="{ 'has-error': emailError }"
+              @blur="validateEmail"
+            />
+            <span v-if="emailError" class="error-text">{{ emailError }}</span>
+          </div>
         </div>
         
         <div class="form-group">
           <label for="password">Password</label>
-          <input 
-            type="password" 
-            id="password" 
-            v-model="password" 
-            required 
-          />
+          <div class="input-wrapper">
+            <input 
+              type="password" 
+              id="password" 
+              v-model="password" 
+              required 
+              placeholder="Enter your password"
+              :class="{ 'has-error': passwordError }"
+              @blur="validatePassword"
+            />
+            <span v-if="passwordError" class="error-text">{{ passwordError }}</span>
+          </div>
         </div>
         
-        <button type="submit" :disabled="loading">
-          {{ loading ? 'Logging in...' : 'Login' }}
+        <button type="submit" :disabled="loading" class="login-btn">
+          <span v-if="loading" class="loading-spinner"></span>
+          <span :class="{ 'loading-content': loading }">
+            {{ loading ? 'Signing in...' : 'Sign In' }}
+          </span>
         </button>
         
-        <!-- Debug button for testing -->
-        <button 
-          type="button" 
-          @click="debugLogin" 
-          class="debug-btn"
-          style="margin-top: 1rem; background: #28a745; color: white;"
-        >
-          Debug Login (Skip Auth)
-        </button>
-        
-        <p v-if="error" class="error-message">{{ error }}</p>
+        <transition name="fade">
+          <p v-if="error" class="error-message">
+            <span class="error-icon">⚠</span>
+            {{ error }}
+          </p>
+        </transition>
       </form>
     </div>
   </div>
@@ -56,10 +68,40 @@ const email = ref('')
 const password = ref('')
 const loading = ref(false)
 const error = ref('')
+const emailError = ref('')
+const passwordError = ref('')
 const router = useRouter()
 const authStore = useAuthStore()
 
+function validateEmail() {
+  if (!email.value) {
+    emailError.value = 'Email is required'
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+    emailError.value = 'Please enter a valid email'
+  } else {
+    emailError.value = ''
+  }
+}
+
+function validatePassword() {
+  if (!password.value) {
+    passwordError.value = 'Password is required'
+  } else if (password.value.length < 6) {
+    passwordError.value = 'Password must be at least 6 characters'
+  } else {
+    passwordError.value = ''
+  }
+}
+
 async function handleLogin() {
+  // Validate before submitting
+  validateEmail()
+  validatePassword()
+  
+  if (emailError.value || passwordError.value) {
+    return
+  }
+  
   loading.value = true
   error.value = ''
   
@@ -69,51 +111,14 @@ async function handleLogin() {
       password: password.value
     })
     
-    // Store authentication data
-    authStore.setToken(response.token, response.user, response.refreshToken)
-    
-    console.log('Login successful:', { 
-      user: response.user,
-      isAuthenticated: authStore.isAuthenticated
-    })
-    
+    const user = response.user
+    authStore.setToken(response.accessToken, user as any, response.refreshToken)
     router.push('/')
   } catch (err: any) {
-    error.value = err.response?.data?.error || err.response?.data?.message || err.response?.data || 'Login failed'
-    console.error('Login error:', err)
+    error.value = err.response?.data?.error || err.response?.data?.message || err.response?.data || 'Login failed. Please check your credentials.'
   } finally {
     loading.value = false
   }
-}
-
-// Debug login function
-function debugLogin() {
-  console.log('Debug login triggered')
-  
-  const mockUser = {
-    id: '1',
-    email: 'debug@test.com',
-    fullName: 'Debug User',
-    userName: 'debug',
-    roles: ['Admin', 'User']
-  }
-  
-  const mockToken = 'debug-mock-token'
-  const mockRefreshToken = 'debug-refresh-token'
-  
-  // Force set authentication
-  authStore.setToken(mockToken, mockUser, mockRefreshToken)
-  
-  console.log('Debug login complete:', {
-    user: mockUser,
-    token: mockToken,
-    isAuthenticated: authStore.isAuthenticated,
-    storedToken: SecureTokenManager.getToken(),
-    storedUser: SecureTokenManager.getUser()
-  })
-  
-  // Force redirect to home
-  router.push('/')
 }
 </script>
 
@@ -122,57 +127,188 @@ function debugLogin() {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background-color: var(--bg-secondary, #f0f2f5);
+  min-height: 100vh;
+  padding: var(--space-16);
+  background: var(--gradient-hero);
 }
 
 .login-box {
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
+  padding: var(--space-32);
+  background: var(--color-glass);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-medium);
+  backdrop-filter: blur(16px);
 }
 
-h1 {
-  margin-top: 0;
-  color: var(--primary-color, #1890ff);
+.login-header {
+  text-align: center;
+  margin-bottom: var(--space-32);
+}
+
+.logo-icon {
+  font-size: 2.5rem;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--space-16);
+  background: var(--color-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glow-primary);
+}
+
+.login-header h1 {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-8);
+}
+
+.login-header p {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
 }
 
-label {
-  display: block;
-  margin-bottom: 0.5rem;
+.form-group label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
 input {
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
+  padding: var(--space-12) var(--space-16);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  transition: all 0.2s ease;
 }
 
-button {
+input::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 25%, transparent);
+}
+
+input.has-error {
+  border-color: var(--color-error);
+}
+
+input.has-error:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 25%, transparent);
+}
+
+.error-text {
+  font-size: var(--font-size-xs);
+  color: var(--color-error);
+}
+
+.login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
   width: 100%;
-  padding: 0.75rem;
-  background-color: var(--primary-color, #1890ff);
+  padding: var(--space-14) var(--space-20);
+  background: linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary-dark) 80%, var(--color-primary) 20%));
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  font-weight: 600;
   cursor: pointer;
-  font-weight: bold;
+  transition: all 0.2s ease;
+  min-height: 48px;
+  box-shadow: var(--shadow-subtle);
 }
 
-button:disabled {
-  background-color: #d9d9d9;
+.login-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+.login-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.login-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.loading-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.loading-content {
+  opacity: 0.7;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error-message {
-  color: red;
-  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-12) var(--space-16);
+  background: color-mix(in srgb, var(--color-error) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-error) 40%, transparent);
+  border-radius: var(--radius-md);
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  margin: 0;
+}
+
+.error-icon {
+  font-size: var(--font-size-lg);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

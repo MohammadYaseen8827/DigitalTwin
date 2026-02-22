@@ -26,8 +26,8 @@ class ApiConfiguration {
     // Fallback logic based on environment
     if (!baseUrl) {
       if (isDevelopment) {
-        // Default development URL
-        baseUrl = 'http://localhost:5000/api';
+        // Default development URL - use HTTP on port 7000 to avoid SSL issues
+        baseUrl = 'http://localhost:7000/api';
       } else {
         // Production relative path
         baseUrl = '/api';

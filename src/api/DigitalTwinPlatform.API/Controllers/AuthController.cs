@@ -19,7 +19,6 @@ namespace DigitalTwinPlatform.API.Controllers;
 [Route("api/[controller]")]
 [Produces("application/json")]
 [ApiVersion("1.0")]
-[Authorize]
 public class AuthController(
     UserManager<ApplicationUser> userManager,
     IConfiguration configuration,
@@ -115,7 +114,6 @@ public class AuthController(
     [AllowAnonymous]
     [Consumes("application/json")]
     [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
@@ -170,6 +168,7 @@ public class AuthController(
     /// <response code="500">Internal server error.</response>
     [HttpPost("refresh")]
     [Consumes("application/json")]
+    [Authorize]
     [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -204,7 +203,8 @@ public class AuthController(
     /// <response code="400">Invalid request.</response>
     /// <response code="500">Internal server error.</response>
     [HttpPost("revoke")]
-    [Consumes("application/json")]
+    [Consumes("application/json")]  
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -259,6 +259,7 @@ public class AuthController(
     /// <response code="400">Invalid request data.</response>
     /// <response code="401">Unauthorized - Authentication required.</response>
     [HttpPut("profile")]
+    [Authorize]
     [Consumes("application/json")]
     [ProducesResponseType(typeof(CurrentUserResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -311,6 +312,7 @@ public class AuthController(
     /// <response code="401">Unauthorized - Authentication required.</response>
     [HttpPost("change-password")]
     [Consumes("application/json")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -344,6 +346,7 @@ public class AuthController(
     /// <returns>Success message.</returns>
     [HttpPost("forgot-password")]
     [Consumes("application/json")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
@@ -385,6 +388,7 @@ public class AuthController(
     /// <returns>Success message.</returns>
     [HttpPost("reset-password")]
     [Consumes("application/json")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
@@ -409,6 +413,7 @@ public class AuthController(
     /// </summary>
     /// <returns>Success message.</returns>
     [HttpPost("logout")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Logout()
     {
@@ -428,6 +433,7 @@ public class AuthController(
     /// <response code="200">Returns QR code for 2FA setup.</response>
     /// <response code="401">Unauthorized - Authentication required.</response>
     [HttpPost("2fa/enable")]
+    [Authorize]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> EnableTwoFactor()
@@ -466,6 +472,7 @@ public class AuthController(
     /// <response code="400">Invalid verification code.</response>
     /// <response code="401">Unauthorized - Authentication required.</response>
     [HttpPost("2fa/verify")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -510,6 +517,7 @@ public class AuthController(
     /// <response code="400">Invalid verification code.</response>
     /// <response code="401">Unauthorized - Authentication required.</response>
     [HttpPost("2fa/disable")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

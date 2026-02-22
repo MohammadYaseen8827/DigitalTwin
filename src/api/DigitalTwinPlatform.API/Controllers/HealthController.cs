@@ -1,7 +1,5 @@
 using Asp.Versioning;
 using DigitalTwinPlatform.API.Models;
-using Azure.DigitalTwins.Core;
-using Azure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DigitalTwinPlatform.Infrastructure.Persistence;
@@ -10,19 +8,19 @@ namespace DigitalTwinPlatform.API.Controllers;
 
 /// <summary>
 /// API controller for system health checks.
-/// Provides endpoints to monitor the health of database, Azure Digital Twins, and other services.
+/// Provides endpoints to monitor the health of database and other services.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
 [ApiVersion("1.0")]
-public class HealthController(DigitalTwinDbContext db, DigitalTwinsClient? adtClient, ILogger<HealthController> logger) : ControllerBase
+public class HealthController(DigitalTwinDbContext db, ILogger<HealthController> logger) : ControllerBase
 {
     /// <summary>
     /// Performs a comprehensive health check of all system components.
     /// Returns the overall health status along with individual component statuses.
     /// </summary>
-    /// <returns>Health status including database, SignalR, and Azure Digital Twins connectivity.</returns>
+    /// <returns>Health status including database and SignalR connectivity.</returns>
     /// <response code="200">Health check completed successfully.</response>
     /// <response code="503">One or more components are unhealthy.</response>
     [HttpGet]
@@ -32,15 +30,9 @@ public class HealthController(DigitalTwinDbContext db, DigitalTwinsClient? adtCl
     {
         var dbStatus = await CheckDbAsync();
         var signalRStatus = "Healthy"; // SignalR health is implicit via successful response
-        var adtStatus = await CheckAdtAsync();
-        var overall = (dbStatus, adtStatus) switch
-        {
-            ("Healthy", "Healthy") => "Healthy",
-            ("Healthy", "Disabled") => "Healthy",
-            _ => "Degraded"
-        };
+        var overall = dbStatus == "Healthy" ? "Healthy" : "Degraded";
 
-        var result = new HealthStatusDto(overall, DateTime.UtcNow, dbStatus, signalRStatus, adtStatus);
+        var result = new HealthStatusDto(overall, DateTime.UtcNow, dbStatus, signalRStatus);
 
         if (overall != "Healthy")
         {
@@ -84,8 +76,7 @@ public class HealthController(DigitalTwinDbContext db, DigitalTwinsClient? adtCl
             Timestamp = DateTime.UtcNow,
             Checks = new Dictionary<string, string>
             {
-                { "Database", dbStatus },
-                { "AzureDigitalTwins", await CheckAdtAsync() }
+                { "Database", dbStatus }
             }
         };
 
@@ -107,25 +98,6 @@ public class HealthController(DigitalTwinDbContext db, DigitalTwinsClient? adtCl
         catch (Exception ex)
         {
             logger.LogError(ex, "Database health check failed: {ErrorMessage}", ex.Message);
-            return "Unhealthy";
-        }
-    }
-
-    private async Task<string> CheckAdtAsync()
-    {
-        if (adtClient == null) return "Disabled";
-        try
-        {
-            await adtClient.GetDigitalTwinAsync<string>("health-probe");
-            return "Healthy";
-        }
-        catch (RequestFailedException ex) when (ex.Status == 404)
-        {
-            return "Healthy";
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Azure Digital Twins health check failed: {ErrorMessage}", ex.Message);
             return "Unhealthy";
         }
     }

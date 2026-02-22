@@ -51,9 +51,7 @@ const chartOptions = computed<ApexOptions>(() => ({
             enabled: true
         },
         animations: {
-            enabled: true,
-            easing: 'easeinout',
-            speed: 800
+            enabled: false
         }
     },
     colors: ['#10B981'],
@@ -113,7 +111,7 @@ const chartOptions = computed<ApexOptions>(() => ({
         strokeDashArray: 4
     },
     theme: {
-        mode: 'light'
+        mode: 'dark'
     },
     annotations: {
         yaxis: [

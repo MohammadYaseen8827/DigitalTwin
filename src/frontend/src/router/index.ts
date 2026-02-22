@@ -35,12 +35,12 @@ import ReportingDashboardView from '@/views/ReportingDashboardView.vue'
 import PredictiveAnalyticsDashboardView from '@/views/PredictiveAnalyticsDashboardView.vue'
 import ModelValidationView from '@/views/ModelValidationView.vue'
 import ModelLifecycleView from '@/views/ModelLifecycleView.vue'
-import AzureDigitalTwinView from '@/views/AzureDigitalTwinView.vue'
 import TenantManagementView from '@/views/TenantManagementView.vue'
 import ExternalSystemIntegrationView from '@/views/ExternalSystemIntegrationView.vue'
 import RealTimeAnalyticsView from '@/views/RealTimeAnalyticsView.vue'
 import BenchmarkValidationView from '@/views/BenchmarkValidationView.vue'
 import MLInsightsView from '@/views/MLInsights.vue'
+import EnterpriseOperationsDashboard from '@/views/EnterpriseOperationsDashboard.vue'
 
 // Type augmentation for RouteMeta
 declare module 'vue-router' {
@@ -249,12 +249,6 @@ const routes: RouteRecordRaw[] = [
     component: ModelLifecycleView,
     meta: { requiresAuth: true }
   },
-  {
-    path: '/azure-digital-twin',
-    name: 'AzureDigitalTwin',
-    component: AzureDigitalTwinView,
-    meta: { requiresAuth: true }
-  },
   // Phase 9 Enterprise Integration Routes
   {
     path: '/tenants',
@@ -285,54 +279,42 @@ const routes: RouteRecordRaw[] = [
     name: 'MLInsights',
     component: MLInsightsView,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/enterprise-dashboard',
+    name: 'EnterpriseOperations',
+    component: EnterpriseOperationsDashboard,
+    meta: { requiresAuth: true }
   }
 ]
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition
+    }
+    return { top: 0 }
+  }
 })
 
 // Navigation guard
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
   
-  console.log('=== Router Guard Start ===')
-  console.log('Target route:', to.path, to.name)
-  console.log('From route:', from.path, from.name)
-  console.log('Auth required:', to.meta.requiresAuth)
-  console.log('Current auth state:', {
-    isAuthenticated: authStore.isAuthenticated,
-    hasToken: !!authStore.token,
-    hasUser: !!authStore.user,
-    user: authStore.user
-  })
-  
   // Skip auth check for login page
   if (to.path === '/login') {
-    console.log('Allowing login page access')
     next()
     return
   }
   
-  // For development, be more lenient but still check auth
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Development mode detected')
-    if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-      console.log('Development: Auth required but not authenticated, redirecting to login')
-      next('/login')
-      return
-    }
-  }
-  
-  // Production auth check
+  // Auth check for protected routes
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    console.log('Production: Auth required but not authenticated, redirecting to login')
     next('/login')
     return
   }
   
-  console.log('Navigation allowed')
   next()
 })
 

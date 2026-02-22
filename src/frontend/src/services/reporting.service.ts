@@ -46,7 +46,7 @@ export async function exportData<T>(
       responseType: 'blob'
     }
   )
-  return response
+  return response.data
 }
 
 /**
@@ -68,6 +68,31 @@ export async function scheduleReport(
     '/Reports/schedule',
     schedule
   )
+}
+
+/**
+ * Get report generation history
+ */
+export async function getReportHistory(
+  page: number = 1,
+  pageSize: number = 20
+): Promise<ReportHistoryResponse> {
+  return axiosClient.get<ReportHistoryResponse, ReportHistoryResponse>(
+    `/Reports/history?page=${page}&pageSize=${pageSize}`
+  )
+}
+
+/**
+ * Download a generated report
+ */
+export async function downloadReport(reportId: string): Promise<Blob> {
+  const response = await axiosClient.get<Blob>(
+    `/Reports/download/${reportId}`,
+    {
+      responseType: 'blob'
+    }
+  )
+  return response.data
 }
 
 /**

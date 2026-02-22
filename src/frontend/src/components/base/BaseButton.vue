@@ -4,6 +4,7 @@
     class="base-button"
     :class="[variantClass, sizeClass, { 'is-disabled': disabled || loading, 'is-loading': loading }]"
     v-bind="componentAttrs"
+    :aria-label="ariaLabel || undefined"
     @click="handleClick"
   >
     <span v-if="loading" class="loading-spinner"></span>
@@ -17,6 +18,10 @@
 import { computed, useAttrs, type Component, type PropType } from 'vue'
 
 const props = defineProps({
+  ariaLabel: {
+    type: String,
+    default: ''
+  },
   variant: {
     type: String as () => 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'warning' | 'critical',
     default: 'primary'
@@ -68,7 +73,6 @@ const handleClick = (event: MouseEvent) => {
   --btn-padding-x: var(--space-20);
   --btn-radius: var(--radius-md);
   --btn-font-size: var(--font-size-base);
-  --btn-line-height: var(--font-lineheight-snug);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -76,36 +80,35 @@ const handleClick = (event: MouseEvent) => {
   padding: var(--btn-padding-y) var(--btn-padding-x);
   border-radius: var(--btn-radius);
   font-size: var(--btn-font-size);
-  line-height: var(--btn-line-height);
   font-weight: 600;
   border: 1px solid transparent;
   cursor: pointer;
   transition:
-    background-color 0.25s ease,
-    color 0.25s ease,
-    border-color 0.25s ease,
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+    background-color var(--transition-normal),
+    color var(--transition-normal),
+    border-color var(--transition-normal),
+    transform var(--transition-fast),
+    box-shadow var(--transition-normal);
   text-decoration: none;
   color: inherit;
   min-height: 44px;
-  box-shadow: var(--shadow-subtle);
-  background: var(--color-surface-alt);
+  box-shadow: var(--shadow-card);
+  background: var(--color-surface);
 }
 
 .base-button:hover {
   transform: translateY(-1px);
-  box-shadow: var(--shadow-medium);
+  box-shadow: var(--shadow-elevated);
 }
 
 .base-button:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
+  outline: 3px solid var(--color-primary);
   outline-offset: 2px;
 }
 
 .base-button:active {
   transform: translateY(0);
-  box-shadow: var(--shadow-subtle);
+  box-shadow: var(--shadow-card);
 }
 
 .base-button.is-disabled,
@@ -140,35 +143,35 @@ const handleClick = (event: MouseEvent) => {
 }
 
 .variant-primary {
-  background: linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary-dark) 80%, var(--color-primary) 20%));
-  color: var(--color-text-primary);
-  border-color: color-mix(in srgb, var(--color-primary-dark) 60%, var(--color-primary) 40%);
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
 }
 
 .variant-primary:hover {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 60%, var(--color-primary-dark) 40%), var(--color-primary-dark));
+  background: #2563eb;
 }
 
 .variant-secondary {
-  background: color-mix(in srgb, var(--color-surface-alt) 60%, var(--color-primary) 40%);
+  background: var(--color-surface-elevated);
   color: var(--color-text-primary);
-  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border) 55%);
+  border-color: var(--color-border);
 }
 
 .variant-secondary:hover {
-  background: color-mix(in srgb, var(--color-primary) 50%, var(--color-surface-alt) 50%);
+  background: var(--color-surface);
+  border-color: var(--color-primary);
 }
 
 .variant-outline {
   background: transparent;
   color: var(--color-primary);
-  border-color: color-mix(in srgb, var(--color-primary) 60%, var(--color-border) 40%);
+  border-color: var(--color-primary);
   box-shadow: none;
 }
 
 .variant-outline:hover {
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-  box-shadow: var(--shadow-subtle);
+  background: rgba(59, 130, 246, 0.1);
 }
 
 .variant-ghost {
@@ -179,42 +182,38 @@ const handleClick = (event: MouseEvent) => {
 }
 
 .variant-ghost:hover {
-  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  background: var(--color-surface-elevated);
   color: var(--color-text-primary);
 }
 
 .variant-danger {
-  background: linear-gradient(135deg, var(--color-error), color-mix(in srgb, var(--color-error) 60%, #8b1d1d 40%));
-  color: var(--color-text-primary);
-  border-color: color-mix(in srgb, var(--color-error) 70%, #8b1d1d 30%);
+  background: var(--color-danger);
+  color: white;
+  border-color: var(--color-danger);
 }
 
 .variant-danger:hover {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--color-error) 60%, #8b1d1d 40%), #8b1d1d);
+  background: #dc2626;
 }
 
 .variant-warning {
-  background: linear-gradient(135deg, var(--color-warning-500, #f59e0b), color-mix(in srgb, var(--color-warning-600, #d97706) 70%, var(--color-warning-500, #f59e0b) 30%));
-  color: var(--color-text-primary);
-  border-color: color-mix(in srgb, var(--color-warning-600, #d97706) 60%, var(--color-warning-500, #f59e0b) 40%);
+  background: var(--color-warning);
+  color: #1a1a1a;
+  border-color: var(--color-warning);
 }
 
 .variant-warning:hover {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--color-warning-600, #d97706) 60%, var(--color-warning-500, #f59e0b) 40%), var(--color-warning-700, #b45309));
-}
-
-.variant-critical,
-.variant-danger {
-  color: var(--color-text-primary);
+  background: #d97706;
 }
 
 .variant-critical {
-  background: linear-gradient(135deg, var(--color-critical-500, #ef4444), color-mix(in srgb, var(--color-critical-600, #dc2626) 70%, var(--color-critical-500, #ef4444) 30%));
-  border-color: color-mix(in srgb, var(--color-critical-600, #dc2626) 60%, var(--color-critical-500, #ef4444) 40%);
+  background: var(--color-danger);
+  color: white;
+  border-color: var(--color-danger);
 }
 
 .variant-critical:hover {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--color-critical-600, #dc2626) 60%, var(--color-critical-500, #ef4444) 40%), var(--color-critical-700, #b91c1c));
+  background: #dc2626;
 }
 
 .size-sm {

@@ -44,7 +44,7 @@ public class RefreshTokenService(
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var expiryMinutes = int.Parse(configuration["Jwt:ExpiryInMinutes"] ?? "1440");
+        var expiryMinutes = int.Parse(configuration["Jwt:ExpirationMinutes"] ?? "1440");
         
         var token = new JwtSecurityToken(
             issuer: configuration["Jwt:Issuer"],

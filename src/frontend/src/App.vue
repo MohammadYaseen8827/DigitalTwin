@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.store'
 import { Toaster } from 'vue-sonner'
@@ -49,19 +49,11 @@ import {
 const router = useRouter()
 const authStore = useAuthStore()
 
-// Debug auth state on mount
-onMounted(() => {
-  console.log('App mounted - auth state:', {
-    isAuthenticated: authStore.isAuthenticated,
-    user: authStore.user,
-    token: authStore.token
-  })
-})
-
 const navItems = ref([
   // Core Dashboard
   { name: 'Home', path: '/', icon: Home },
   { name: 'Dashboard', path: '/dashboard', icon: BarChart3 },
+  { name: 'Enterprise', path: '/enterprise-dashboard', icon: LayoutDashboard },
   
   // Core Operations
   { name: 'Machines', path: '/machines', icon: Server },
@@ -125,6 +117,7 @@ const handleLogout = () => {
 
 <template>
   <div class="app-container">
+    <template v-if="authStore.isAuthenticated">
     <nav class="sidebar glass-panel">
       <div class="logo">
         <div class="logo-icon">🏭</div>
@@ -153,8 +146,22 @@ const handleLogout = () => {
     </nav>
     
     <main class="main-content">
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <transition name="page-fade" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
     </main>
+    </template>
+    <template v-else>
+      <main class="main-content full-width">
+        <router-view v-slot="{ Component }">
+          <transition name="page-fade" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </router-view>
+      </main>
+    </template>
     
     <!-- Toast Container -->
     <Toaster position="top-right" />
@@ -286,6 +293,26 @@ const handleLogout = () => {
   padding: 2rem;
   background: var(--color-background);
   min-height: 100vh;
+}
+
+.main-content.full-width {
+  margin-left: 0;
+}
+
+/* Page Transitions */
+.page-fade-enter-active,
+.page-fade-leave-active {
+  transition: opacity 250ms ease-out, transform 250ms ease-out;
+}
+
+.page-fade-enter-from {
+  opacity: 0;
+  transform: translateY(15px);
+}
+
+.page-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 
 /* Responsive Design */

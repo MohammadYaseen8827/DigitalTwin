@@ -1,0 +1,233 @@
+/* ==========================================================================
+   Reusable Transitions & Animations
+   ========================================================================== */
+
+/* Fade Transitions */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Fade Up */
+.fade-up-enter-active,
+.fade-up-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.fade-up-enter-from {
+  opacity: 0;
+  transform: translateY(15px);
+}
+
+.fade-up-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* Fade Down */
+.fade-down-enter-active,
+.fade-down-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.fade-down-enter-from {
+  opacity: 0;
+  transform: translateY(-15px);
+}
+
+.fade-down-leave-to {
+  opacity: 0;
+  transform: translateY(15px);
+}
+
+/* Slide Left */
+.slide-left-enter-active,
+.slide-left-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.slide-left-enter-from {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.slide-left-leave-to {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+/* Scale Fade */
+.scale-fade-enter-active,
+.scale-fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.scale-fade-enter-from,
+.scale-fade-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+/* ==========================================================================
+   Stagger Animations (for lists)
+   ========================================================================== */
+
+.stagger-item {
+  animation: stagger-fade-up 0.3s ease forwards;
+  opacity: 0;
+}
+
+.stagger-item:nth-child(1) { animation-delay: 0ms; }
+.stagger-item:nth-child(2) { animation-delay: 50ms; }
+.stagger-item:nth-child(3) { animation-delay: 100ms; }
+.stagger-item:nth-child(4) { animation-delay: 150ms; }
+.stagger-item:nth-child(5) { animation-delay: 200ms; }
+.stagger-item:nth-child(6) { animation-delay: 250ms; }
+.stagger-item:nth-child(7) { animation-delay: 300ms; }
+.stagger-item:nth-child(8) { animation-delay: 350ms; }
+.stagger-item:nth-child(9) { animation-delay: 400ms; }
+.stagger-item:nth-child(10) { animation-delay: 450ms; }
+.stagger-item:nth-child(11) { animation-delay: 500ms; }
+.stagger-item:nth-child(12) { animation-delay: 550ms; }
+
+@keyframes stagger-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
+   Micro-interactions
+   ========================================================================== */
+
+/* Hover lift effect */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-medium);
+}
+
+/* Focus ring */
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+
+/* Button press effect */
+.press-effect:active {
+  transform: scale(0.98);
+}
+
+/* Card hover effect */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+  border-color: color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
+}
+
+/* Table row hover */
+.table-row-hover tr {
+  transition: background-color 0.15s ease;
+}
+
+.table-row-hover tr:hover {
+  background: var(--color-surface-alt);
+}
+
+/* ==========================================================================
+   Utility Animation Classes
+   ========================================================================== */
+
+.animate-in {
+  animation: fade-up 0.3s ease forwards;
+}
+
+.animate-in-delay-1 { animation-delay: 50ms; }
+.animate-in-delay-2 { animation-delay: 100ms; }
+.animate-in-delay-3 { animation-delay: 150ms; }
+.animate-in-delay-4 { animation-delay: 200ms; }
+.animate-in-delay-5 { animation-delay: 250ms; }
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Pulse animation */
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Spin animation */
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Shimmer loading effect */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, white 20%, transparent),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}

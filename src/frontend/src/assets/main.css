@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Manrope:wght@500;600&display=swap');
 @import './tokens.css';
 @import './base.css';
+@import './transitions.css';
 
 :root {
   color-scheme: dark;

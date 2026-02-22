@@ -95,7 +95,7 @@ const chartOptions = computed<ApexOptions>(() => ({
         strokeDashArray: 4,
         row: { colors: ['#F9FAFB', 'transparent'], opacity: 0.5 }
     },
-    theme: { mode: 'light' },
+    theme: { mode: 'dark' },
     dataLabels: {
         enabled: true,
         formatter: (_val: number, opts: { dataPointIndex: number }) => {

@@ -84,7 +84,7 @@ const chartOptions = computed<ApexOptions>(() => ({
         strokeDashArray: 4
     },
     theme: {
-        mode: 'light'
+        mode: 'dark'
     },
     markers: {
         size: 4,

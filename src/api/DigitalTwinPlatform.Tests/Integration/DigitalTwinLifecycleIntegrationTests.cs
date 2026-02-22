@@ -1,11 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using DigitalTwinPlatform.Infrastructure.Persistence;
-using DigitalTwinPlatform.Application.Machines.Models;
 
 namespace DigitalTwinPlatform.Tests.Integration;
 
@@ -13,22 +9,15 @@ namespace DigitalTwinPlatform.Tests.Integration;
 /// End-to-end integration tests for the complete Digital Twin lifecycle:
 /// Machine Registration → Telemetry Ingestion → ML Prediction → Alert Generation → Maintenance Planning
 /// </summary>
-public class DigitalTwinLifecycleIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+public class DigitalTwinLifecycleIntegrationTests(WebApplicationFactory<Program> factory)
+    : IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly WebApplicationFactory<Program> _factory;
-    private readonly HttpClient _client;
-    private readonly JsonSerializerOptions _jsonOptions;
-
-    public DigitalTwinLifecycleIntegrationTests(WebApplicationFactory<Program> factory)
+    private readonly HttpClient _client = factory.CreateClient();
+    private readonly JsonSerializerOptions _jsonOptions = new()
     {
-        _factory = factory;
-        _client = _factory.CreateClient();
-        _jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
-    }
+        PropertyNameCaseInsensitive = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
 
     [Fact]
     public async Task CompleteDigitalTwinLifecycle_ShouldWorkEndToEnd()

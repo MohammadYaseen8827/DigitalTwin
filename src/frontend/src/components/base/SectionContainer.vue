@@ -68,7 +68,7 @@ const props = defineProps({
   justify-content: space-between;
   align-items: flex-end;
   gap: var(--space-16);
-  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  border-bottom: 1px solid var(--color-border-subtle);
   padding-bottom: var(--space-16);
 }
 
@@ -76,7 +76,7 @@ const props = defineProps({
   margin: 0;
   font-size: var(--font-size-2xl);
   color: var(--color-text-primary);
-  line-height: var(--font-lineheight-tight);
+  line-height: 1.2;
 }
 
 .section-eyebrow {
@@ -101,14 +101,14 @@ const props = defineProps({
 
 .section-footer {
   padding-top: var(--space-16);
-  border-top: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  border-top: 1px solid var(--color-border-subtle);
 }
 
 .section-container.is-bordered {
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-xl);
-  background: color-mix(in srgb, var(--color-surface-alt) 60%, transparent);
-  box-shadow: var(--shadow-subtle);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
 }
 
 @media (max-width: 768px) {

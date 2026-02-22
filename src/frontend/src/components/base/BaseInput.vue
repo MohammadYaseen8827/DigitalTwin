@@ -108,6 +108,13 @@ const isFocused = ref(false)
 const inputId = computed(() => props.id || `input-${Math.random().toString(36).slice(2)}`)
 const hintId = computed(() => `${inputId.value}-hint`)
 
+const attrs = useAttrs()
+
+const componentAttrs = computed(() => ({
+  ...attrs,
+  disabled: props.disabled || attrs.disabled
+}))
+
 const hasValue = computed(() => {
   return props.modelValue !== null && props.modelValue !== undefined && props.modelValue !== ''
 })
@@ -151,18 +158,18 @@ const onBlur = (event: FocusEvent) => {
   --input-border: var(--color-border);
   --input-bg: var(--color-surface);
   --input-text: var(--color-text-primary);
-  --input-placeholder: color-mix(in srgb, var(--color-text-secondary) 70%, transparent);
-  --input-focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-primary) 30%, transparent);
+  --input-placeholder: var(--color-text-muted);
+  --input-focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.3);
   --input-focus-border: var(--color-primary);
-  --input-hover-border: var(--color-primary-light);
-  --input-disabled-bg: var(--color-bg-subtle);
-  --input-disabled-text: var(--color-text-disabled);
+  --input-hover-border: var(--color-primary);
+  --input-disabled-bg: var(--color-surface-elevated);
+  --input-disabled-text: var(--color-text-muted);
   --input-disabled-border: var(--color-border-subtle);
-  --input-error: var(--color-error);
+  --input-error: var(--color-danger);
   --input-warning: var(--color-warning);
   --input-success: var(--color-success);
   --input-info: var(--color-info);
-  --input-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --input-transition: all var(--transition-fast) ease;
 
   display: flex;
   flex-direction: column;
@@ -177,11 +184,11 @@ const onBlur = (event: FocusEvent) => {
   font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--color-text-secondary);
-  transition: color 0.2s ease;
+  transition: color var(--transition-fast);
 }
 
 .required-indicator {
-  color: var(--color-error);
+  color: var(--color-danger);
   margin-left: 2px;
 }
 
@@ -211,7 +218,7 @@ const onBlur = (event: FocusEvent) => {
   display: inline-flex;
   align-items: center;
   color: var(--color-text-secondary);
-  transition: color 0.2s ease;
+  transition: color var(--transition-fast);
 }
 
 .input-prefix {
@@ -228,7 +235,7 @@ input {
   background: transparent;
   color: var(--input-text);
   font-size: var(--font-size-base);
-  line-height: var(--font-lineheight-normal);
+  line-height: 1.5;
   padding: 0;
   outline: none;
   min-width: 0;
@@ -238,7 +245,7 @@ input {
 input::placeholder {
   color: var(--input-placeholder);
   opacity: 1;
-  transition: color 0.2s ease;
+  transition: color var(--transition-fast);
 }
 
 /* Sizes */
@@ -265,7 +272,7 @@ input::placeholder {
   align-items: center;
   justify-content: center;
   margin-left: auto;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
 }
 
 .input-status-icon.error {
@@ -322,7 +329,7 @@ input::placeholder {
 }
 
 .has-error .input-wrapper:focus-within {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--input-error) 30%, transparent);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
 }
 
 .is-disabled {
@@ -348,13 +355,13 @@ input::placeholder {
 /* Animation for focus state */
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 50%, transparent);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
   }
   70% {
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 0%, transparent);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 0%, transparent);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
   }
 }
 
@@ -366,17 +373,6 @@ input::placeholder {
 @media (prefers-reduced-motion: reduce) {
   .input-wrapper:focus-within {
     animation: none;
-  }
-}
-
-/* Dark mode adjustments */
-@media (prefers-color-scheme: dark) {
-  .input-wrapper {
-    --input-bg: color-mix(in srgb, var(--color-surface) 95%, var(--color-bg));
-  }
-  
-  input::placeholder {
-    opacity: 0.7;
   }
 }
 </style>
