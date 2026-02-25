@@ -63,8 +63,6 @@ public class ExternalSystem : BaseEntity<Guid>
     public string? Password { get; private set; }
     public ExternalSystemStatus Status => _status;
     public DateTime LastConnected => _lastConnected;
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
 
     // Navigation properties
     public ICollection<SystemIntegration> Integrations { get; private set; } = [];
@@ -88,7 +86,7 @@ public class ExternalSystem : BaseEntity<Guid>
         Username = username?.Trim();
         Password = password;
         
-        UpdatedAt = DateTime.UtcNow;
+        base.UpdatedAt = DateTime.UtcNow;
         return new Result.Success();
     }
 
@@ -101,7 +99,7 @@ public class ExternalSystem : BaseEntity<Guid>
             return new Result.Failure("System name cannot exceed 100 characters");
 
         _name = name.Trim();
-        UpdatedAt = DateTime.UtcNow;
+        base.UpdatedAt = DateTime.UtcNow;
         return new Result.Success();
     }
 
@@ -114,7 +112,7 @@ public class ExternalSystem : BaseEntity<Guid>
             return new Result.Failure("System type cannot exceed 50 characters");
 
         _systemType = systemType.Trim();
-        UpdatedAt = DateTime.UtcNow;
+        base.UpdatedAt = DateTime.UtcNow;
         return new Result.Success();
     }
 
@@ -125,7 +123,7 @@ public class ExternalSystem : BaseEntity<Guid>
 
         _status = ExternalSystemStatus.Connected;
         _lastConnected = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        base.UpdatedAt = DateTime.UtcNow;
         return new Result.Success();
     }
 
@@ -135,14 +133,14 @@ public class ExternalSystem : BaseEntity<Guid>
             return new Result.Failure("System is already disconnected");
 
         _status = ExternalSystemStatus.Disconnected;
-        UpdatedAt = DateTime.UtcNow;
+        base.UpdatedAt = DateTime.UtcNow;
         return new Result.Success();
     }
 
     public Result MarkAsError()
     {
         _status = ExternalSystemStatus.Error;
-        UpdatedAt = DateTime.UtcNow;
+        base.UpdatedAt = DateTime.UtcNow;
         return new Result.Success();
     }
 

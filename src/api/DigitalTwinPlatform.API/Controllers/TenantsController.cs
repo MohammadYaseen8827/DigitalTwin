@@ -4,6 +4,7 @@ using DigitalTwinPlatform.Application.Tenants.Queries;
 using DigitalTwinPlatform.Application.Tenants.Services;
 using DigitalTwinPlatform.Domain.Common;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UserRole = DigitalTwinPlatform.Application.Tenants.Dtos.UserRole;
 
@@ -11,6 +12,7 @@ namespace DigitalTwinPlatform.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "Administrator")]
 public class TenantsController : ControllerBase
 {
     private readonly IMediator _mediator;

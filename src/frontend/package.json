@@ -10,7 +10,7 @@
   "packageManager": "pnpm@8.15.1",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && tsc --noEmit",
+    "build": "vite build && vue-tsc --noEmit",
     "preview": "vite preview --port 3000",
     "test:unit": "vitest",
     "test:unit:coverage": "vitest run --coverage",

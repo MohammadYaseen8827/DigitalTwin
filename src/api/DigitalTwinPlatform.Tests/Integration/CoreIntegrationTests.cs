@@ -165,7 +165,8 @@ public class CoreIntegrationTests : IClassFixture<IntegrationTestFixture>
 
         var response = await _client.PostAsJsonAsync("/api/machines", testMachine);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<dynamic>()!;
+        var body = await response.Content.ReadFromJsonAsync<dynamic>();
+        return body ?? throw new InvalidOperationException("Failed to deserialize machine response.");
     }
 
     private async Task GenerateTestData(Guid machineId, int count)

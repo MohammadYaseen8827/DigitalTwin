@@ -1,8 +1,8 @@
 using DigitalTwinPlatform.Domain.Entities.Auth;
 using DigitalTwinPlatform.Infrastructure.Persistence;
-using DigitalTwinPlatform.Infrastructure.Persistence.DataSeeding;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 
 namespace DigitalTwinPlatform.API.Extensions;
 
@@ -32,18 +32,16 @@ public static class DatabaseExtensions
         await serviceProvider.SeedIdentityAsync(logger, cancellationToken);
     }
 
-    /// <summary>
-    /// Initializes the database by applying migrations and seeding data.
-    /// </summary>
-    public static async Task InitializeDatabaseAsync(this IServiceProvider serviceProvider, ILogger logger, CancellationToken cancellationToken = default)
-    {
-        using var scope = serviceProvider.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<DigitalTwinDbContext>();
-        var initializer = new DbContextInitializer(dbContext, scope.ServiceProvider.GetRequiredService<ILogger<DbContextInitializer>>());
-        
-        await initializer.InitializeAsync();
-        await serviceProvider.SeedIdentityAsync(logger, cancellationToken);
-    }
+    // InitializeDatabaseAsync (commented out): was applying migrations and seeding; use ApplyDatabaseMigrationsAsync + SeedDatabaseAsync instead.
+    // public static async Task InitializeDatabaseAsync(this IServiceProvider serviceProvider, ILogger logger, CancellationToken cancellationToken = default)
+    // {
+    //     using var scope = serviceProvider.CreateScope();
+    //     var dbContext = scope.ServiceProvider.GetRequiredService<DigitalTwinDbContext>();
+    //     var initializer = new DbContextInitializer(dbContext, scope.ServiceProvider.GetRequiredService<ILogger<DbContextInitializer>>());
+    //     
+    //     await initializer.InitializeAsync();
+    //     await serviceProvider.SeedIdentityAsync(logger, cancellationToken);
+    // }
 
     /// <summary>
     /// Applies migrations with retry logic for database connectivity issues.
@@ -84,6 +82,7 @@ public static class DatabaseExtensions
     {
         var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        var env = serviceProvider.GetService<IHostEnvironment>();
 
         // Seed Roles
         var roles = new[] { "Administrator", "Engineer", "Operator" };
@@ -103,7 +102,10 @@ public static class DatabaseExtensions
             }
         }
 
-        // Seed Admin User
+        // Seed default admin user only in Development to avoid predictable credentials in production
+        if (env?.IsDevelopment() != true)
+            return;
+
         if (await userManager.FindByEmailAsync("admin@example.com") == null)
         {
             try

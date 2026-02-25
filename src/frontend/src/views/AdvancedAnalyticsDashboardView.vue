@@ -498,22 +498,22 @@ const goToEnhancedPrescriptive = () => {
 
 const generatePrediction = () => {
   // Would trigger prediction generation
-  console.log('Generating prediction for:', selectedMachineId.value)
+  // Generating prediction
 }
 
 const generateRecommendation = () => {
   // Would trigger recommendation generation
-  console.log('Generating recommendation for:', selectedMachineId.value)
+  // Generating recommendation
 }
 
 const viewRecommendationDetails = () => {
   // Would show detailed recommendation view
-  console.log('Viewing recommendation details')
+  // Viewing recommendation details
 }
 
 const generateNewRecommendation = () => {
   // Would generate new recommendation
-  console.log('Generating new recommendation')
+  // Generating new recommendation
 }
 
 const runAllAnalyses = async () => {
@@ -529,12 +529,12 @@ const runAllAnalyses = async () => {
 
 const generateReport = () => {
   // Would generate comprehensive report
-  console.log('Generating report')
+  // Generating report
 }
 
 const exportData = () => {
   // Would export dashboard data
-  console.log('Exporting data')
+  // Exporting data
 }
 
 // Load initial data when machine is selected

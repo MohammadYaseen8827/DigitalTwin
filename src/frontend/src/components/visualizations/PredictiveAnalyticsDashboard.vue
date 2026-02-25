@@ -156,54 +156,7 @@ import TooltipIcon from '../base/TooltipIcon.vue'
 import PredictionExplanation from './PredictionExplanation.vue'
 import { Info } from 'lucide-vue-next'
 
-// Maintenance scheduling service
-const scheduleMaintenance = async (machineId: string) => {
-  try {
-    const response = await fetch(`/api/maintenance/schedule`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify({
-        machineId,
-        scheduledDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Schedule for tomorrow
-        priority: 'medium',
-        description: `Scheduled maintenance for machine ${machineId} based on predictive analytics`
-      })
-    })
-    
-    if (!response.ok) {
-      throw new Error(`Failed to schedule maintenance: ${response.statusText}`)
-    }
-    
-    const result = await response.json()
-    console.log('Successfully scheduled maintenance for machine:', machineId, result)
-    
-    // Show success notification
-    if ('Notification' in window) {
-      new Notification('Maintenance Scheduled', {
-        body: `Maintenance for machine ${machineId} has been scheduled successfully`,
-        icon: '/icons/success.png'
-      })
-    }
-    
-    return result
-  } catch (error) {
-    console.error('Failed to schedule maintenance:', error)
-    
-    // Show error notification
-    if ('Notification' in window) {
-      new Notification('Maintenance Scheduling Failed', {
-        body: `Failed to schedule maintenance for machine ${machineId}: ${error.message}`,
-        icon: '/icons/error.png'
-      })
-    }
-    
-    throw error
-  }
-}
-
+import { planMaintenance } from '@/services/maintenance.service'
 import { fetchMachines } from '@/services/machines.service'
 import { fetchPredictionHistory, requestPrediction } from '@/services/predictions.service'
 import type { MachineDto, PredictionDto } from '@/api/types'
@@ -223,6 +176,23 @@ const selectedMachinePrediction = computed(() => {
 })
 
 const toast = useToast()
+
+const scheduleMaintenance = async (machineId: string) => {
+  try {
+    const plannedDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    await planMaintenance({
+      machineId,
+      type: 'Predictive',
+      plannedDate,
+      notes: `Scheduled from predictive analytics dashboard for machine ${machineId}`
+    })
+    toast.success('Maintenance scheduled successfully')
+    await loadPredictionHistory()
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to schedule maintenance'
+    toast.error(message)
+  }
+}
 
 const latestPredictions = computed(() =>
   machines.value
@@ -409,7 +379,7 @@ const loadPredictionHistory = async () => {
 
         return [machine.id, history] as const
       } catch (error) {
-        console.error(`Failed to load predictions for machine ${machine.name}`, error)
+        if (import.meta.env.DEV) console.error(`Failed to load predictions for machine ${machine.name}`, error)
         toast.error(`Unable to load prediction history for ${machine.name}.`)
         return [machine.id, []] as const
       }

@@ -71,6 +71,7 @@ public class DifferentialEquationSolver : IDifferentialEquationSolver
         double stepSize,
         CancellationToken ct = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         _logger.LogInformation("Solving ODE from {StartTime} to {EndTime} with step size {StepSize}", 
             startTime, endTime, stepSize);
 
@@ -252,6 +253,7 @@ public class OptimizationService : IOptimizationService
         OptimizationOptions options,
         CancellationToken ct = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         _logger.LogInformation("Starting gradient-based optimization");
 
         var currentSolution = (double[])initialGuess.Clone();
@@ -310,6 +312,7 @@ public class OptimizationService : IOptimizationService
         GeneticAlgorithmOptions options,
         CancellationToken ct = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         _logger.LogInformation("Starting genetic algorithm optimization");
 
         // Initialize population
@@ -388,6 +391,7 @@ public class OptimizationService : IOptimizationService
         MultiObjectiveOptions options,
         CancellationToken ct = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         _logger.LogInformation("Starting multi-objective optimization (NSGA-II)");
 
         // Initialize population

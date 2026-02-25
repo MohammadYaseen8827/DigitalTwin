@@ -12,9 +12,9 @@ public record TelemetryDto(
 {
     // Expose data as object for proper JSON serialization
     [JsonPropertyName("data")]
-    public object DataObject => Data != null ? 
-        JsonSerializer.Deserialize<object>(Data.RootElement.GetRawText()) : 
-        new { };
+    public object DataObject => Data != null
+        ? (JsonSerializer.Deserialize<object>(Data.RootElement.GetRawText()) ?? (object)new { })
+        : new { };
 }
 
 public record TelemetryIngestDto(

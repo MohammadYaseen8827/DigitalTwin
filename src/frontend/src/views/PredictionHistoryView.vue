@@ -441,7 +441,7 @@ const viewDetails = (prediction: PredictionDto) => {
 
 const compareWithOthers = (prediction: PredictionDto) => {
   // Would open comparison view
-  console.log('Comparing prediction:', prediction)
+  if (import.meta.env.DEV) console.debug('Comparing prediction:', prediction)
 }
 
 const closeModal = () => {

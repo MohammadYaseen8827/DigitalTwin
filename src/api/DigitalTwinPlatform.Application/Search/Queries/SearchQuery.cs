@@ -175,8 +175,8 @@ public class SearchQueryHandler(
             {
                 ["machineId"] = m.MachineId.ToString(),
                 ["type"] = m.Type.ToString(),
-                ["plannedDate"] = m.PlannedDate,
-                ["completedDate"] = m.CompletionDate
+                ["plannedDate"] = (object)(m.PlannedDate ?? default(DateTime)),
+                ["completedDate"] = (object)(m.CompletionDate ?? default(DateTime))
             }
         }).ToList();
     }

@@ -18,6 +18,7 @@ public class UncertaintyQuantificationService(
         double noiseLevel = 0.1,
         CancellationToken ct = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         logger.LogInformation("Starting Monte Carlo simulation with {Iterations} iterations", iterations);
 
         var samples = new double[iterations];
@@ -97,6 +98,7 @@ public class UncertaintyQuantificationService(
         int samples = 2000,
         CancellationToken ct = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         logger.LogInformation("Starting Bayesian inference with {Samples} samples", samples);
 
         // Initialize posterior samples

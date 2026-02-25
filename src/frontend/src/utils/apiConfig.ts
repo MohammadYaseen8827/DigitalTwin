@@ -29,7 +29,10 @@ class ApiConfiguration {
         // Default development URL - use HTTP on port 7000 to avoid SSL issues
         baseUrl = 'http://localhost:7000/api';
       } else {
-        // Production relative path
+        // Production: require explicit base URL via VITE_API_BASE_URL; fallback to /api with warning
+        if (typeof console !== 'undefined' && console.warn) {
+          console.warn('[apiConfig] VITE_API_BASE_URL is not set in production. Using /api. Set VITE_API_BASE_URL for correct API base.');
+        }
         baseUrl = '/api';
       }
     }

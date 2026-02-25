@@ -367,6 +367,7 @@ namespace DigitalTwinPlatform.Application.ML.Services
 
         public async Task<bool> MonitorModelPerformance(string modelId)
         {
+            await Task.CompletedTask.ConfigureAwait(false);
             return true;
         }
 

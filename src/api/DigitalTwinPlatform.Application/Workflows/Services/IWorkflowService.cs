@@ -362,6 +362,7 @@ namespace DigitalTwinPlatform.Application.Workflows.Services
 
         public async Task<bool> MonitorWorkflowHealth(string workflowId)
         {
+            await Task.CompletedTask.ConfigureAwait(false);
             return true;
         }
 
@@ -374,6 +375,7 @@ namespace DigitalTwinPlatform.Application.Workflows.Services
 
         public async Task<WorkflowDefinitionDto> ImportWorkflow(string workflowDefinition, string createdBy)
         {
+            await Task.CompletedTask.ConfigureAwait(false);
             _logger.LogInformation("Importing workflow");
             return new WorkflowDefinitionDto { Name = "Imported Workflow", CreatedBy = createdBy };
         }

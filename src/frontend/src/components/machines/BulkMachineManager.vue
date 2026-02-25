@@ -737,9 +737,7 @@ const resetBulkUpdateFields = () => {
   }
 }
 
-const editMachine = (machine: MachineDto) => {
-  // This would typically emit an event to open the edit form
-  console.log('Edit machine:', machine)
+const editMachine = (_machine: MachineDto) => {
   toast.info('Edit functionality would open machine form')
 }
 

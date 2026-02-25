@@ -92,8 +92,9 @@ public class SyntheticDataGenerator : ISyntheticDataGenerator
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             var processingTime = DateTime.UtcNow - startTime;
-            _logger.LogInformation("Generated {Count} synthetic trajectories with {DataPointCount} points in {ProcessingTime}ms for machine type {MachineType}", 
-                syntheticData.Count, processingTime.TotalMilliseconds, request.MachineType);
+            var dataPointCount = syntheticData.Count;
+            _logger.LogInformation("Generated {Count} synthetic trajectories with {DataPointCount} points in {ProcessingTime}ms for machine type {MachineType}",
+                syntheticData.Count, dataPointCount, processingTime.TotalMilliseconds, request.MachineType);
 
             return generationRecord;
         }
@@ -159,6 +160,7 @@ public class SyntheticDataGenerator : ISyntheticDataGenerator
         Random random,
         CancellationToken cancellationToken = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         var timeStep = timeRange?.TotalSeconds / 1000.0 ?? 1.0;
         var totalSteps = (int)(timeRange?.TotalSeconds / timeStep ?? 1000);
             
@@ -169,9 +171,9 @@ public class SyntheticDataGenerator : ISyntheticDataGenerator
             
         for (int step = 0; step <= totalSteps; step++)
         {
-            // Generate sensor readings
+            // Generate sensor readings (diffusion adds noise to vibration)
             var temperature = 20 + (random.NextDouble() * 10 - 5);
-            var vibration = 2 + (random.NextDouble() * 3 - 1.5) + drift * (random.NextDouble() * 2 - 1);
+            var vibration = 2 + (random.NextDouble() * 3 - 1.5) + drift * step * 0.001 + diffusion * (random.NextDouble() * 2 - 1);
             var pressure = 100 + (random.NextDouble() * 30 - 10);
             var rpm = 1800 + (random.NextDouble() * 400 - 200);
                 
@@ -201,6 +203,7 @@ public class SyntheticDataGenerator : ISyntheticDataGenerator
         Random random,
         CancellationToken cancellationToken = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         var timeStep = timeRange?.TotalSeconds / 1000.0 ?? 1.0;
         var totalSteps = (int)(timeRange?.TotalSeconds / timeStep ?? 1000);
             
@@ -211,9 +214,9 @@ public class SyntheticDataGenerator : ISyntheticDataGenerator
             
         for (int step = 0; step <= totalSteps; step++)
         {
-            // Generate sensor readings
+            // Generate sensor readings (exponential degradation: alpha + beta * step)
             var temperature = 25 + (random.NextDouble() * 5 - 2);
-            var vibration = 1 + (random.NextDouble() * 2 - 0.5) + Math.Exp(beta * step * 0.1);
+            var vibration = 1 + (random.NextDouble() * 2 - 0.5) + Math.Exp(alpha + beta * step * 0.1);
             var pressure = 120 + (random.NextDouble() * 20 - 5);
             var rpm = 1750 + (random.NextDouble() * 200 - 100);
                 
@@ -243,6 +246,7 @@ public class SyntheticDataGenerator : ISyntheticDataGenerator
         Random random,
         CancellationToken cancellationToken = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         var timeStep = timeRange?.TotalSeconds / 1000.0 ?? 1.0;
         var totalSteps = (int)(timeRange?.TotalSeconds / timeStep ?? 1000);
             
@@ -253,9 +257,9 @@ public class SyntheticDataGenerator : ISyntheticDataGenerator
             
         for (int step = 0; step <= totalSteps; step++)
         {
-            // Generate sensor readings
+            // Generate sensor readings (exponential degradation)
             var temperature = 30 + (random.NextDouble() * 7 - 3);
-            var vibration = 1.5 + (random.NextDouble() * 2 - 0.5) + Math.Exp(beta * step * 0.1);
+            var vibration = 1.5 + (random.NextDouble() * 2 - 0.5) + Math.Exp(alpha + beta * step * 0.1);
             var pressure = 140 + (random.NextDouble() * 20 - 8);
             var rpm = 1600 + (random.NextDouble() * 100 - 50);
                 
@@ -285,6 +289,7 @@ public class SyntheticDataGenerator : ISyntheticDataGenerator
         Random random,
         CancellationToken cancellationToken = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         var timeStep = timeRange?.TotalSeconds / 1000.0 ?? 1.0;
         var totalSteps = (int)(timeRange?.TotalSeconds / timeStep ?? 1000);
             
@@ -330,6 +335,7 @@ public class SyntheticDataGenerator : ISyntheticDataGenerator
         Random random,
         CancellationToken cancellationToken = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         var timeStep = timeRange?.TotalSeconds / 1000.0 ?? 1.0;
         var totalSteps = (int)(timeRange?.TotalSeconds / timeStep ?? 1000);
             
@@ -398,6 +404,7 @@ public class SyntheticDataGenerator : ISyntheticDataGenerator
         string machineType,
         CancellationToken cancellationToken = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         _logger.LogInformation("Starting synthetic data validation for machine type {MachineType}", machineType);
 
         try

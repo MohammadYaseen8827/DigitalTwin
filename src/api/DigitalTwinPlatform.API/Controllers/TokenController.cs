@@ -13,6 +13,7 @@ public class TokenController(RefreshTokenService refreshTokenService) : Controll
     /// </summary>
     /// <param name="request">Refresh token request</param>
     /// <returns>New access and refresh tokens</returns>
+    [AllowAnonymous]
     [HttpPost("refresh")]
     [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -45,6 +46,7 @@ public class TokenController(RefreshTokenService refreshTokenService) : Controll
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> RevokeToken([FromBody] RevokeTokenRequest request)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         // In a real implementation, you would invalidate the refresh token
         // This is a simplified version
         return Ok(new { message = "Token revoked successfully" });

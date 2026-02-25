@@ -1,10 +1,12 @@
 using DigitalTwinPlatform.API.Services.Analytics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalTwinPlatform.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class UncertaintyController : ControllerBase
 {
     private readonly IUncertaintyQuantificationService _uncertaintyService;

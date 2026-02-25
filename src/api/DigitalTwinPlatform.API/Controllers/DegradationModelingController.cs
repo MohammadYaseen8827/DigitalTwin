@@ -1,4 +1,5 @@
 using DigitalTwinPlatform.Application.Mathematics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using DigitalTwinPlatform.Application.Services;
@@ -15,6 +16,7 @@ namespace DigitalTwinPlatform.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
+[Authorize]
 public class DegradationModelingController(
     DigitalTwinPlatform.Application.Services.IODESolver odeSolver,
     IParameterEstimation parameterEstimation,

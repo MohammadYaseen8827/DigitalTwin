@@ -69,28 +69,29 @@ export class RealTimeAnalyticsService {
     if (!this.connection) return
 
     // Connection events
+    const dev = typeof import.meta !== 'undefined' && import.meta.env?.DEV
     this.connection.on('connected', (data: { connectionId: string }) => {
-      console.log('Connected to real-time analytics hub:', data.connectionId)
+      if (dev) console.debug('Connected to real-time analytics hub:', data.connectionId)
     })
 
     this.connection.on('streamSubscribed', (data: { stream: string; machineId?: string }) => {
-      console.log(`Subscribed to ${data.stream} stream`, data.machineId ? `for machine ${data.machineId}` : '')
+      if (dev) console.debug(`Subscribed to ${data.stream} stream`, data.machineId ? `for machine ${data.machineId}` : '')
       this.subscriptions.value.push({ stream: data.stream, machineId: data.machineId })
     })
 
     this.connection.on('streamUnsubscribed', (data: { stream: string; machineId?: string }) => {
-      console.log(`Unsubscribed from ${data.stream} stream`, data.machineId ? `for machine ${data.machineId}` : '')
+      if (dev) console.debug(`Unsubscribed from ${data.stream} stream`, data.machineId ? `for machine ${data.machineId}` : '')
       this.subscriptions.value = this.subscriptions.value.filter(
         sub => !(sub.stream === data.stream && sub.machineId === data.machineId)
       )
     })
 
     this.connection.on('allStreamsSubscribed', (data: { machineId: string }) => {
-      console.log(`Subscribed to all streams for machine ${data.machineId}`)
+      if (dev) console.debug(`Subscribed to all streams for machine ${data.machineId}`)
     })
 
     this.connection.on('allStreamsUnsubscribed', (data: { machineId: string }) => {
-      console.log(`Unsubscribed from all streams for machine ${data.machineId}`)
+      if (dev) console.debug(`Unsubscribed from all streams for machine ${data.machineId}`)
       this.subscriptions.value = []
     })
 
@@ -142,20 +143,20 @@ export class RealTimeAnalyticsService {
     // Connection lifecycle events
     this.connection.onclose((error?: Error) => {
       this.isConnected.value = false
-      console.log('Real-time analytics connection closed', error)
+      if (dev) console.debug('Real-time analytics connection closed', error)
       if (error) {
         toast.error('Real-time analytics connection lost')
       }
     })
 
     this.connection.onreconnecting((error?: Error) => {
-      console.log('Reconnecting to real-time analytics...', error)
+      if (dev) console.debug('Reconnecting to real-time analytics...', error)
       toast.loading('Reconnecting to real-time analytics...')
     })
 
     this.connection.onreconnected((connectionId?: string) => {
       this.isConnected.value = true
-      console.log('Reconnected to real-time analytics:', connectionId)
+      if (dev) console.debug('Reconnected to real-time analytics:', connectionId)
       toast.success('Reconnected to real-time analytics')
     })
   }

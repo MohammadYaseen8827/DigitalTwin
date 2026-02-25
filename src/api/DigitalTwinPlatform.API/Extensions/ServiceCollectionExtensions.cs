@@ -25,6 +25,7 @@ using DigitalTwinPlatform.API.Services.MathematicalModeling;
 using DigitalTwinPlatform.API.Services.Analytics.Advanced;
 using DigitalTwinPlatform.Application.ExternalSystems.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using IHubPublisher = DigitalTwinPlatform.API.Services.Infrastructure.IHubPublisher;
 
@@ -72,17 +73,20 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Configures CORS policies with dynamic origin detection.
     /// Allows flexible origins in development and Docker environments.
+    /// Permissive policy is never used in production.
     /// </summary>
     public static IServiceCollection AddCorsConfiguration(this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IHostEnvironment? environment = null)
     {
+        var isProduction = environment?.IsProduction() ?? false;
         services.AddCors(options =>
         {
             options.AddPolicy("DefaultCorsPolicy", policy =>
             {
-                var environment = configuration.GetSection("Environment").Value?.ToLower() ?? "development";
-                
-                if (environment == "development" || environment == "staging")
+                var configEnv = configuration.GetSection("Environment").Value?.ToLower() ?? "development";
+
+                if (!isProduction && (configEnv == "development" || configEnv == "staging"))
                 {
                     // Use configured origins for development
                     var allowedOrigins = configuration
@@ -98,45 +102,41 @@ public static class ServiceCollectionExtensions
                                              "http://localhost:7000",
                                              "http://127.0.0.1:7000"
                                          ];
-                    
+
                     policy.WithOrigins(allowedOrigins);
                 }
                 else
                 {
-                    // For production-like environments, allow origins based on environment variable
-                    // This allows Docker containers on the same network to communicate
+                    // Production: never use permissive. Other environments: allow permissive only if explicitly configured.
                     var corsPolicy = configuration.GetSection("Cors:Policy").Value?.ToLower();
-                    
-                    if (corsPolicy == "permissive" || corsPolicy == "docker")
+                    var usePermissive = !isProduction && (corsPolicy == "permissive" || corsPolicy == "docker");
+
+                    if (usePermissive)
                     {
-                        // Permissive CORS policy for Docker/swarm environments
-                        policy.SetIsOriginAllowed(origin => true); // Allow any origin
+                        policy.SetIsOriginAllowed(_ => true);
                     }
                     else
                     {
-                        // Strict CORS policy for true production
                         policy.SetIsOriginAllowed(origin =>
                         {
-                            // Allow localhost and 127.0.0.1 for development/testing
-                            if (origin.StartsWith("http://localhost") || 
+                            if (origin.StartsWith("http://localhost") ||
                                 origin.StartsWith("http://127.0.0.1") ||
-                                origin.StartsWith("https://localhost") || 
+                                origin.StartsWith("https://localhost") ||
                                 origin.StartsWith("https://127.0.0.1"))
                             {
                                 return true;
                             }
-                            
-                            // Allow origins from environment configuration
+
                             var allowedOrigins = configuration
                                                      .GetSection("Cors:AllowedOrigins")
                                                      .Get<string[]>();
-                            
-                            return allowedOrigins != null && 
+
+                            return allowedOrigins != null &&
                                    allowedOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase);
                         });
                     }
                 }
-                
+
                 policy.AllowAnyHeader()
                        .AllowAnyMethod()
                        .AllowCredentials();

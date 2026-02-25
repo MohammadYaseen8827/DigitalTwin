@@ -1,10 +1,12 @@
 using DigitalTwinPlatform.API.Services.MathematicalModeling;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalTwinPlatform.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class MathematicalModelingController : ControllerBase
 {
     private readonly IDifferentialEquationSolver _odeSolver;

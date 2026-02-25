@@ -110,7 +110,7 @@ const generateReportHandler = async () => {
     toast.success(`Report "${result.fileName}" generated successfully!`)
     
     // In a real app, you'd provide a download link or auto-download
-    console.log('Download URL:', result.downloadUrl)
+    if (import.meta.env.DEV) console.debug('Download URL:', result.downloadUrl)
     
   } catch (error) {
     console.error('Failed to generate report:', error)

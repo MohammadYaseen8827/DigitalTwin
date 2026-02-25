@@ -51,6 +51,7 @@ public class DataDriftService : IDataDriftService
         DriftDetectionMethod method = DriftDetectionMethod.KS_Test,
         CancellationToken cancellationToken = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         try
         {
             var result = new DriftDetectionResult
@@ -167,6 +168,7 @@ public class DataDriftService : IDataDriftService
         DateTimeOffset endTime,
         CancellationToken cancellationToken = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         if (_driftHistory.TryGetValue(modelName, out var history))
         {
             return history
@@ -180,6 +182,7 @@ public class DataDriftService : IDataDriftService
     public async Task<Dictionary<string, DriftDetectionResult>> GetCurrentDriftStatusAsync(
         CancellationToken cancellationToken = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         var results = new Dictionary<string, DriftDetectionResult>();
 
         foreach (var modelName in _driftHistory.Keys)
@@ -206,6 +209,7 @@ public class DataDriftService : IDataDriftService
         DriftThresholds thresholds,
         CancellationToken cancellationToken = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         _modelThresholds[modelName] = thresholds;
         _logger.LogInformation("Configured drift thresholds for model {ModelName}", modelName);
     }
@@ -214,6 +218,7 @@ public class DataDriftService : IDataDriftService
         string modelName,
         CancellationToken cancellationToken = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         return _modelThresholds.GetValueOrDefault(modelName, CreateDefaultThresholds());
     }
 
@@ -260,6 +265,7 @@ public class DataDriftService : IDataDriftService
         DriftDetectionResult result,
         CancellationToken cancellationToken = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         if (!_options.EnableAlerts)
             return false;
 

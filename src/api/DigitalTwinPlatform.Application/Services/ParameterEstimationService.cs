@@ -401,6 +401,7 @@ public class ParameterEstimationService : IParameterEstimation
         Func<Dictionary<string, double>, double> objectiveFunction,
         CancellationToken cancellationToken)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         // Simple gradient descent optimization
         var currentParams = new Dictionary<string, double>(initialParams);
         var learningRate = 0.001;

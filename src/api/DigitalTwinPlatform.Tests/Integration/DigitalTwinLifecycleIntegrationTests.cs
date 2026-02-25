@@ -81,7 +81,6 @@ public class DigitalTwinLifecycleIntegrationTests(WebApplicationFactory<Program>
         response.EnsureSuccessStatusCode();
         var result = await response.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
         
-        Assert.NotNull(result);
         Assert.True(result.GetProperty("status").GetString() == "Completed");
         Assert.True(result.GetProperty("numberOfTrajectories").GetInt32() == 5);
         Assert.True(result.GetProperty("statistics").GetProperty("totalDataPoints").GetInt32() > 0);
@@ -112,7 +111,6 @@ public class DigitalTwinLifecycleIntegrationTests(WebApplicationFactory<Program>
         latestResponse.EnsureSuccessStatusCode();
         
         var latestTelemetry = await latestResponse.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
-        Assert.NotNull(latestTelemetry);
         
         // Cleanup
         await CleanupTestData(machineId);
@@ -132,7 +130,6 @@ public class DigitalTwinLifecycleIntegrationTests(WebApplicationFactory<Program>
         var trainingResult = await trainResponse.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
         
         // Assert
-        Assert.NotNull(trainingResult);
         Assert.True(trainingResult.GetProperty("success").GetBoolean());
         Assert.True(trainingResult.GetProperty("samplesUsed").GetInt32() > 0);
         
@@ -170,7 +167,6 @@ public class DigitalTwinLifecycleIntegrationTests(WebApplicationFactory<Program>
         var searchResult = await searchResponse.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
         
         // Assert
-        Assert.NotNull(searchResult);
         Assert.True(searchResult.GetProperty("totalCount").GetInt32() >= 3);
         
         var items = searchResult.GetProperty("items").EnumerateArray();

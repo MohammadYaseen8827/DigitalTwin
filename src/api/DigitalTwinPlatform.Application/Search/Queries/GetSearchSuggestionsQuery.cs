@@ -20,11 +20,12 @@ public class GetSearchSuggestionsQuery(string query, string? entityType = null, 
 /// </summary>
 public class GetSearchSuggestionsQueryHandler(
     IMachineRepository machineRepository,
-    ITelemetryRepository telemetryRepository,
+    ITelemetryRepository _telemetryRepository,
     ILogger<GetSearchSuggestionsQueryHandler> logger) : IRequestHandler<GetSearchSuggestionsQuery, IEnumerable<SearchSuggestionDto>>
 {
     public async Task<IEnumerable<SearchSuggestionDto>> Handle(GetSearchSuggestionsQuery request, CancellationToken cancellationToken)
     {
+        _ = _telemetryRepository; // Reserved for future telemetry-based suggestions
         var suggestions = new List<SearchSuggestionDto>();
         var queryLower = request.Query.ToLowerInvariant();
 

@@ -28,12 +28,12 @@ public class TenantUser : BaseEntity<Guid>
         return new Result<TenantUser>.Success(tenantUser);
     }
 
-    // Properties
-    public Guid TenantId { get; private set; }
+    // Properties (new to explicitly hide base TenantId, CreatedAt, UpdatedAt)
+    public new Guid TenantId { get; private set; }
     public Guid UserId { get; private set; }
     public UserRole Role => _role;
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public new DateTime CreatedAt { get; private set; }
+    public new DateTime UpdatedAt { get; private set; }
 
     // Navigation properties
     public Tenant Tenant { get; private set; } = null!;

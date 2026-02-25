@@ -39,20 +39,21 @@ function toggleNotificationType(typeId: string) {
 
 // Save preferences
 function savePreferences() {
-    // In production, this would call an API
-    console.log('Saving notification preferences:', {
-        emailNotifications: emailNotifications.value,
-        pushNotifications: pushNotifications.value,
-        alertSeverityThreshold: alertSeverityThreshold.value,
-        quietHoursEnabled: quietHoursEnabled.value,
-        quietHoursStart: quietHoursStart.value,
-        quietHoursEnd: quietHoursEnd.value,
-        dailyDigest: dailyDigest.value,
-        dailyDigestTime: dailyDigestTime.value,
-        weeklyReport: weeklyReport.value,
+    // In production, call API to persist preferences
+    if (import.meta.env.DEV) {
+        console.debug('Saving notification preferences:', {
+            emailNotifications: emailNotifications.value,
+            pushNotifications: pushNotifications.value,
+            alertSeverityThreshold: alertSeverityThreshold.value,
+            quietHoursEnabled: quietHoursEnabled.value,
+            quietHoursStart: quietHoursStart.value,
+            quietHoursEnd: quietHoursEnd.value,
+            dailyDigest: dailyDigest.value,
+            dailyDigestTime: dailyDigestTime.value,
+            weeklyReport: weeklyReport.value,
         selectedNotificationTypes: selectedNotificationTypes.value
-    })
-    
+        })
+    }
     // Show success message
     alert('Notification preferences saved!')
 }

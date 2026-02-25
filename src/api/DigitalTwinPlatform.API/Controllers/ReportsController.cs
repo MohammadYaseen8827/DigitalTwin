@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using DigitalTwinPlatform.Application.Abstractions.Services;
 
@@ -8,6 +9,7 @@ namespace DigitalTwinPlatform.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class ReportsController : ControllerBase
 {
     private readonly ILogger<ReportsController> _logger;
@@ -29,6 +31,7 @@ public class ReportsController : ControllerBase
         [FromBody] ReportGenerationRequest request,
         CancellationToken ct = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         try
         {
             _logger.LogInformation("Generating report with template {TemplateId}", request.TemplateId);
@@ -76,6 +79,7 @@ public class ReportsController : ControllerBase
         [FromBody] ExportDataRequest request,
         CancellationToken ct = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         try
         {
             _logger.LogInformation("Exporting data in {Format} format", request.Format);
@@ -89,7 +93,7 @@ public class ReportsController : ControllerBase
             // Mock implementation - return empty content with appropriate headers
             var fileName = request.FileName ?? $"export_{DateTime.UtcNow:yyyyMMdd_HHmmss}.{request.Format}";
             
-            Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{fileName}\"");
+            Response.Headers["Content-Disposition"] = $"attachment; filename=\"{fileName}\"";
             
             switch (request.Format.ToLower())
             {
@@ -118,6 +122,7 @@ public class ReportsController : ControllerBase
     [HttpGet("templates")]
     public async Task<IActionResult> GetTemplates(CancellationToken ct = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         try
         {
             // Mock templates - in real implementation, these would come from database
@@ -183,6 +188,7 @@ public class ReportsController : ControllerBase
         [FromBody] ReportSchedule schedule,
         CancellationToken ct = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         try
         {
             _logger.LogInformation("Scheduling report {TemplateId} with cron {Cron}", schedule.TemplateId, schedule.CronExpression);
@@ -230,6 +236,7 @@ public class ReportsController : ControllerBase
         [FromQuery] int pageSize = 20,
         CancellationToken ct = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         try
         {
             // Mock history data
@@ -274,6 +281,7 @@ public class ReportsController : ControllerBase
         string reportId,
         CancellationToken ct = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         try
         {
             _logger.LogInformation("Downloading report {ReportId}", reportId);
@@ -287,7 +295,7 @@ public class ReportsController : ControllerBase
             var content = "Mock report content";
             var fileName = $"report_{reportId}.txt";
             
-            Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{fileName}\"");
+            Response.Headers["Content-Disposition"] = $"attachment; filename=\"{fileName}\"";
             return Content(content, "text/plain");
         }
         catch (Exception ex)

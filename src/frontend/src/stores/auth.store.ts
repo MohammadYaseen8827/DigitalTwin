@@ -61,29 +61,15 @@ export const useAuthStore = defineStore('auth', () => {
     const refreshToken = ref<string | null>(null)
     const user = ref<User | null>(null)
 
-    const isAuthenticated = computed(() => {
-      const isAuth = !!token.value && !!user.value
-      console.log('isAuthenticated computed:', { 
-        token: token.value, 
-        user: user.value, 
-        result: isAuth 
-      })
-      return isAuth
-    })
+    const isAuthenticated = computed(() => !!token.value && !!user.value)
 
     function setToken(newToken: string, userData: User, newRefreshToken?: string) {
-        console.log('setToken called:', { newToken, userData, newRefreshToken })
         token.value = newToken
         user.value = userData
         if (newRefreshToken) {
             refreshToken.value = newRefreshToken
         }
         SecureTokenManager.storeToken(newToken, userData, newRefreshToken)
-        console.log('setToken complete - auth state:', {
-          token: token.value,
-          user: user.value,
-          isAuthenticated: isAuthenticated.value
-        })
     }
 
     function updateAccessToken(newToken: string) {
@@ -105,15 +91,9 @@ export const useAuthStore = defineStore('auth', () => {
 
     // Initialize from storage on store creation
     function initialize() {
-        console.log('Initializing auth store...')
         token.value = SecureTokenManager.getToken()
         refreshToken.value = SecureTokenManager.getRefreshToken()
         user.value = SecureTokenManager.getUser()
-        console.log('Auth store initialized:', {
-          token: token.value,
-          user: user.value,
-          isAuthenticated: isAuthenticated.value
-        })
     }
 
     // Auto-initialize

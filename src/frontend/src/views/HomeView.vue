@@ -114,14 +114,12 @@ const handleStopSimulation = async (machineId: string, simulationId?: string) =>
   }
 }
 
-const handleScheduleSimulation = async (machineId: string) => {
-  // This would be handled by the MachineCard component
-  console.log(`Scheduling simulation for machine ${machineId}`)
+const handleScheduleSimulation = async (_machineId: string) => {
+  // Handled by MachineCard / simulation flow
 }
 
-const handleCancelSchedule = async (machineId: string) => {
-  // This would be handled by the MachineCard component
-  console.log(`Cancelling schedule for machine ${machineId}`)
+const handleCancelSchedule = async (_machineId: string) => {
+  // Handled by MachineCard / simulation flow
 }
 
 onMounted(async () => {

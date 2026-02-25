@@ -35,6 +35,7 @@ namespace DigitalTwinPlatform.Application.Services
 
         public async Task<ModelPredictionDto> PredictRulAsync(string machineId, Dictionary<string, double> features)
         {
+            await Task.CompletedTask.ConfigureAwait(false);
             _logger.LogInformation("Predicting RUL for machine {MachineId}", machineId);
 
             var input = new ModelInputData
@@ -73,6 +74,7 @@ namespace DigitalTwinPlatform.Application.Services
 
         public async Task<TrainingResultDto> TrainModelsAsync(IEnumerable<ModelTrainingData> trainingData)
         {
+            await Task.CompletedTask.ConfigureAwait(false);
             _logger.LogInformation("Starting ML pipeline training");
 
             try

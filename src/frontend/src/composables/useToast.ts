@@ -12,22 +12,19 @@ export function useToast(): ToastFunctions {
   const toast = inject<ToastFunctions>('toast')
   
   if (!toast) {
-    // Fallback to console logging if toast is not available
+    const dev = typeof import.meta !== 'undefined' && import.meta.env?.DEV
     return {
-      success: (message: string) => {
-        console.log('[SUCCESS]', message)
-        return ''
-      },
+      success: () => '',
       error: (message: string) => {
-        console.error('[ERROR]', message)
+        if (dev) console.error('[ERROR]', message)
         return ''
       },
       warning: (message: string) => {
-        console.warn('[WARNING]', message)
+        if (dev) console.warn('[WARNING]', message)
         return ''
       },
       info: (message: string) => {
-        console.info('[INFO]', message)
+        if (dev) console.info('[INFO]', message)
         return ''
       }
     }

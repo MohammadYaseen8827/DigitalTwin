@@ -51,8 +51,8 @@ public class Tenant : BaseEntity<Guid>
     public string? Description { get; private set; }
     public string? ConnectionString { get; private set; }
     public bool IsActive => _isActive;
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public new DateTime CreatedAt { get; private set; }
+    public new DateTime UpdatedAt { get; private set; }
 
     // Navigation properties
     public ICollection<TenantUser> Users { get; private set; } = [];

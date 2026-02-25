@@ -97,10 +97,9 @@ export interface PredictionRequestDto {
 
 export interface HealthStatusDto {
   status: string
-  timestampUtc: string
-  database: string
-  signalR: string
-  azureDigitalTwins: string
+  timestampUtc: string;
+  database: string;
+  signalR: string;
 }
 
 export interface DataArchivalRequestDto {

@@ -85,13 +85,13 @@ const handleQuickAction = (actionId: string) => {
       router.push('/settings')
       break
     case 'export-report':
-      console.log('Export report')
+      router.push('/reporting')
       break
     case 'run-prediction':
       router.push('/predictions')
       break
     case 'schedule-maintenance':
-      console.log('Schedule maintenance')
+      router.push('/maintenance')
       break
   }
 }
@@ -104,7 +104,7 @@ onMounted(async () => {
       alertsStore.fetchAlerts()
     ])
   } catch (err) {
-    console.error('Error loading dashboard data:', err)
+    if (import.meta.env.DEV) console.error('Error loading dashboard data:', err)
   } finally {
     isLoading.value = false
   }

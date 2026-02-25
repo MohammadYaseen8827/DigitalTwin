@@ -102,7 +102,7 @@ namespace DigitalTwinPlatform.Application.Services
             }
         }
 
-        private void EvictionCallback(object key, object value, EvictionReason reason, object state)
+        private void EvictionCallback(object key, object? value, EvictionReason reason, object? state)
         {
             if (key is string cacheKey)
             {

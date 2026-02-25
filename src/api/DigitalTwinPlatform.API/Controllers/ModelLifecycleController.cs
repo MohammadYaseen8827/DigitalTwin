@@ -1,11 +1,13 @@
 using DigitalTwinPlatform.API.Services.Analytics;
 using DigitalTwinPlatform.Domain.Enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalTwinPlatform.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class ModelLifecycleController : ControllerBase
 {
     private readonly IModelLifecycleService _lifecycleService;

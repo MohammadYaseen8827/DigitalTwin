@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using DigitalTwinPlatform.API.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DigitalTwinPlatform.Infrastructure.Persistence;
@@ -14,6 +15,7 @@ namespace DigitalTwinPlatform.API.Controllers;
 [Route("api/[controller]")]
 [Produces("application/json")]
 [ApiVersion("1.0")]
+[AllowAnonymous]
 public class HealthController(DigitalTwinDbContext db, ILogger<HealthController> logger) : ControllerBase
 {
     /// <summary>

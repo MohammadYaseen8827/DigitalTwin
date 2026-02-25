@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using DigitalTwinPlatform.Application.ML.Models;
 using DigitalTwinPlatform.Application.ML.Services;
@@ -14,6 +15,7 @@ namespace DigitalTwinPlatform.API.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class AIModelController : ControllerBase
     {
         private readonly IMediator _mediator;

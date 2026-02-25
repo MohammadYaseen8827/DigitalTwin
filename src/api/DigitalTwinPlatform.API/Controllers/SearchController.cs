@@ -49,7 +49,7 @@ public class SearchController(IMediator mediator) : ControllerBase
         {
             return BadRequest(new { Message = ex.Message });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(500, new { Message = "Internal server error during search" });
         }
@@ -81,7 +81,7 @@ public class SearchController(IMediator mediator) : ControllerBase
             var result = await mediator.Send(new GetSearchSuggestionsQuery(query, entityType, limit), ct);
             return Ok(result);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(500, new { Message = "Internal server error while getting suggestions" });
         }
@@ -106,7 +106,7 @@ public class SearchController(IMediator mediator) : ControllerBase
             var result = await mediator.Send(new GetSavedSearchesQuery(), ct);
             return Ok(result);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(500, new { Message = "Internal server error while getting saved searches" });
         }
@@ -141,7 +141,7 @@ public class SearchController(IMediator mediator) : ControllerBase
         {
             return BadRequest(new { Message = ex.Message });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(500, new { Message = "Internal server error while saving search" });
         }
@@ -172,7 +172,7 @@ public class SearchController(IMediator mediator) : ControllerBase
         {
             return NotFound(new { Message = "Saved search not found" });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(500, new { Message = "Internal server error while deleting saved search" });
         }

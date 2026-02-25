@@ -128,7 +128,6 @@ defineExpose({
   },
   refresh: () => {
     // Trigger refresh without re-rendering everything
-    console.log('Refreshing virtual list')
   }
 })
 </script>

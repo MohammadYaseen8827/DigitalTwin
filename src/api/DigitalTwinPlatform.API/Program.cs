@@ -34,7 +34,7 @@ builder.Services.AddApplicationMetrics();
 builder.Services.AddSecurityServices(builder.Configuration);
 
 // Configure infrastructure
-builder.Services.AddCorsConfiguration(builder.Configuration);
+builder.Services.AddCorsConfiguration(builder.Configuration, builder.Environment);
 builder.Services.AddSignalRServices(builder.Configuration);
 builder.Services.AddApiVersioningConfiguration();
 
@@ -53,8 +53,7 @@ builder.Services.AddSwaggerDocumentation();
 var app = builder.Build();
 
 // Initialize database
-await app.Services.InitializeDatabaseAsync(
-    app.Services.GetRequiredService<ILogger<Program>>());
+//await app.Services.InitializeDatabaseAsync(app.Services.GetRequiredService<ILogger<Program>>());
 
 // Configure middleware pipeline
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();

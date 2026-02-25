@@ -180,7 +180,7 @@ public class AlertRulesController : ControllerBase
     /// Toggles an alert rule's enabled status.
     /// </summary>
     /// <param name="id">The unique identifier of the alert rule.</param>
-    /// <param name="enabled">The new enabled status.</param>
+    /// <param name="request">The toggle request containing the new enabled status.</param>
     /// <returns>The updated alert rule.</returns>
     /// <response code="200">Alert rule status updated successfully.</response>
     /// <response code="401">Unauthorized - Authentication required.</response>

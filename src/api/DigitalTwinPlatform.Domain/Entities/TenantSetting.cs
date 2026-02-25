@@ -42,12 +42,12 @@ public class TenantSetting : BaseEntity<Guid>
         return new Result<TenantSetting>.Success(setting);
     }
 
-    // Properties
-    public Guid TenantId { get; private set; }
+    // Properties (new to explicitly hide base TenantId, CreatedAt, UpdatedAt)
+    public new Guid TenantId { get; private set; }
     public string Key => _key;
     public string Value => _value;
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public new DateTime CreatedAt { get; private set; }
+    public new DateTime UpdatedAt { get; private set; }
 
     // Navigation properties
     public Tenant Tenant { get; private set; } = null!;

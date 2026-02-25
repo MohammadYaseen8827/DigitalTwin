@@ -1,5 +1,6 @@
 using DigitalTwinPlatform.Application.Services;
 using DigitalTwinPlatform.Application.Simulations.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
@@ -13,6 +14,7 @@ namespace DigitalTwinPlatform.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
+[Authorize]
 public class SyntheticDataController : ControllerBase
 {
     private readonly ISyntheticDataGenerator _syntheticDataGenerator;
@@ -123,6 +125,7 @@ public class SyntheticDataController : ControllerBase
     public async Task<ActionResult<List<DigitalTwinPlatform.Domain.Entities.GenerationStatistics>>> GetAllGenerationStatistics(
         CancellationToken cancellationToken = default)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         try
         {
             _logger.LogInformation("Getting all generation statistics");

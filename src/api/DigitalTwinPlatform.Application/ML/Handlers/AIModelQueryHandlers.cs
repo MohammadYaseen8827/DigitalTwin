@@ -64,6 +64,7 @@ namespace DigitalTwinPlatform.Application.ML.Handlers
 
         public async Task<AIModelDto?> Handle(GetAIModelByIdQuery request, CancellationToken cancellationToken)
         {
+            await Task.CompletedTask.ConfigureAwait(false);
             _logger.LogInformation("Handling GetAIModelByIdQuery for ID: {ModelId}", request.Id);
             
             return new AIModelDto

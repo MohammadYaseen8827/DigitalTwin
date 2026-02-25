@@ -1,11 +1,13 @@
 using DigitalTwinPlatform.Application.Maintenance;
 using DigitalTwinPlatform.Domain.ValueObjects;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalTwinPlatform.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class PrescriptiveController : ControllerBase
 {
     private readonly IPrescriptiveService _prescriptiveService;

@@ -196,9 +196,9 @@ const injectStyles = () => {
 
 const enqueueToast = (intent: ToastIntent, message: string, options: ToastOptions = {}) => {
   if (typeof window === 'undefined') {
-    // During SSR fall back to console logging
-    // eslint-disable-next-line no-console
-    console.log(`[${intent.toUpperCase()}]`, message)
+    if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
+      console.debug(`[${intent.toUpperCase()}]`, message)
+    }
     return
   }
 

@@ -47,7 +47,7 @@ public class DashboardController(
         // Calculate average health from HealthStatus enum (0-100 scale)
         var healthScores = machines
             .Where(m => m.HealthStatus.HasValue)
-            .Select(m => (double)MapHealthStatusToScore(m.HealthStatus.Value))
+            .Select(m => (double)MapHealthStatusToScore(m.HealthStatus!.Value))
             .ToList();
         var avgHealth = healthScores.Any() ? Math.Round(healthScores.Average(), 1) : 0;
         

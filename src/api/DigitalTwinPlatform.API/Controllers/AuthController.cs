@@ -25,6 +25,7 @@ public class AuthController(
     RefreshTokenService refreshTokenService,
     ILogger<AuthController> logger) : ControllerBase
 {
+    private IConfiguration Configuration => configuration;
     /// <summary>
     /// Registers a new user in the Digital Twin Platform.
     /// </summary>

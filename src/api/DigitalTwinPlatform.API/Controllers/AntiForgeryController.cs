@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalTwinPlatform.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[AllowAnonymous]
 public class AntiForgeryController(IAntiforgery antiforgery) : ControllerBase
 {
     /// <summary>
@@ -19,16 +21,16 @@ public class AntiForgeryController(IAntiforgery antiforgery) : ControllerBase
         
         return Ok(new AntiForgeryTokenResponse
         {
-            HeaderName = tokens.HeaderName,
-            RequestToken = tokens.RequestToken,
-            FormFieldName = tokens.FormFieldName
+            HeaderName = tokens.HeaderName ?? "RequestVerificationToken",
+            RequestToken = tokens.RequestToken ?? string.Empty,
+            FormFieldName = tokens.FormFieldName ?? "RequestVerificationToken"
         });
     }
 
     /// <summary>
     /// Validates a CSRF token (for testing purposes)
     /// </summary>
-    /// <param name="token">The token to validate</param>
+    /// <param name="request">The validation request containing the token</param>
     /// <returns>Validation result</returns>
     [HttpPost("validate")]
     [ProducesResponseType(StatusCodes.Status200OK)]

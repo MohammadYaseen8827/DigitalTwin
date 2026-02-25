@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using DigitalTwinPlatform.Application.Workflows.Models;
 using DigitalTwinPlatform.Application.Workflows.Services;
@@ -14,6 +15,7 @@ namespace DigitalTwinPlatform.API.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class WorkflowController : ControllerBase
     {
         private readonly IMediator _mediator;

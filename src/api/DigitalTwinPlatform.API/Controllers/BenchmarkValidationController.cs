@@ -1,4 +1,5 @@
 using DigitalTwinPlatform.API.Services.Analytics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalTwinPlatform.API.Controllers;
@@ -13,6 +14,7 @@ public class BenchmarkValidateModelRequest
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class BenchmarkValidationController : ControllerBase
 {
     private readonly IBenchmarkValidationService _validationService;

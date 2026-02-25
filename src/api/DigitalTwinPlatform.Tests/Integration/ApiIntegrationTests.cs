@@ -143,8 +143,9 @@ public class ApiIntegrationTests : IClassFixture<IntegrationTestFixture>
         var telemetryRecords = await queryResponse.Content.ReadFromJsonAsync<List<TelemetryDto>>();
         telemetryRecords.Should().NotBeNull();
         telemetryRecords!.Should().NotBeEmpty();
-        telemetryRecords.First().MachineId.Should().Be(machineId);
-        telemetryRecords.First().Temperature.Should().Be(72.5);
+        var first = telemetryRecords!.First();
+        first.MachineId.Should().Be(machineId);
+        first.Temperature.Should().Be(72.5);
     }
 
     [Fact]

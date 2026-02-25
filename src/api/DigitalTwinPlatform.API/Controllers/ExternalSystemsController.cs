@@ -1,6 +1,7 @@
 using DigitalTwinPlatform.Application.ExternalSystems.Dtos;
 using DigitalTwinPlatform.Application.ExternalSystems.Services;
 using DigitalTwinPlatform.Domain.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ExternalSystemStatus = DigitalTwinPlatform.Application.ExternalSystems.Dtos.ExternalSystemStatus;
 
@@ -8,6 +9,7 @@ namespace DigitalTwinPlatform.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class ExternalSystemsController(IExternalSystemService externalSystemService)
     : ControllerBase
 {

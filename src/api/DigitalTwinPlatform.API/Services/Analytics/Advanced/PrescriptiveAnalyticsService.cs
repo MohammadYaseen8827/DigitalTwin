@@ -654,6 +654,7 @@ public class PrescriptiveAnalyticsService : IPrescriptiveAnalyticsService
 
     private async Task<List<Resource>> GetAvailableResources(DateTime planningPeriod, CancellationToken ct)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         // Simplified resource availability
         return new List<Resource>
         {

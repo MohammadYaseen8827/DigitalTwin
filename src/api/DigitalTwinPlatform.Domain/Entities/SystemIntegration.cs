@@ -47,8 +47,6 @@ public class SystemIntegration : BaseEntity<Guid>
     public IntegrationType IntegrationType => _integrationType;
     public bool IsEnabled => _isEnabled;
     public int SyncIntervalMinutes => _syncIntervalMinutes;
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
 
     // Navigation properties
     public ExternalSystem ExternalSystem { get; private set; } = null!;
@@ -60,7 +58,7 @@ public class SystemIntegration : BaseEntity<Guid>
             return new Result.Failure("Integration is already enabled");
 
         _isEnabled = true;
-        UpdatedAt = DateTime.UtcNow;
+        base.UpdatedAt = DateTime.UtcNow;
         return new Result.Success();
     }
 
@@ -70,7 +68,7 @@ public class SystemIntegration : BaseEntity<Guid>
             return new Result.Failure("Integration is already disabled");
 
         _isEnabled = false;
-        UpdatedAt = DateTime.UtcNow;
+        base.UpdatedAt = DateTime.UtcNow;
         return new Result.Success();
     }
 
@@ -83,14 +81,14 @@ public class SystemIntegration : BaseEntity<Guid>
             return new Result.Failure("Sync interval cannot exceed 1440 minutes (24 hours)");
 
         _syncIntervalMinutes = minutes;
-        UpdatedAt = DateTime.UtcNow;
+        base.UpdatedAt = DateTime.UtcNow;
         return new Result.Success();
     }
 
     public Result UpdateIntegrationType(IntegrationType type)
     {
         _integrationType = type;
-        UpdatedAt = DateTime.UtcNow;
+        base.UpdatedAt = DateTime.UtcNow;
         return new Result.Success();
     }
 

@@ -52,8 +52,6 @@ public class User : BaseEntity<Guid>
     public string LastName => _lastName;
     public string? PhoneNumber { get; private set; }
     public bool IsActive => _isActive;
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
 
     // Navigation properties
     public ICollection<TenantUser> TenantUsers { get; private set; } = [];
