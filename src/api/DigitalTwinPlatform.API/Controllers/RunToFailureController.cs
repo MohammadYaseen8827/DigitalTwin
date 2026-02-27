@@ -1,5 +1,6 @@
-using DigitalTwinPlatform.API.Services.Simulation;
+using DigitalTwinPlatform.Application.Abstractions.Services;
 using Microsoft.AspNetCore.Authorization;
+using DigitalTwinPlatform.Application.Analytics.Degradation.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalTwinPlatform.API.Controllers;
@@ -46,7 +47,7 @@ public class RunToFailureController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to run simulation for machine {MachineId}", machineId);
-            return BadRequest(new { message = $"Failed to run simulation: {ex.Message}" });
+            return BadRequest(new { message = "Failed to run simulation due to an internal error" });
         }
     }
 
@@ -80,7 +81,7 @@ public class RunToFailureController : ControllerBase
         {
             _logger.LogError(ex, "Failed to generate trajectories for machine type {MachineType}", 
                 request.MachineType);
-            return BadRequest(new { message = $"Failed to generate trajectories: {ex.Message}" });
+            return BadRequest(new { message = "Failed to generate trajectories due to an internal error" });
         }
     }
 
@@ -108,14 +109,7 @@ public class RunToFailureController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to retrieve results for machine {MachineId}", machineId);
-            return BadRequest(new { message = $"Failed to retrieve results: {ex.Message}" });
+            return BadRequest(new { message = "Failed to retrieve results due to an internal error" });
         }
     }
-}
-
-public class GenerateTrajectoriesRequest
-{
-    public string MachineType { get; set; } = string.Empty;
-    public int Count { get; set; }
-    public RunToFailureOptions? Options { get; set; }
 }

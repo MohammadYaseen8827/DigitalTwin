@@ -1,5 +1,8 @@
 using DigitalTwinPlatform.Application.Abstractions.Repositories;
-using DigitalTwinPlatform.API.Services.Analytics.Advanced;
+using DigitalTwinPlatform.Application.Analytics.Advanced;
+using DigitalTwinPlatform.Application.Predictions.Models;
+using DigitalTwinPlatform.Application.Services;
+using DigitalTwinPlatform.Domain.Entities;
 
 namespace DigitalTwinPlatform.API.Services.Analytics;
 

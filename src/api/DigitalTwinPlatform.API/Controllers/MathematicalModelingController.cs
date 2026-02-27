@@ -1,3 +1,4 @@
+using DigitalTwinPlatform.Application.Mathematics.Models;
 using DigitalTwinPlatform.API.Services.MathematicalModeling;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -59,7 +60,7 @@ public class MathematicalModelingController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error solving ODE system: {SystemName}", request.SystemName);
-            return StatusCode(500, new { Error = "Failed to solve ODE system", Details = ex.Message });
+            return StatusCode(500, new { Error = "Failed to solve ODE system" });
         }
     }
 
@@ -112,7 +113,7 @@ public class MathematicalModelingController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error solving system dynamics: {SystemName}", request.SystemName);
-            return StatusCode(500, new { Error = "Failed to solve system dynamics", Details = ex.Message });
+            return StatusCode(500, new { Error = "Failed to solve system dynamics" });
         }
     }
 
@@ -163,7 +164,7 @@ public class MathematicalModelingController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error performing gradient optimization");
-            return StatusCode(500, new { Error = "Failed to perform gradient optimization", Details = ex.Message });
+            return StatusCode(500, new { Error = "Failed to perform gradient optimization" });
         }
     }
 
@@ -214,7 +215,7 @@ public class MathematicalModelingController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error performing genetic optimization");
-            return StatusCode(500, new { Error = "Failed to perform genetic optimization", Details = ex.Message });
+            return StatusCode(500, new { Error = "Failed to perform genetic optimization" });
         }
     }
 
@@ -264,7 +265,7 @@ public class MathematicalModelingController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error performing multi-objective optimization");
-            return StatusCode(500, new { Error = "Failed to perform multi-objective optimization", Details = ex.Message });
+            return StatusCode(500, new { Error = "Failed to perform multi-objective optimization" });
         }
     }
 
@@ -384,133 +385,3 @@ public class MathematicalModelingController : ControllerBase
 
     #endregion
 }
-
-#region DTOs
-
-public class OdeSolveRequest
-{
-    public string SystemName { get; set; } = string.Empty;
-    public string[] Equations { get; set; } = [];
-    public double[] InitialConditions { get; set; } = [];
-    public double StartTime { get; set; }
-    public double EndTime { get; set; }
-    public double StepSize { get; set; } = 0.01;
-}
-
-public class SystemDynamicsRequest
-{
-    public string SystemName { get; set; } = string.Empty;
-    public string[] Equations { get; set; } = [];
-    public double[] InitialConditions { get; set; } = [];
-    public double StepSize { get; set; } = 0.01;
-    public double SimulationTime { get; set; } = 10.0;
-    public Dictionary<string, string> DerivedQuantities { get; set; } = [];
-}
-
-public class GradientOptimizationRequest
-{
-    public string ObjectiveExpression { get; set; } = string.Empty;
-    public double[] InitialGuess { get; set; } = [];
-    public double LearningRate { get; set; } = 0.01;
-    public int MaxIterations { get; set; } = 1000;
-    public double Tolerance { get; set; } = 1e-6;
-    public double Epsilon { get; set; } = 1e-8;
-    public ParameterBoundsDto[]? ParameterBounds { get; set; }
-}
-
-public class GeneticOptimizationRequest
-{
-    public string FitnessExpression { get; set; } = string.Empty;
-    public int ParameterCount { get; set; }
-    public int PopulationSize { get; set; } = 100;
-    public int MaxGenerations { get; set; } = 100;
-    public double MutationRate { get; set; } = 0.1;
-    public int TournamentSize { get; set; } = 3;
-    public ParameterBoundsDto[] ParameterBounds { get; set; } = [];
-}
-
-public class MultiObjectiveOptimizationRequest
-{
-    public string[] ObjectiveExpressions { get; set; } = [];
-    public int ParameterCount { get; set; }
-    public int PopulationSize { get; set; } = 100;
-    public int MaxGenerations { get; set; } = 100;
-    public double MutationRate { get; set; } = 0.1;
-    public ParameterBoundsDto[] ParameterBounds { get; set; } = [];
-}
-
-public class OdeSolutionDto
-{
-    public string SystemName { get; set; } = string.Empty;
-    public double[] TimePoints { get; set; } = [];
-    public double[][] Solutions { get; set; } = [];
-    public int Steps { get; set; }
-    public double FinalTime { get; set; }
-    public double[] FinalState { get; set; } = [];
-}
-
-public class SystemDynamicsSolutionDto
-{
-    public string SystemName { get; set; } = string.Empty;
-    public double[] TimePoints { get; set; } = [];
-    public double[][] StateVariables { get; set; } = [];
-    public Dictionary<string, double[]> DerivedQuantities { get; set; } = [];
-    public StabilityAnalysisDto Stability { get; set; } = new();
-    public EnergyBalanceDto EnergyBalance { get; set; } = new();
-}
-
-public class StabilityAnalysisDto
-{
-    public bool IsStable { get; set; }
-    public double MaxChange { get; set; }
-    public double ConvergenceRate { get; set; }
-}
-
-public class EnergyBalanceDto
-{
-    public double KineticEnergy { get; set; }
-    public double PotentialEnergy { get; set; }
-    public double TotalEnergy { get; set; }
-    public bool EnergyConserved { get; set; }
-}
-
-public class OptimizationResultDto
-{
-    public double[] OptimalParameters { get; set; } = [];
-    public double OptimalValue { get; set; }
-    public int Iterations { get; set; }
-    public bool Converged { get; set; }
-    public string Method { get; set; } = string.Empty;
-}
-
-public class MultiObjectiveResultDto
-{
-    public double[][] ParetoOptimalSolutions { get; set; } = [];
-    public double[][] ObjectiveValues { get; set; } = [];
-    public int Generations { get; set; }
-    public int PopulationSize { get; set; }
-    public string Method { get; set; } = string.Empty;
-    public int ParetoFrontSize { get; set; }
-}
-
-public class ParameterBoundsDto
-{
-    public double Min { get; set; }
-    public double Max { get; set; }
-}
-
-public class SystemModelCatalogDto
-{
-    public SystemModelDto[] Models { get; set; } = [];
-}
-
-public class SystemModelDto
-{
-    public string Name { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public string[] Equations { get; set; } = [];
-    public string[] Parameters { get; set; } = [];
-    public string[] Variables { get; set; } = [];
-}
-
-#endregion

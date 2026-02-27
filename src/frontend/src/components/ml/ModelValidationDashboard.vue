@@ -37,18 +37,21 @@ echarts.use([
   CanvasRenderer
 ])
 
+import { benchmarkValidationService } from '@/services/benchmarkValidation.service'
+import type { ValidationRequest, BenchmarkDataset } from '@/services/benchmarkValidation.service'
+
 const toast = useToast()
 
 // State
 const validating = ref(false)
 const loadingBenchmarks = ref(false)
-const benchmarks = ref<string[]>([])
-const benchmarkInfo = ref<any>(null)
+const benchmarks = ref<BenchmarkDataset[]>([])
+const benchmarkInfo = ref<BenchmarkDataset | null>(null)
 const validationResult = ref<any>(null)
 const validationHistory = ref<any[]>([])
 
 // Validation Configuration
-const selectedBenchmark = ref('')
+const selectedBenchmarkId = ref('')
 const modelVersionId = ref('')
 const modelPath = ref('')
 const modelType = ref('RUL')
@@ -74,13 +77,13 @@ const modelTypeOptions = [
 
 // Computed
 const isValidForm = computed(() => {
-  return selectedBenchmark.value && 
+  return selectedBenchmarkId.value && 
          (modelVersionId.value || modelPath.value)
 })
 
 const overallScore = computed(() => {
   if (!validationResult.value) return 0
-  return validationResult.value.overallScore || 0
+  return validationResult.value.score || 0
 })
 
 const scoreColor = computed(() => {
@@ -98,63 +101,38 @@ const scoreBgColor = computed(() => {
 })
 
 const passedMetrics = computed(() => {
-  if (!validationResult.value?.metrics) return 0
-  return Object.values(validationResult.value.metrics).filter((metric: any) => metric.passed).length
+  if (!validationResult.value?.passed) return 0
+  return 1 // Simplified since result doesn't have granular metric pass/fail in current DTO
 })
 
 const totalMetrics = computed(() => {
-  if (!validationResult.value?.metrics) return 0
-  return Object.keys(validationResult.value.metrics).length
+  if (!validationResult.value?.results) return 0
+  return Object.keys(validationResult.value.results).length
 })
 
 // Methods
 const loadBenchmarks = async () => {
   try {
     loadingBenchmarks.value = true
-    
-    // Mock API call - in real implementation this would call the actual service
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    benchmarks.value = [
-      'CMAPSS_FD001',
-      'CMAPSS_FD002', 
-      'CMAPSS_FD003',
-      'CMAPSS_FD004',
-      'PHM_Society_Challenge',
-      'FEMTO_Bearing_Dataset',
-      'IEEE_PHM_Competition_2012'
-    ]
+    const availableBenchmarks = await benchmarkValidationService.getAvailableDatasets()
+    benchmarks.value = availableBenchmarks
     
     if (benchmarks.value.length > 0) {
-      selectedBenchmark.value = benchmarks.value[0]
-      loadBenchmarkInfo()
+      selectedBenchmarkId.value = benchmarks.value[0].id
+      benchmarkInfo.value = benchmarks.value[0]
     }
-    
   } catch (error) {
     console.error('Failed to load benchmarks:', error)
-    toast.error('Failed to load benchmark datasets')
+    toast.error('Failed to load benchmark datasets from backend')
   } finally {
     loadingBenchmarks.value = false
   }
 }
 
-const loadBenchmarkInfo = async () => {
-  if (!selectedBenchmark.value) return
-  
-  try {
-    // Mock API call
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    benchmarkInfo.value = {
-      name: selectedBenchmark.value,
-      description: `Comprehensive dataset for ${selectedBenchmark.value} equipment monitoring`,
-      size: `${Math.floor(Math.random() * 1000) + 500}MB`,
-      samples: Math.floor(Math.random() * 50000) + 10000,
-      features: Math.floor(Math.random() * 50) + 20,
-      lastUpdated: new Date().toISOString()
-    }
-  } catch (error) {
-    console.error('Failed to load benchmark info:', error)
+const handleBenchmarkChange = () => {
+  const selected = benchmarks.value.find(b => b.id === selectedBenchmarkId.value)
+  if (selected) {
+    benchmarkInfo.value = selected
   }
 }
 
@@ -162,65 +140,52 @@ const validateModel = async () => {
   try {
     validating.value = true
     
-    // Mock API call
-    await new Promise(resolve => setTimeout(resolve, 3000))
-    
-    const mockResult = {
+    const request: ValidationRequest = {
       modelId: modelVersionId.value || 'custom_model',
-      benchmark: selectedBenchmark.value,
-      overallScore: Math.random() * 0.4 + 0.6, // 0.6 - 1.0
-      metrics: {
-        'RMSE': {
-          value: (Math.random() * 20 + 10).toFixed(2),
-          threshold: '25.00',
-          passed: Math.random() > 0.3
-        },
-        'MAE': {
-          value: (Math.random() * 15 + 8).toFixed(2),
-          threshold: '20.00',
-          passed: Math.random() > 0.2
-        },
-        'R²': {
-          value: (Math.random() * 0.3 + 0.7).toFixed(3),
-          threshold: '0.600',
-          passed: Math.random() > 0.4
-        },
-        'Accuracy': {
-          value: (Math.random() * 0.2 + 0.8).toFixed(3),
-          threshold: '0.750',
-          passed: Math.random() > 0.25
-        }
-      },
-      recommendations: [
-        'Consider feature engineering for better performance',
-        'Model shows good generalization on this dataset',
-        'Slight overfitting detected - consider regularization'
-      ],
-      validatedAt: new Date().toISOString()
+      datasetId: selectedBenchmarkId.value,
+      validationType: modelType.value.toLowerCase() as any,
+      parameters: { modelPath: modelPath.value }
     }
     
-    validationResult.value = mockResult
-    validationResults.value.unshift(mockResult)
+    const result = await benchmarkValidationService.validateModel(request)
+    
+    // Convert backend result to local format
+    const formattedResult = {
+      modelId: result.modelId,
+      benchmarkId: result.datasetId,
+      overallScore: result.score || 0,
+      passed: result.passed,
+      metrics: Object.entries(result.results || {}).reduce((acc, [key, value]) => {
+        acc[key] = {
+          value: typeof value === 'number' ? value.toFixed(3) : value,
+          threshold: 'N/A', // Not provided by current backend DTO
+          passed: result.passed // Simplified
+        }
+        return acc
+      }, {} as any),
+      recommendations: result.errors?.length > 0 ? result.errors : ['Model validated successfully.'],
+      validatedAt: result.createdAt
+    }
+    
+    validationResult.value = formattedResult
+    validationResults.value.unshift(formattedResult)
     validationHistory.value.unshift({
-      ...mockResult,
-      id: `validation_${Date.now()}`
+      ...formattedResult,
+      id: result.id
     })
     
     renderMetricsChart()
     renderComparisonChart()
     renderHistoryChart()
     
-    const score = mockResult.overallScore
-    if (score >= 0.8) {
-      toast.success(`Excellent validation result: ${(score * 100).toFixed(1)}%`)
-    } else if (score >= 0.6) {
-      toast.warning(`Acceptable validation result: ${(score * 100).toFixed(1)}%`)
+    if (result.passed) {
+      toast.success(`Validation passed: ${(formattedResult.overallScore * 100).toFixed(1)}%`)
     } else {
-      toast.error(`Poor validation result: ${(score * 100).toFixed(1)}%`)
+      toast.warning(`Validation completed with issues: ${(formattedResult.overallScore * 100).toFixed(1)}%`)
     }
   } catch (error) {
     console.error('Failed to validate model:', error)
-    toast.error('Failed to validate model against benchmark')
+    toast.error('Failed to validate model against backend benchmark')
   } finally {
     validating.value = false
   }
@@ -455,11 +420,11 @@ const cleanup = () => {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <BaseSelect
-                v-model="selectedBenchmark"
-                :options="benchmarks.map(b => ({ label: b, value: b }))"
+                v-model="selectedBenchmarkId"
+                :options="benchmarks.map(b => ({ label: b.name, value: b.id }))"
                 label="Benchmark Dataset"
                 :loading="loadingBenchmarks"
-                @change="loadBenchmarkInfo"
+                @change="handleBenchmarkChange"
               />
             </div>
             

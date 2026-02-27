@@ -127,8 +127,8 @@ export async function getModelStatus(): Promise<ModelStatusDto> {
  * Get RUL prediction history for a machine.
  */
 export async function getRulHistory(machineId: string, take = 100): Promise<PredictionDto[]> {
-  const response = await axiosClient.get<PredictionDto[]>(`/Predictions/rul/${encodeURIComponent(machineId)}`, {
-    params: { take }
+  const response = await axiosClient.get<PredictionDto[]>(`/Predictions/${encodeURIComponent(machineId)}`, {
+    params: { limit: take }
   })
   return response as unknown as PredictionDto[]
 }
@@ -159,11 +159,9 @@ export async function requestPrediction(machineId: string): Promise<PredictionDt
 
 /**
  * Fetch prediction history for a machine.
- * NOTE: This endpoint is not implemented in the backend
  */
 export async function fetchPredictionHistory(machineId: string, take = 100): Promise<PredictionDto[]> {
-  console.warn(`fetchPredictionHistory: Backend endpoint /Predictions/${machineId} not implemented`)
-  throw new Error('This endpoint is not yet implemented')
+  return getRulHistory(machineId, take)
 }
 
 /**

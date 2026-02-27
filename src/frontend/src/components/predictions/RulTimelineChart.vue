@@ -1,7 +1,9 @@
-<script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import type { RULTimeline, TimelineDataPoint } from '@/types/prediction'
+import { ref, computed, watch, onMounted } from 'vue'
+import type { TimelineDataPoint } from '@/api/types'
 import Card from '@/components/common/Card.vue'
+import { predictionsService } from '@/services/predictions.service'
+import { prescriptiveService } from '@/services/prescriptive.service'
+import type { MaintenanceWindow } from '@/services/prescriptive.service'
 
 interface Props {
     machineId: string
@@ -16,12 +18,13 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
     'maintenance-recommended': [date: Date]
-    'point-click': [point: TimelineDataPoint]
+    'point-click': [point: any]
 }>()
 
 // Chart data
-const timelineData = ref<TimelineDataPoint[]>([])
-const maintenanceRecommendations = ref<RULTimeline['maintenanceRecommendations']>([])
+const timelineData = ref<any[]>([])
+const maintenanceRecommendations = ref<MaintenanceWindow[]>([])
+const isLoading = ref(false)
 
 // Time horizon options
 const timeHorizonOptions = [
@@ -32,47 +35,35 @@ const timeHorizonOptions = [
     { value: 365, label: '1 year' }
 ]
 
-// This chart uses sample data until a timeline API is available
-const isSampleData = true
+// This chart now uses real data
+const isSampleData = ref(false)
 
-const generateMockData = () => {
-    const data: TimelineDataPoint[] = []
-    const now = new Date()
-    const startRUL = 120
-    const endRUL = 30
+const fetchData = async () => {
+    if (!props.machineId) return
     
-    for (let i = 0; i <= props.timeHorizon; i++) {
-        const date = new Date(now.getTime() + i * 24 * 60 * 60 * 1000)
-        const progress = i / props.timeHorizon
-        const rul = Math.round(startRUL - (startRUL - endRUL) * progress)
-        const failureProb = Math.min(100, Math.round((progress * 100) + Math.random() * 10))
+    try {
+        isLoading.value = true
+        const [history, analysis] = await Promise.all([
+            predictionsService.getRulHistory(props.machineId, props.timeHorizon),
+            prescriptiveService.getAnalysis(props.machineId, props.timeHorizon)
+        ])
         
-        data.push({
-            timestamp: date,
-            rul: rul,
-            failureProbability: failureProb,
-            confidenceLower: Math.max(0, rul - 10),
-            confidenceUpper: rul + 10
-        })
+        timelineData.value = history.map(p => ({
+            timestamp: new Date(p.predictionDate || Date.now()),
+            rul: p.remainingUsefulLifeDays,
+            failureProbability: p.failureProbability * 100,
+            confidenceLower: p.confidenceInterval?.lower || 0,
+            confidenceUpper: p.confidenceInterval?.upper || 0
+        }))
+        
+        maintenanceRecommendations.value = analysis
+        isSampleData.value = history.length === 0
+    } catch (error) {
+        console.error('Failed to fetch RUL history:', error)
+        isSampleData.value = true
+    } finally {
+        isLoading.value = false
     }
-    
-    timelineData.value = data
-    
-    // Generate maintenance recommendations
-    maintenanceRecommendations.value = [
-        {
-            date: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
-            type: 'optimal',
-            estimatedRUL: 90,
-            description: 'Optimal maintenance window - schedule now for best results'
-        },
-        {
-            date: new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000),
-            type: 'minimum',
-            estimatedRUL: 60,
-            description: 'Last recommended maintenance before risk increases'
-        }
-    ]
 }
 
 // Computed
@@ -81,7 +72,7 @@ const currentRUL = computed(() => {
 })
 
 const failureRisk = computed(() => {
-    return timelineData.value[0]?.failureProbability || 0
+    return Math.round(timelineData.value[0]?.failureProbability || 0)
 })
 
 const criticalDate = computed(() => {
@@ -90,8 +81,8 @@ const criticalDate = computed(() => {
 })
 
 const optimalMaintenanceDate = computed(() => {
-    const optimal = maintenanceRecommendations.value.find(r => r.type === 'optimal')
-    return optimal ? new Date(optimal.date) : null
+    const optimal = maintenanceRecommendations.value.find(r => r.priority === 'high' || r.priority === 'critical')
+    return optimal ? new Date(optimal.scheduledDate) : null
 })
 
 // Methods
@@ -111,12 +102,15 @@ const getRiskLevel = (probability: number): { color: string; label: string } => 
     return { color: 'bg-red-500', label: 'Critical' }
 }
 
-const handlePointClick = (point: TimelineDataPoint) => {
+const handlePointClick = (point: any) => {
     emit('point-click', point)
 }
 
-// Generate data on mount
-generateMockData()
+// Watch for changes
+watch(() => props.machineId, fetchData)
+watch(() => props.timeHorizon, fetchData)
+
+onMounted(fetchData)
 </script>
 
 <template>

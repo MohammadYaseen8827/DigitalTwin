@@ -7,147 +7,160 @@ import RULPredictionPanel from '@/components/enterprise/RULPredictionPanel.vue'
 import SHAPExplanationPanel from '@/components/enterprise/SHAPExplanationPanel.vue'
 import AlertBanner from '@/components/enterprise/AlertBanner.vue'
 
+// API Services
+import { dashboardService } from '@/services/dashboard.service'
+import { alertsService } from '@/services/alerts.service'
+import { telemetryService } from '@/services/telemetry.service'
+import { predictionsService } from '@/services/predictions.service'
+import type { DashboardStatsDto } from '@/services/dashboard.service'
+import type { AlertDto } from '@/api/types'
+
 // Connection status
 const connectionStatus = ref<'connected' | 'connecting' | 'disconnected'>('connected')
 const lastUpdate = ref(new Date())
+const isLoading = ref(true)
 
-// Mock alerts
-const alerts = ref([
-  {
-    id: '1',
-    machineName: 'CNC Machine #12',
-    message: 'Temperature exceeded 85°C threshold',
-    timestamp: new Date(),
-    severity: 'critical' as const
-  },
-  {
-    id: '2',
-    machineName: 'Injection Molder #3',
-    message: 'Vibration anomaly detected',
-    timestamp: new Date(),
-    severity: 'warning' as const
-  }
-])
-
-// Mock metrics
-const metrics = computed(() => [
-  {
-    title: 'Total Machines',
-    value: 24,
-    status: 'healthy' as const,
-    lastUpdated: lastUpdate.value
-  },
-  {
-    title: 'Active',
-    value: 22,
-    status: 'healthy' as const,
-    lastUpdated: lastUpdate.value
-  },
-  {
-    title: 'Avg Efficiency',
-    value: 87.5,
-    unit: '%',
-    status: 'healthy' as const,
-    delta: 2.3,
-    lastUpdated: lastUpdate.value
-  },
-  {
-    title: 'Active Alerts',
-    value: alerts.value.length,
-    status: alerts.value.length > 0 ? 'critical' as const : 'healthy' as const,
-    lastUpdated: lastUpdate.value
-  }
-])
-
-// Generate mock telemetry data
-function generateTelemetryData(points: number = 100): Array<[number, number]> {
-  const data: Array<[number, number]> = []
-  const now = Date.now()
-  let value = 65
-
-  for (let i = points; i >= 0; i--) {
-    const timestamp = now - i * 1000
-    // Add some realistic variation
-    value = value + (Math.random() - 0.5) * 2
-    value = Math.max(40, Math.min(90, value))
-    data.push([timestamp, value])
-  }
-
-  return data
-}
-
+// Dashboard data
+const dashboardStats = ref<DashboardStatsDto | null>(null)
+const alerts = ref<AlertDto[]>([])
 const telemetryData = ref<Array<[number, number]>>([])
+
+// Metrics computed from dashboard stats
+const metrics = computed(() => {
+  if (!dashboardStats.value) return []
+  
+  return [
+    {
+      title: 'Total Machines',
+      value: dashboardStats.value.totalMachines,
+      status: 'healthy' as const,
+      lastUpdated: lastUpdate.value
+    },
+    {
+      title: 'Active',
+      value: dashboardStats.value.activeMachines,
+      status: 'healthy' as const,
+      lastUpdated: lastUpdate.value
+    },
+    {
+      title: 'Avg Efficiency',
+      value: dashboardStats.value.averageHealthScore,
+      unit: '%',
+      status: dashboardStats.value.averageHealthScore > 80 ? 'healthy' as const : 'warning' as const,
+      delta: dashboardStats.value.averageHealthScore > 85 ? 2.3 : -1.5,
+      lastUpdated: lastUpdate.value
+    },
+    {
+      title: 'Active Alerts',
+      value: dashboardStats.value.activeAlerts,
+      status: dashboardStats.value.activeAlerts > 0 ? 'critical' as const : 'healthy' as const,
+      lastUpdated: lastUpdate.value
+    }
+  ]
+})
 
 // RUL prediction data
 const rulPrediction = ref({
-  machineId: 'CNC-001',
-  machineName: 'CNC Machine #1',
-  rul: 168,
+  machineId: 'loading...',
+  machineName: 'Equipment #1',
+  rul: 0,
   confidenceInterval: {
-    lower: 120,
-    upper: 220
+    lower: 0,
+    upper: 0
   },
   chartData: [] as Array<{ timestamp: number; prediction: number; lower: number; upper: number }>
 })
 
 // SHAP data
-const shapFeatures = ref([
-  { feature: 'Temperature', value: 0.45 },
-  { feature: 'Vibration', value: 0.32 },
-  { feature: 'Pressure', value: 0.18 },
-  { feature: 'Rotation Speed', value: -0.12 },
-  { feature: 'Power Consumption', value: 0.08 },
-  { feature: 'Operating Hours', value: -0.05 },
-  { feature: 'Maintenance Age', value: 0.03 },
-  { feature: 'Ambient Temp', value: -0.02 }
-])
+const shapFeatures = ref<Array<{ feature: string; value: number }>>([])
 
-// Update telemetry periodically
-let intervalId: ReturnType<typeof setInterval> | null = null
+// Interval for real-time updates
+let refreshInterval: ReturnType<typeof setInterval> | null = null
 
-onMounted(() => {
-  // Initialize with mock data
-  telemetryData.value = generateTelemetryData(100)
-
-  // Generate RUL chart data
-  const now = Date.now()
-  rulPrediction.value.chartData = Array.from({ length: 24 }, (_, i) => ({
-    timestamp: now + i * 3600000,
-    prediction: Math.max(0, 168 - i * 7),
-    lower: Math.max(0, 120 - i * 5),
-    upper: 220 - i * 4
-  }))
-
-  // Simulate real-time updates
-  intervalId = setInterval(() => {
-    // Add new data point
-    const lastPoint = telemetryData.value[telemetryData.value.length - 1]
-    const newValue = lastPoint[1] + (Math.random() - 0.5) * 3
-    const clampedValue = Math.max(40, Math.min(90, newValue))
-
-    telemetryData.value = [
-      ...telemetryData.value.slice(1),
-      [Date.now(), clampedValue]
-    ] as Array<[number, number]>
-
+async function fetchDashboardData() {
+  try {
+    const [stats, activeAlerts, recentTelemetry] = await Promise.all([
+      dashboardService.getDashboardStats(),
+      alertsService.fetchActiveAlerts(),
+      telemetryService.fetchRecentTelemetry({ limit: 50 })
+    ])
+    
+    dashboardStats.value = stats
+    alerts.value = activeAlerts
+    
+    // Process telemetry data for chart
+    if (recentTelemetry && recentTelemetry.length > 0) {
+      telemetryData.value = recentTelemetry.map(t => [
+        new Date(t.timestamp).getTime(),
+        t.temperature ?? t.vibration ?? 0
+      ])
+    }
+    
+    // Fetch prediction for the first machine if available
+    const machineId = activeAlerts[0]?.machineId || recentTelemetry[0]?.machineId
+    if (machineId) {
+      const prediction = await predictionsService.requestRulPrediction(machineId)
+      const summary = await predictionsService.getRulSummary(machineId)
+      
+      rulPrediction.value = {
+        machineId,
+        machineName: `Machine ${machineId.substring(0, 8)}`,
+        rul: prediction.remainingUsefulLifeDays,
+        confidenceInterval: prediction.confidenceInterval,
+        chartData: [] // History would be fetched here if needed
+      }
+      
+      // Update SHAP features
+      shapFeatures.value = Object.entries(prediction.featureContributions || {}).map(([feature, value]) => ({
+        feature,
+        value
+      }))
+    }
+    
     lastUpdate.value = new Date()
-  }, 2000)
+    connectionStatus.value = 'connected'
+  } catch (error) {
+    console.error('Failed to fetch dashboard data:', error)
+    connectionStatus.value = 'disconnected'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(async () => {
+  await fetchDashboardData()
+  
+  // Refresh data every 30 seconds
+  refreshInterval = setInterval(fetchDashboardData, 30000)
 })
 
 onUnmounted(() => {
-  if (intervalId) {
-    clearInterval(intervalId)
+  if (refreshInterval) {
+    clearInterval(refreshInterval)
   }
 })
 
-function handleAcknowledge(acknowledgedAlerts: any[]) {
-  alerts.value = alerts.value.filter(
-    a => !acknowledgedAlerts.find(ack => ack.id === a.id)
-  )
+async function handleAcknowledge(acknowledgedAlerts: any[]) {
+  try {
+    for (const alert of acknowledgedAlerts) {
+      await alertsService.acknowledgeAlert(alert.id)
+    }
+    await fetchDashboardData()
+  } catch (error) {
+    console.error('Failed to acknowledge alerts:', error)
+  }
 }
 
-function dismissAlerts() {
-  alerts.value = []
+async function dismissAlerts() {
+  try {
+    // Dismissing all alerts by acknowledging them
+    for (const alert of alerts.value) {
+      await alertsService.acknowledgeAlert(alert.id)
+    }
+    await fetchDashboardData()
+  } catch (error) {
+    console.error('Failed to dismiss alerts:', error)
+  }
 }
 </script>
 

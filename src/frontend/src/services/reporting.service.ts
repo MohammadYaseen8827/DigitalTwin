@@ -1,4 +1,5 @@
 import axiosClient from '@/api/axiosClient'
+import { errorReporter } from './errorReporter.service'
 import type { 
   ReportGenerationRequest, 
   ReportGenerationResponse,
@@ -110,7 +111,7 @@ export async function getScheduledReports(): Promise<ReportSchedule[]> {
  * NOTE: This endpoint is not implemented in the backend
  */
 export async function cancelScheduledReport(scheduleId: string): Promise<void> {
-  console.warn(`cancelScheduledReport: Backend endpoint /Reports/schedules/${scheduleId} not implemented`)
+  errorReporter.warn(`cancelScheduledReport: Backend endpoint /Reports/schedules/${scheduleId} not implemented`)
   throw new Error('This endpoint is not yet implemented')
 }
 
@@ -119,7 +120,7 @@ export async function cancelScheduledReport(scheduleId: string): Promise<void> {
  * NOTE: This endpoint is not implemented in the backend
  */
 export async function getReportById(reportId: string): Promise<ReportHistoryItem> {
-  console.warn(`getReportById: Backend endpoint /Reports/${reportId} not implemented`)
+  errorReporter.warn(`getReportById: Backend endpoint /Reports/${reportId} not implemented`)
   throw new Error('This endpoint is not yet implemented')
 }
 
@@ -128,7 +129,7 @@ export async function getReportById(reportId: string): Promise<ReportHistoryItem
  * NOTE: This endpoint is not implemented in the backend
  */
 export async function deleteReport(reportId: string): Promise<void> {
-  console.warn(`deleteReport: Backend endpoint /Reports/${reportId} not implemented`)
+  errorReporter.warn(`deleteReport: Backend endpoint /Reports/${reportId} not implemented`)
   throw new Error('This endpoint is not yet implemented')
 }
 
@@ -140,7 +141,7 @@ export async function updateScheduledReport(
   scheduleId: string,
   schedule: Partial<ReportSchedule>
 ): Promise<ReportSchedule> {
-  console.warn(`updateScheduledReport: Backend endpoint /Reports/schedules/${scheduleId} not implemented`)
+  errorReporter.warn(`updateScheduledReport: Backend endpoint /Reports/schedules/${scheduleId} not implemented`)
   throw new Error('This endpoint is not yet implemented')
 }
 

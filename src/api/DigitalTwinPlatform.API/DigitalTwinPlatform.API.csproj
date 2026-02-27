@@ -40,10 +40,8 @@
   </ItemGroup>
  
   <ItemGroup>
-    <!-- Exclude only components that remain deprecated -->
-    <Compile Remove="Controllers\ProductionLinesController.cs" />
+    <!-- Exclude only deprecated Azure Digital Twin controller -->
     <Compile Remove="Controllers\AzureDigitalTwinController.cs" />
-    <Compile Remove="Validators\**\*.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DigitalTwinPlatform.Domain\DigitalTwinPlatform.Domain.csproj" />

@@ -1,6 +1,7 @@
 import axiosClient from '@/api/axiosClient'
 import type { Ref } from 'vue'
 import { ref, reactive } from 'vue'
+import { errorReporter } from './errorReporter.service'
 
 // Define TypeScript interfaces
 export interface ExternalSystem {
@@ -125,7 +126,7 @@ class ExternalSystemService {
       const response = await axiosClient.get<ExternalSystem[]>(this.baseUrl)
       return response.data || []
     } catch (error) {
-      console.error('Failed to fetch external systems:', error)
+      errorReporter.error('Failed to fetch external systems:', error)
       throw error
     }
   }
@@ -135,7 +136,7 @@ class ExternalSystemService {
       const response = await axiosClient.get<ExternalSystem[]>(`${this.baseUrl}/connected`)
       return response.data || []
     } catch (error) {
-      console.error('Failed to fetch connected external systems:', error)
+      errorReporter.error('Failed to fetch connected external systems:', error)
       throw error
     }
   }
@@ -145,7 +146,7 @@ class ExternalSystemService {
       const response = await axiosClient.get<ExternalSystem[]>(`${this.baseUrl}/type/${systemType}`)
       return response.data || []
     } catch (error) {
-      console.error(`Failed to fetch external systems by type ${systemType}:`, error)
+      errorReporter.error(`Failed to fetch external systems by type ${systemType}:`, error)
       throw error
     }
   }
@@ -155,7 +156,7 @@ class ExternalSystemService {
       const response = await axiosClient.get<ExternalSystem>(`${this.baseUrl}/${id}`)
       return response.data
     } catch (error) {
-      console.error(`Failed to fetch external system ${id}:`, error)
+      errorReporter.error(`Failed to fetch external system ${id}:`, error)
       throw error
     }
   }
@@ -165,7 +166,7 @@ class ExternalSystemService {
       const response = await axiosClient.get<ExternalSystemStatus>(`${this.baseUrl}/${id}/status`)
       return response.data
     } catch (error) {
-      console.error(`Failed to fetch status for external system ${id}:`, error)
+      errorReporter.error(`Failed to fetch status for external system ${id}:`, error)
       throw error
     }
   }
@@ -175,7 +176,7 @@ class ExternalSystemService {
       const response = await axiosClient.post<ExternalSystem>(this.baseUrl, system)
       return response.data
     } catch (error) {
-      console.error('Failed to create external system:', error)
+      errorReporter.error('Failed to create external system:', error)
       throw error
     }
   }
@@ -185,7 +186,7 @@ class ExternalSystemService {
       const response = await axiosClient.put<ExternalSystem>(`${this.baseUrl}/${id}`, system)
       return response.data
     } catch (error) {
-      console.error(`Failed to update external system ${id}:`, error)
+      errorReporter.error(`Failed to update external system ${id}:`, error)
       throw error
     }
   }
@@ -194,7 +195,7 @@ class ExternalSystemService {
     try {
       await axiosClient.delete(`${this.baseUrl}/${id}`)
     } catch (error) {
-      console.error(`Failed to delete external system ${id}:`, error)
+      errorReporter.error(`Failed to delete external system ${id}:`, error)
       throw error
     }
   }
@@ -203,7 +204,7 @@ class ExternalSystemService {
     try {
       await axiosClient.post(`${this.baseUrl}/${id}/connect`)
     } catch (error) {
-      console.error(`Failed to connect external system ${id}:`, error)
+      errorReporter.error(`Failed to connect external system ${id}:`, error)
       throw error
     }
   }
@@ -212,7 +213,7 @@ class ExternalSystemService {
     try {
       await axiosClient.post(`${this.baseUrl}/${id}/disconnect`)
     } catch (error) {
-      console.error(`Failed to disconnect external system ${id}:`, error)
+      errorReporter.error(`Failed to disconnect external system ${id}:`, error)
       throw error
     }
   }
@@ -222,7 +223,7 @@ class ExternalSystemService {
       const response = await axiosClient.post<boolean>(`${this.baseUrl}/${id}/test`)
       return response.data
     } catch (error) {
-      console.error(`Failed to test connection for external system ${id}:`, error)
+      errorReporter.error(`Failed to test connection for external system ${id}:`, error)
       throw error
     }
   }
@@ -233,7 +234,7 @@ class ExternalSystemService {
       const response = await axiosClient.get<SystemIntegration[]>(`${this.baseUrl}/integrations`)
       return response.data || []
     } catch (error) {
-      console.error('Failed to fetch system integrations:', error)
+      errorReporter.error('Failed to fetch system integrations:', error)
       throw error
     }
   }
@@ -243,7 +244,7 @@ class ExternalSystemService {
       const response = await axiosClient.get<SystemIntegration[]>(`${this.baseUrl}/${systemId}/integrations`)
       return response.data || []
     } catch (error) {
-      console.error(`Failed to fetch integrations for system ${systemId}:`, error)
+      errorReporter.error(`Failed to fetch integrations for system ${systemId}:`, error)
       throw error
     }
   }
@@ -253,7 +254,7 @@ class ExternalSystemService {
       const response = await axiosClient.get<SystemIntegration[]>(`${this.baseUrl}/integrations/active`)
       return response.data || []
     } catch (error) {
-      console.error('Failed to fetch active system integrations:', error)
+      errorReporter.error('Failed to fetch active system integrations:', error)
       throw error
     }
   }
@@ -263,7 +264,7 @@ class ExternalSystemService {
       const response = await axiosClient.post<SystemIntegration>(`${this.baseUrl}/integrations`, integration)
       return response.data
     } catch (error) {
-      console.error('Failed to create system integration:', error)
+      errorReporter.error('Failed to create system integration:', error)
       throw error
     }
   }
@@ -273,7 +274,7 @@ class ExternalSystemService {
       const response = await axiosClient.put<SystemIntegration>(`${this.baseUrl}/integrations/${id}`, integration)
       return response.data
     } catch (error) {
-      console.error(`Failed to update system integration ${id}:`, error)
+      errorReporter.error(`Failed to update system integration ${id}:`, error)
       throw error
     }
   }
@@ -282,7 +283,7 @@ class ExternalSystemService {
     try {
       await axiosClient.delete(`${this.baseUrl}/integrations/${id}`)
     } catch (error) {
-      console.error(`Failed to delete system integration ${id}:`, error)
+      errorReporter.error(`Failed to delete system integration ${id}:`, error)
       throw error
     }
   }
@@ -291,7 +292,7 @@ class ExternalSystemService {
     try {
       await axiosClient.post(`${this.baseUrl}/integrations/${id}/enable`)
     } catch (error) {
-      console.error(`Failed to enable system integration ${id}:`, error)
+      errorReporter.error(`Failed to enable system integration ${id}:`, error)
       throw error
     }
   }
@@ -300,7 +301,7 @@ class ExternalSystemService {
     try {
       await axiosClient.post(`${this.baseUrl}/integrations/${id}/disable`)
     } catch (error) {
-      console.error(`Failed to disable system integration ${id}:`, error)
+      errorReporter.error(`Failed to disable system integration ${id}:`, error)
       throw error
     }
   }
@@ -311,7 +312,7 @@ class ExternalSystemService {
       const response = await axiosClient.get<DataSynchronization[]>(`${this.baseUrl}/synchronizations`)
       return response.data || []
     } catch (error) {
-      console.error('Failed to fetch data synchronizations:', error)
+      errorReporter.error('Failed to fetch data synchronizations:', error)
       throw error
     }
   }
@@ -321,7 +322,7 @@ class ExternalSystemService {
       const response = await axiosClient.get<DataSynchronization[]>(`${this.baseUrl}/synchronizations/pending`)
       return response.data || []
     } catch (error) {
-      console.error('Failed to fetch pending synchronizations:', error)
+      errorReporter.error('Failed to fetch pending synchronizations:', error)
       throw error
     }
   }
@@ -331,7 +332,7 @@ class ExternalSystemService {
       const response = await axiosClient.get<DataSynchronization[]>(`${this.baseUrl}/synchronizations/failed`)
       return response.data || []
     } catch (error) {
-      console.error('Failed to fetch failed synchronizations:', error)
+      errorReporter.error('Failed to fetch failed synchronizations:', error)
       throw error
     }
   }
@@ -341,7 +342,7 @@ class ExternalSystemService {
       const response = await axiosClient.get<DataSynchronization[]>(`${this.baseUrl}/synchronizations/recent?limit=${limit}`)
       return response.data || []
     } catch (error) {
-      console.error('Failed to fetch recent synchronizations:', error)
+      errorReporter.error('Failed to fetch recent synchronizations:', error)
       throw error
     }
   }
@@ -351,7 +352,7 @@ class ExternalSystemService {
       const response = await axiosClient.post<DataSynchronization>(`${this.baseUrl}/synchronizations`, sync)
       return response.data
     } catch (error) {
-      console.error('Failed to create data synchronization:', error)
+      errorReporter.error('Failed to create data synchronization:', error)
       throw error
     }
   }
@@ -361,7 +362,7 @@ class ExternalSystemService {
       const response = await axiosClient.post<number>(`${this.baseUrl}/synchronizations/process`)
       return response.data
     } catch (error) {
-      console.error('Failed to process data synchronizations:', error)
+      errorReporter.error('Failed to process data synchronizations:', error)
       throw error
     }
   }
@@ -400,7 +401,7 @@ export function useExternalSystems() {
       externalSystems.value = await externalSystemService.getAllExternalSystems()
     } catch (err) {
       error.value = 'Failed to fetch external systems'
-      console.error(err)
+      errorReporter.error('Failed to fetch external systems', err as Error)
     } finally {
       loading.value = false
     }
@@ -413,7 +414,7 @@ export function useExternalSystems() {
       externalSystems.value = await externalSystemService.getConnectedExternalSystems()
     } catch (err) {
       error.value = 'Failed to fetch connected systems'
-      console.error(err)
+      errorReporter.error('Failed to fetch external systems', err as Error)
     } finally {
       loading.value = false
     }
@@ -426,7 +427,7 @@ export function useExternalSystems() {
       systemIntegrations.value = await externalSystemService.getSystemIntegrations()
     } catch (err) {
       error.value = 'Failed to fetch system integrations'
-      console.error(err)
+      errorReporter.error('Failed to fetch external systems', err as Error)
     } finally {
       loading.value = false
     }
@@ -439,7 +440,7 @@ export function useExternalSystems() {
       dataSynchronizations.value = await externalSystemService.getDataSynchronizations()
     } catch (err) {
       error.value = 'Failed to fetch data synchronizations'
-      console.error(err)
+      errorReporter.error('Failed to fetch external systems', err as Error)
     } finally {
       loading.value = false
     }
@@ -452,7 +453,7 @@ export function useExternalSystems() {
       currentSystem.value = await externalSystemService.getExternalSystemById(systemId)
     } catch (err) {
       error.value = 'Failed to select external system'
-      console.error(err)
+      errorReporter.error('Failed to fetch external systems', err as Error)
     } finally {
       loading.value = false
     }
@@ -467,7 +468,7 @@ export function useExternalSystems() {
       return newSystem
     } catch (err) {
       error.value = 'Failed to create external system'
-      console.error(err)
+      errorReporter.error('Failed to fetch external systems', err as Error)
       throw err
     } finally {
       loading.value = false
@@ -489,7 +490,7 @@ export function useExternalSystems() {
       return updatedSystem
     } catch (err) {
       error.value = 'Failed to update external system'
-      console.error(err)
+      errorReporter.error('Failed to fetch external systems', err as Error)
       throw err
     } finally {
       loading.value = false
@@ -507,7 +508,7 @@ export function useExternalSystems() {
       }
     } catch (err) {
       error.value = 'Failed to delete external system'
-      console.error(err)
+      errorReporter.error('Failed to fetch external systems', err as Error)
       throw err
     } finally {
       loading.value = false
@@ -527,7 +528,7 @@ export function useExternalSystems() {
       }
     } catch (err) {
       error.value = 'Failed to connect external system'
-      console.error(err)
+      errorReporter.error('Failed to fetch external systems', err as Error)
       throw err
     } finally {
       loading.value = false
@@ -546,7 +547,7 @@ export function useExternalSystems() {
       }
     } catch (err) {
       error.value = 'Failed to disconnect external system'
-      console.error(err)
+      errorReporter.error('Failed to fetch external systems', err as Error)
       throw err
     } finally {
       loading.value = false
@@ -569,7 +570,7 @@ export function useExternalSystems() {
       return isConnected
     } catch (err) {
       error.value = 'Failed to test external system connection'
-      console.error(err)
+      errorReporter.error('Failed to fetch external systems', err as Error)
       throw err
     } finally {
       loading.value = false

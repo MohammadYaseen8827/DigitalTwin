@@ -1,4 +1,5 @@
 import axiosClient from '@/api/axiosClient'
+import { errorReporter } from './errorReporter.service'
 
 export interface HealthCheckResult {
   status: 'Healthy' | 'Degraded' | 'Unhealthy'
@@ -23,7 +24,7 @@ export async function getHealthStatus(): Promise<HealthCheckResult> {
     const response = await axiosClient.get<HealthCheckResult>('/health')
     return response
   } catch (error) {
-    console.error('Failed to get health status:', error)
+    errorReporter.error('Failed to get health status:', error)
     // Return unhealthy status if health check fails
     return {
       status: 'Unhealthy',
@@ -51,7 +52,7 @@ export async function getDatabaseHealth(): Promise<HealthCheckEntry> {
       duration: '0ms'
     }
   } catch (error) {
-    console.error('Failed to get database health:', error)
+    errorReporter.error('Failed to get database health:', error)
     return {
       status: 'Unhealthy',
       description: 'Failed to check database health',
@@ -80,7 +81,7 @@ export async function getReadinessStatus(): Promise<{ ready: boolean; checks: Re
     const response = await axiosClient.get<{ ready: boolean; checks: Record<string, boolean> }>('/Health/ready')
     return response
   } catch (error) {
-    console.error('Failed to get readiness status:', error)
+    errorReporter.error('Failed to get readiness status:', error)
     return {
       ready: false,
       checks: {}

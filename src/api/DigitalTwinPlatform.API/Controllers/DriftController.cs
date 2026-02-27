@@ -7,7 +7,7 @@ namespace DigitalTwinPlatform.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class DriftController(IDataDriftService driftService) : ControllerBase
+public class DriftController(IDataDriftService driftService, ILogger<DriftController> logger) : ControllerBase
 {
     /// <summary>
     /// Gets current drift status for all monitored models
@@ -26,7 +26,8 @@ public class DriftController(IDataDriftService driftService) : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = "Failed to retrieve drift status", details = ex.Message });
+            logger.LogError(ex, "Failed to retrieve drift status");
+            return StatusCode(500, new { error = "Failed to retrieve drift status" });
         }
     }
 
@@ -62,7 +63,8 @@ public class DriftController(IDataDriftService driftService) : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = "Failed to retrieve drift history", details = ex.Message });
+            logger.LogError(ex, "Failed to retrieve drift history for model {ModelName}", modelName);
+            return StatusCode(500, new { error = "Failed to retrieve drift history" });
         }
     }
 
@@ -85,7 +87,8 @@ public class DriftController(IDataDriftService driftService) : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = "Failed to retrieve thresholds", details = ex.Message });
+            logger.LogError(ex, "Failed to retrieve thresholds for model {ModelName}", modelName);
+            return StatusCode(500, new { error = "Failed to retrieve thresholds" });
         }
     }
 
@@ -123,7 +126,8 @@ public class DriftController(IDataDriftService driftService) : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = "Failed to configure thresholds", details = ex.Message });
+            logger.LogError(ex, "Failed to configure thresholds for model {ModelName}", modelName);
+            return StatusCode(500, new { error = "Failed to configure thresholds" });
         }
     }
 
@@ -151,7 +155,8 @@ public class DriftController(IDataDriftService driftService) : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = "Failed to generate drift report", details = ex.Message });
+            logger.LogError(ex, "Failed to generate drift report");
+            return StatusCode(500, new { error = "Failed to generate drift report" });
         }
     }
 
@@ -193,14 +198,15 @@ public class DriftController(IDataDriftService driftService) : ControllerBase
             {
                 // In a real implementation, you would send alerts here
                 // For now, we'll just log it
-                Console.WriteLine($"DRIFT ALERT: {result.Recommendation}");
+                logger.LogWarning("DRIFT ALERT: {Recommendation}", result.Recommendation);
             }
 
             return Ok(result);
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = "Failed to detect drift", details = ex.Message });
+            logger.LogError(ex, "Failed to detect drift");
+            return StatusCode(500, new { error = "Failed to detect drift" });
         }
     }
 

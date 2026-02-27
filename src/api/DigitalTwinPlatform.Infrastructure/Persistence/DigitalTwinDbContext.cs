@@ -164,6 +164,7 @@ public class DigitalTwinDbContext : IdentityDbContext<ApplicationUser>
             entity.HasIndex(x => x.Location);
             entity.HasIndex(x => x.HealthStatus);
             entity.HasIndex(x => x.RemainingUsefulLifeDays);
+            entity.HasIndex(x => x.ProductionLineId);
         });
 
         modelBuilder.Entity<ProductionLine>(entity =>
@@ -229,6 +230,7 @@ public class DigitalTwinDbContext : IdentityDbContext<ApplicationUser>
             
             // Indexes for performance
             entity.HasIndex(x => x.MachineId);
+            entity.HasIndex(x => x.AlertId);
             entity.HasIndex(x => x.Date);
             entity.HasIndex(x => x.Status);
             entity.HasIndex(x => x.Type);
@@ -324,6 +326,7 @@ public class DigitalTwinDbContext : IdentityDbContext<ApplicationUser>
             
             // Indexes for performance
             entity.HasIndex(x => x.MachineId);
+            entity.HasIndex(x => x.RelatedPredictionId);
             entity.HasIndex(x => x.CreatedAt);
             entity.HasIndex(x => x.Severity);
             entity.HasIndex(x => x.Status);

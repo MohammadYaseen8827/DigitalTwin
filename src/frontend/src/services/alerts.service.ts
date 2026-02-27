@@ -13,7 +13,9 @@ export async function fetchActiveAlerts(machineId?: string): Promise<AlertDto[]>
     const response = await axiosClient.get('/Alerts', { params })
     return response.data
   } catch (error) {
-    console.error('Failed to fetch active alerts:', error)
+    if (import.meta.env.DEV) {
+      console.error('Failed to fetch active alerts:', error)
+    }
     const message = (error as any)?.response?.data?.message ?? 'Failed to fetch active alerts'
     toast.error(message)
     throw error
@@ -28,7 +30,9 @@ export async function fetchAlert(alertId: string): Promise<AlertDto> {
     const response = await axiosClient.get(`/Alerts/${encodeURIComponent(alertId)}`)
     return response.data
   } catch (error) {
-    console.error(`Failed to fetch alert ${alertId}:`, error)
+    if (import.meta.env.DEV) {
+      console.error(`Failed to fetch alert ${alertId}:`, error)
+    }
     const message = (error as any)?.response?.data?.message ?? 'Failed to fetch alert'
     toast.error(message)
     throw error
@@ -43,7 +47,9 @@ export async function acknowledgeAlert(alertId: string): Promise<void> {
     await axiosClient.put(`/Alerts/${encodeURIComponent(alertId)}/acknowledge`)
     toast.success('Alert acknowledged successfully')
   } catch (error) {
-    console.error(`Failed to acknowledge alert ${alertId}:`, error)
+    if (import.meta.env.DEV) {
+      console.error(`Failed to acknowledge alert ${alertId}:`, error)
+    }
     const message = (error as any)?.response?.data?.message ?? 'Failed to acknowledge alert'
     toast.error(message)
     throw error
@@ -58,7 +64,9 @@ export async function deleteAlert(alertId: string): Promise<void> {
     await axiosClient.delete(`/Alerts/${encodeURIComponent(alertId)}`)
     toast.success('Alert deleted successfully')
   } catch (error) {
-    console.error(`Failed to delete alert ${alertId}:`, error)
+    if (import.meta.env.DEV) {
+      console.error(`Failed to delete alert ${alertId}:`, error)
+    }
     const message = (error as any)?.response?.data?.message ?? 'Failed to delete alert'
     toast.error(message)
     throw error
@@ -74,7 +82,9 @@ export async function fetchAllAlerts(machineId?: string): Promise<AlertDto[]> {
     const response = await axiosClient.get('/Alerts/all', { params })
     return response.data
   } catch (error) {
-    console.error('Failed to fetch all alerts:', error)
+    if (import.meta.env.DEV) {
+      console.error('Failed to fetch all alerts:', error)
+    }
     const message = (error as any)?.response?.data?.message ?? 'Failed to fetch all alerts'
     toast.error(message)
     throw error
@@ -90,7 +100,9 @@ export async function fetchAlertStats(machineId?: string): Promise<AlertStatsDto
     const response = await axiosClient.get('/Alerts/stats', { params })
     return response.data
   } catch (error) {
-    console.error('Failed to fetch alert stats:', error)
+    if (import.meta.env.DEV) {
+      console.error('Failed to fetch alert stats:', error)
+    }
     const message = (error as any)?.response?.data?.message ?? 'Failed to fetch alert stats'
     toast.error(message)
     throw error
@@ -114,7 +126,9 @@ export async function searchAlerts(params: {
     const response = await axiosClient.get('/Alerts/search', { params })
     return response.data
   } catch (error) {
-    console.error('Failed to search alerts:', error)
+    if (import.meta.env.DEV) {
+      console.error('Failed to search alerts:', error)
+    }
     const message = (error as any)?.response?.data?.message ?? 'Failed to search alerts'
     toast.error(message)
     throw error
@@ -126,7 +140,9 @@ export async function searchAlerts(params: {
  * Use deleteAlert instead
  */
 export async function resolveAlert(alertId: string): Promise<void> {
-  console.warn('resolveAlert is deprecated, use deleteAlert instead')
+  if (import.meta.env.DEV) {
+    console.warn('resolveAlert is deprecated, use deleteAlert instead')
+  }
   return deleteAlert(alertId)
 }
 
@@ -146,7 +162,9 @@ export async function getAlertById(alertId: string): Promise<AlertDto> {
     const response = await axiosClient.get(`/Alerts/${encodeURIComponent(alertId)}`)
     return response.data
   } catch (error) {
-    console.error(`Failed to fetch alert ${alertId}:`, error)
+    if (import.meta.env.DEV) {
+      console.error(`Failed to fetch alert ${alertId}:`, error)
+    }
     throw error
   }
 }
@@ -205,3 +223,24 @@ export function formatAlertDuration(createdAt: string, acknowledgedAt?: string, 
   
   return `${hours}h ${minutes}m`
 }
+
+// Service object export for convenience
+export const alertsService = {
+  fetchActiveAlerts,
+  fetchAlert,
+  acknowledgeAlert,
+  deleteAlert,
+  fetchAllAlerts,
+  fetchAlertStats,
+  searchAlerts,
+  resolveAlert,
+  escalateAlert,
+  getAlertById,
+  acknowledgeAlertPut,
+  getSeverityColor,
+  getStatusColor,
+  getSeverityIcon,
+  formatAlertDuration
+}
+
+export default alertsService

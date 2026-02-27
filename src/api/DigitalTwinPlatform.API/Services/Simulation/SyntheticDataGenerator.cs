@@ -4,6 +4,8 @@ using DigitalTwinPlatform.Application.Services;
 using DigitalTwinPlatform.Domain.Common;
 using DigitalTwinPlatform.Domain.Entities;
 using DigitalTwinPlatform.Domain.ValueObjects;
+using DigitalTwinPlatform.Application.Abstractions.Services;
+using DigitalTwinPlatform.Application.Analytics.Degradation.Models;
 using Microsoft.Extensions.Logging;
 
 namespace DigitalTwinPlatform.API.Services.Simulation;

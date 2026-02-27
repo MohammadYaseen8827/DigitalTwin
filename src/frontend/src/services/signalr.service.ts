@@ -1,12 +1,15 @@
 import * as signalR from '@microsoft/signalr'
 import { ref } from 'vue'
+import { apiConfig } from '@/utils/apiConfig'
 import { useMachinesStore } from '@/stores/machines.store'
 
 class SignalRService {
     private connection: signalR.HubConnection | null = null
-    private apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
-    private hubUrl = this.apiUrl.replace('/api', '/hubs/telemetry')
-    
+    private apiUrl = apiConfig.getBaseUrl()
+    private hubUrl = this.apiUrl.endsWith('/')
+        ? this.apiUrl.replace(/\/api\/$/, '/hubs/telemetry')
+        : this.apiUrl.replace('/api', '/hubs/telemetry')
+
     // Connection status as reactive ref
     public isConnected = ref(false)
 

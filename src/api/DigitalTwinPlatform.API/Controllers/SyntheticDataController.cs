@@ -54,7 +54,7 @@ public class SyntheticDataController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to generate synthetic data for machine type {MachineType}", request.MachineType);
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "Internal server error during data generation" });
         }
     }
 
@@ -83,7 +83,7 @@ public class SyntheticDataController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to validate synthetic data for machine type {MachineType}", request.MachineType);
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "Internal server error during data validation" });
         }
     }
 
@@ -112,7 +112,7 @@ public class SyntheticDataController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get generation statistics for machine type {MachineType}", machineType);
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "Internal server error retrieving statistics" });
         }
     }
 
@@ -140,7 +140,7 @@ public class SyntheticDataController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get all generation statistics");
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "Internal server error retrieving statistics" });
         }
     }
 }

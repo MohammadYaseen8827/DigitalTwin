@@ -1,4 +1,5 @@
-using DigitalTwinPlatform.API.Services.Analytics.Advanced;
+using DigitalTwinPlatform.Application.Analytics.Advanced;
+using DigitalTwinPlatform.Application.Analytics.Advanced.Models;
 using DigitalTwinPlatform.Application.Predictions.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -41,7 +42,7 @@ public class AdvancedAnalyticsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error performing ensemble prediction for machine {MachineId}", machineId);
-            return StatusCode(500, new { Error = "Failed to perform ensemble prediction", Details = ex.Message });
+            return StatusCode(500, new { Error = "Failed to perform ensemble prediction due to an internal error" });
         }
     }
 
@@ -63,7 +64,7 @@ public class AdvancedAnalyticsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error performing deep learning prediction for machine {MachineId}", machineId);
-            return StatusCode(500, new { Error = "Failed to perform deep learning prediction", Details = ex.Message });
+            return StatusCode(500, new { Error = "Failed to perform deep learning prediction due to an internal error" });
         }
     }
 
@@ -91,7 +92,7 @@ public class AdvancedAnalyticsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error detecting anomalies for machine {MachineId}", machineId);
-            return StatusCode(500, new { Error = "Failed to detect anomalies", Details = ex.Message });
+            return StatusCode(500, new { Error = "Failed to detect anomalies due to an internal error" });
         }
     }
 
@@ -120,7 +121,7 @@ public class AdvancedAnalyticsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error forecasting {Metric} for machine {MachineId}", metric, machineId);
-            return StatusCode(500, new { Error = "Failed to perform forecasting", Details = ex.Message });
+            return StatusCode(500, new { Error = "Failed to perform forecasting due to an internal error" });
         }
     }
 
@@ -154,7 +155,7 @@ public class AdvancedAnalyticsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error generating maintenance recommendation for machine {MachineId}", machineId);
-            return StatusCode(500, new { Error = "Failed to generate maintenance recommendation", Details = ex.Message });
+            return StatusCode(500, new { Error = "Failed to generate maintenance recommendation due to an internal error" });
         }
     }
 
@@ -181,7 +182,7 @@ public class AdvancedAnalyticsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error optimizing production schedule");
-            return StatusCode(500, new { Error = "Failed to optimize production schedule", Details = ex.Message });
+            return StatusCode(500, new { Error = "Failed to optimize production schedule due to an internal error" });
         }
     }
 
@@ -208,7 +209,7 @@ public class AdvancedAnalyticsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error optimizing resource allocation");
-            return StatusCode(500, new { Error = "Failed to optimize resource allocation", Details = ex.Message });
+            return StatusCode(500, new { Error = "Failed to optimize resource allocation due to an internal error" });
         }
     }
 
@@ -234,7 +235,7 @@ public class AdvancedAnalyticsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error optimizing maintenance costs");
-            return StatusCode(500, new { Error = "Failed to optimize maintenance costs", Details = ex.Message });
+            return StatusCode(500, new { Error = "Failed to optimize maintenance costs due to an internal error" });
         }
     }
 
@@ -274,7 +275,7 @@ public class AdvancedAnalyticsController : ControllerBase
                 AnomalyDetection = anomalyResult,
                 MaintenanceRecommendation = recommendation,
                 GeneratedAt = DateTime.UtcNow,
-                HealthScore = CalculateHealthScore(prediction, anomalyResult, recommendation)
+                HealthScore = _advancedPredictiveService.CalculateHealthScore(prediction, anomalyResult, recommendation)
             };
 
             return Ok(dashboard);
@@ -282,70 +283,7 @@ public class AdvancedAnalyticsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error generating advanced analytics dashboard for machine {MachineId}", machineId);
-            return StatusCode(500, new { Error = "Failed to generate analytics dashboard", Details = ex.Message });
+            return StatusCode(500, new { Error = "Failed to generate analytics dashboard due to an internal error" });
         }
     }
-
-    private double CalculateHealthScore(
-        PredictionDto prediction, 
-        AnomalyDetectionResult anomalies, 
-        PrescriptiveRecommendation recommendation)
-    {
-        // Weighted health score calculation
-        var predictionScore = 1.0 - (prediction.FailureProbability * 0.5); // 50% weight
-        var anomalyScore = 1.0 - (anomalies.OverallRiskScore * 0.3); // 30% weight
-        var recommendationScore = 1.0 - (recommendation.PriorityScore * 0.2); // 20% weight
-
-        return Math.Max(0, Math.Min(1, predictionScore + anomalyScore + recommendationScore));
-    }
 }
-
-#region DTOs
-
-public class AnomalyDetectionRequest
-{
-    public DateTime? StartTime { get; set; }
-    public DateTime? EndTime { get; set; }
-}
-
-public class ForecastRequest
-{
-    public int ForecastHorizon { get; set; } = 30;
-}
-
-public class MaintenanceRecommendationRequest
-{
-    public CostFactors CostFactors { get; set; } = new();
-    public BusinessImpact BusinessImpact { get; set; } = new();
-    public TimeConstraints TimeConstraints { get; set; } = new();
-}
-
-public class SchedulingOptimizationRequest
-{
-    public List<Guid> MachineIds { get; set; } = [];
-    public DateTime PlanningHorizon { get; set; } = DateTime.UtcNow.AddDays(30);
-}
-
-public class ResourceAllocationRequest
-{
-    public List<Guid> MachineIds { get; set; } = [];
-    public DateTime PlanningPeriod { get; set; } = DateTime.UtcNow.AddDays(30);
-}
-
-public class CostOptimizationRequest
-{
-    public List<Guid> MachineIds { get; set; } = [];
-    public BudgetConstraints Budget { get; set; } = new();
-}
-
-public class AdvancedAnalyticsDashboard
-{
-    public Guid MachineId { get; set; }
-    public PredictionDto? Prediction { get; set; }
-    public AnomalyDetectionResult AnomalyDetection { get; set; } = new();
-    public PrescriptiveRecommendation MaintenanceRecommendation { get; set; } = new();
-    public DateTime GeneratedAt { get; set; }
-    public double HealthScore { get; set; }
-}
-
-#endregion

@@ -163,9 +163,13 @@ const toast = useToast()
 const user = computed(() => authStore.user)
 
 const defaultApiEndpoint = computed(() => {
-  return window.location.hostname === 'localhost' 
-    ? 'https://localhost:5001'
-    : `https://${window.location.hostname}/api`
+  // Use environment variable if available, otherwise use relative path
+  const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL
+  if (configuredBaseUrl) {
+    return configuredBaseUrl.replace(/\/$/, '') // Remove trailing slash
+  }
+  // Default to relative path for production
+  return '/api'
 })
 
 const notifications = ref({
@@ -183,7 +187,7 @@ const security = ref({
 })
 
 const api = ref({
-  endpoint: 'https://localhost:5001',
+  endpoint: defaultApiEndpoint.value,
   key: ''
 })
 
@@ -191,7 +195,7 @@ const resetSettings = () => {
   notifications.value = { enabled: true }
   preferences.value = { theme: 'dark', refreshRate: 60 }
   security.value = { twoFactorEnabled: false, sessionTimeout: 30 }
-  api.value = { endpoint: 'https://localhost:5001', key: '' }
+  api.value = { endpoint: defaultApiEndpoint.value, key: '' }
   toast.info('Settings reset to defaults')
 }
 

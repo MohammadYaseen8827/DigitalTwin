@@ -4,6 +4,7 @@
  */
 
 import axiosClient from '@/api/axiosClient'
+import { errorReporter } from './errorReporter.service'
 
 export interface AntiForgeryTokenResponse {
   headerName: string
@@ -35,7 +36,7 @@ class CsrfTokenManager {
 
     // Fetch new token
     this.tokenPromise = this.fetchToken()
-    
+
     try {
       const token = await this.tokenPromise
       this.tokenExpiry = Date.now() + this.TOKEN_LIFETIME_MS
@@ -47,19 +48,19 @@ class CsrfTokenManager {
 
   /**
    * Fetch CSRF token from server
-   * NOTE: This method has been stubbed as the backend endpoint is not implemented
-   * The token management now uses a default token strategy
    */
   private async fetchToken(): Promise<string> {
     try {
-      console.warn('CSRF token fetch: Backend endpoint /AntiForgery/tokens not implemented')
-      // Return a default token - can be replaced with backend implementation when available
-      this.token = 'default-token-' + Date.now()
-      this.headerName = 'X-CSRF-TOKEN'
-      this.formFieldName = '__RequestVerificationToken'
+      const response = await axiosClient.get<AntiForgeryTokenResponse>('/AntiForgery/tokens')
+      const { requestToken, headerName, formFieldName } = response.data
+
+      this.token = requestToken
+      this.headerName = headerName
+      this.formFieldName = formFieldName
+
       return this.token
     } catch (error) {
-      console.error('Failed to fetch CSRF token:', error)
+      errorReporter.error('Failed to fetch CSRF token:', error)
       throw new Error('Failed to fetch CSRF token. Please refresh the page.')
     }
   }

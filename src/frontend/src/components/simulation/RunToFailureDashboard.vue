@@ -61,7 +61,11 @@ const simulating = ref(false)
 const generating = ref(false)
 
 // Single Simulation State
-const singleMachineId = ref('00000000-0000-0000-0000-000000000001')
+const singleMachineId = ref('')
+const isValidMachineId = computed(() => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  return uuidRegex.test(singleMachineId.value)
+})
 const singleMaxSteps = ref(1000)
 const singleMaxTime = ref('01:00:00') // 1 hour
 const singleStepInterval = ref('00:00:01') // 1 second

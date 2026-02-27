@@ -1,4 +1,5 @@
 using DigitalTwinPlatform.Application.Predictions.Models;
+using DigitalTwinPlatform.Application.ML.Models;
 
 namespace DigitalTwinPlatform.Application.Abstractions.Services;
 
@@ -13,4 +14,9 @@ public interface IPredictionService
     Task CleanupOldPredictionsAsync(DateTime cutoffDate, CancellationToken cancellationToken = default);
     
     Task<IEnumerable<PredictionDto>> SearchPredictionsAsync(string query, Guid? machineId = null, CancellationToken cancellationToken = default);
+
+    Task<RulPredictionResult> GetRulPredictionWithDetailsAsync(Guid machineId, CancellationToken ct = default);
+    Task<HealthClassificationResult> GetHealthClassificationWithDetailsAsync(Guid machineId, CancellationToken ct = default);
+    Task<object> GetDetailedRulSummaryAsync(Guid machineId, CancellationToken ct = default);
+    Task<ModelStatusDto> GetModelStatus();
 }

@@ -32,16 +32,7 @@ public static class DatabaseExtensions
         await serviceProvider.SeedIdentityAsync(logger, cancellationToken);
     }
 
-    // InitializeDatabaseAsync (commented out): was applying migrations and seeding; use ApplyDatabaseMigrationsAsync + SeedDatabaseAsync instead.
-    // public static async Task InitializeDatabaseAsync(this IServiceProvider serviceProvider, ILogger logger, CancellationToken cancellationToken = default)
-    // {
-    //     using var scope = serviceProvider.CreateScope();
-    //     var dbContext = scope.ServiceProvider.GetRequiredService<DigitalTwinDbContext>();
-    //     var initializer = new DbContextInitializer(dbContext, scope.ServiceProvider.GetRequiredService<ILogger<DbContextInitializer>>());
-    //     
-    //     await initializer.InitializeAsync();
-    //     await serviceProvider.SeedIdentityAsync(logger, cancellationToken);
-    // }
+
 
     /// <summary>
     /// Applies migrations with retry logic for database connectivity issues.

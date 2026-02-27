@@ -1,6 +1,6 @@
 using DigitalTwinPlatform.Application.Predictions.Models;
 
-namespace DigitalTwinPlatform.API.Services.Analytics;
+namespace DigitalTwinPlatform.Application.Services;
 
 public interface IPredictiveAnalyticsService
 {

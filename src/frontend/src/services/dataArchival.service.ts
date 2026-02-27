@@ -1,4 +1,5 @@
 import axiosClient from '@/api/axiosClient'
+import { errorReporter } from './errorReporter.service'
 
 export interface DataArchivalRequest {
   retentionDays: number
@@ -28,7 +29,7 @@ export async function archiveTelemetry(request: DataArchivalRequest): Promise<Ar
  * NOTE: This endpoint is not implemented in the backend
  */
 export async function getArchivalStatus(jobId: string): Promise<ArchivalStatus> {
-  console.warn(`getArchivalStatus: Backend endpoint /DataArchival/status/${jobId} not implemented`)
+  errorReporter.warn(`getArchivalStatus: Backend endpoint /DataArchival/status/${jobId} not implemented`)
   throw new Error('This endpoint is not yet implemented')
 }
 
@@ -37,6 +38,6 @@ export async function getArchivalStatus(jobId: string): Promise<ArchivalStatus> 
  * NOTE: This endpoint is not implemented in the backend
  */
 export async function getArchivalHistory(limit: number = 10): Promise<ArchivalStatus[]> {
-  console.warn(`getArchivalHistory: Backend endpoint /DataArchival/history not implemented`)
+  errorReporter.warn(`getArchivalHistory: Backend endpoint /DataArchival/history not implemented`)
   throw new Error('This endpoint is not yet implemented')
 }

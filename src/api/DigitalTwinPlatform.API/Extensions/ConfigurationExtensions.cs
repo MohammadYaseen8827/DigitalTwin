@@ -89,7 +89,15 @@ public static class ConfigurationExtensions
         {
             return (T)Convert.ChangeType(value, typeof(T));
         }
-        catch
+        catch (FormatException)
+        {
+            return defaultValue;
+        }
+        catch (InvalidCastException)
+        {
+            return defaultValue;
+        }
+        catch (OverflowException)
         {
             return defaultValue;
         }

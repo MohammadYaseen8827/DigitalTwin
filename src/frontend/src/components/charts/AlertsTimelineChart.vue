@@ -127,7 +127,12 @@ async function fetchAlerts() {
         alerts.value = response.data
     } catch (error) {
         console.error('Error fetching alerts:', error)
-        generateMockData()
+        // Only show mock data in development; in production show empty state
+        if (import.meta.env.DEV) {
+            generateMockData()
+        } else {
+            alerts.value = []
+        }
     } finally {
         isLoading.value = false
     }

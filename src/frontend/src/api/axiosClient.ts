@@ -73,7 +73,11 @@ axiosClient.interceptors.request.use(async (config: InternalAxiosRequestConfig) 
       headers.set(getCsrfHeaderName(), csrfToken)
       config.headers = headers
     } catch (error) {
-      console.error('Failed to get CSRF token:', error)
+      logError(error as Error, {
+        component: 'axiosClient',
+        action: 'get_csrf_token',
+        method
+      })
       // Continue without CSRF token - backend will reject if required
     }
   }
@@ -112,7 +116,7 @@ const processQueue = (error: any, token: string | null = null) => {
       prom.resolve(token)
     }
   })
-  
+
   failedQueue = []
 }
 
@@ -156,30 +160,30 @@ axiosClient.interceptors.response.use(
       originalRequest._retry = true
       isRefreshing = true
 
-        const authStore = useAuthStore()
-        const refreshTokenValue = authStore.refreshToken || getRefreshToken()
+      const authStore = useAuthStore()
+      const refreshTokenValue = authStore.refreshToken || getRefreshToken()
 
-        if (!refreshTokenValue) {
-          // No refresh token available, logout user
-          authStore.clearAuth()
-          processQueue(error, null)
-          isRefreshing = false
-          window.location.href = '/login'
-          return Promise.reject(error)
-        }
+      if (!refreshTokenValue) {
+        // No refresh token available, logout user
+        authStore.clearAuth()
+        processQueue(error, null)
+        isRefreshing = false
+        window.location.href = '/login'
+        return Promise.reject(error)
+      }
 
       try {
-        // Attempt to refresh token - Fixed endpoint URL to match backend controller name
+        // Attempt to refresh token - using centralized URL config
         const response = await axios.post<{ AccessToken: string; RefreshToken?: string }>(
-          `${apiConfig.getBaseUrl()}/api/Token/refresh`,
+          apiConfig.getFullUrl('Token/refresh'),
           { refreshToken: refreshTokenValue }
         )
 
         const { AccessToken, RefreshToken: newRefreshToken } = response.data
-        
+
         // Update tokens in store
         authStore.updateAccessToken(AccessToken)
-        
+
         if (newRefreshToken) {
           authStore.updateRefreshToken(newRefreshToken)
         }

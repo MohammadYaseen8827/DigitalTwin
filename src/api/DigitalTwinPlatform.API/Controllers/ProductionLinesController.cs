@@ -8,6 +8,7 @@ namespace DigitalTwinPlatform.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Microsoft.AspNetCore.Authorization.Authorize]
 public class ProductionLinesController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

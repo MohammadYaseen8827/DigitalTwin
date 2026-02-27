@@ -3,8 +3,10 @@ using DigitalTwinPlatform.Application.Abstractions.Repositories;
 using DigitalTwinPlatform.Application.ML.Commands;
 using DigitalTwinPlatform.Application.ML.Models;
 using DigitalTwinPlatform.Application.Predictions.Models;
+using DigitalTwinPlatform.Application.Analytics.Advanced.Models;
 using DigitalTwinPlatform.Application.Services;
 using DigitalTwinPlatform.Application.Abstractions.Services;
+using DigitalTwinPlatform.Application.Analytics.Advanced;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,12 +24,8 @@ namespace DigitalTwinPlatform.API.Controllers;
 [ApiVersion("1.0")]
 public class PredictionsController(
     IMediator mediator,
-    IRulPredictor rulPredictor,
-    IHealthClassifier healthClassifier,
-    ITelemetryRepository telemetryRepository,
-    IFeatureExtractionService featureExtractor,
     IPredictionService predictionService,
-    DigitalTwinPlatform.API.Services.Analytics.Advanced.IAdvancedPredictiveService advancedPredictiveService,
+    IAdvancedPredictiveService advancedPredictiveService,
     ILogger<PredictionsController> logger) : ControllerBase
 {
     /// <summary>
@@ -40,7 +38,6 @@ public class PredictionsController(
     [HttpPost("rul/{machineId}")]
     [ProducesResponseType(typeof(RulPredictionResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<RulPredictionResult>> GetRulPrediction(
@@ -51,16 +48,7 @@ public class PredictionsController(
         {
             logger.LogInformation("Getting RUL prediction for machine {MachineId}", machineId);
 
-            var telemetry = await GetTelemetryForMachine(machineId, ct);
-
-            if (telemetry.Count < 20)
-            {
-                logger.LogWarning("Insufficient telemetry data for machine {MachineId}: {Count} points", machineId, telemetry.Count);
-                return BadRequest(new { Message = $"Insufficient telemetry data. Required: 20, Available: {telemetry.Count}" });
-            }
-
-            var features = featureExtractor.ExtractFeatures(telemetry);
-            var result = rulPredictor.PredictWithDetails(machineId.ToString(), features);
+            var result = await predictionService.GetRulPredictionWithDetailsAsync(machineId, ct);
 
             logger.LogInformation(
                 "RUL prediction for {MachineId}: {RUL} {Unit} (confidence: {Confidence:P2})",
@@ -68,10 +56,15 @@ public class PredictionsController(
 
             return Ok(result);
         }
+        catch (InvalidOperationException ex)
+        {
+            logger.LogWarning(ex, "Insufficient telemetry data for machine {MachineId}", machineId);
+            return BadRequest(new { Error = ex.Message });
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error getting RUL prediction for machine {MachineId}", machineId);
-            return StatusCode(500, new { Message = "Internal server error during prediction" });
+            return StatusCode(500, new { Error = "Failed to get RUL prediction due to an internal error" });
         }
     }
 
@@ -85,7 +78,6 @@ public class PredictionsController(
     [HttpGet("health/{machineId}")]
     [ProducesResponseType(typeof(HealthClassificationResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<HealthClassificationResult>> GetHealthClassification(
@@ -96,16 +88,7 @@ public class PredictionsController(
         {
             logger.LogInformation("Getting health classification for machine {MachineId}", machineId);
 
-            var telemetry = await GetTelemetryForMachine(machineId, ct);
-
-            if (telemetry.Count < 20)
-            {
-                logger.LogWarning("Insufficient telemetry data for machine {MachineId}: {Count} points", machineId, telemetry.Count);
-                return BadRequest(new { Message = $"Insufficient telemetry data. Required: 20, Available: {telemetry.Count}" });
-            }
-
-            var features = featureExtractor.ExtractFeatures(telemetry);
-            var result = healthClassifier.ClassifyWithDetails(machineId.ToString(), features);
+            var result = await predictionService.GetHealthClassificationWithDetailsAsync(machineId, ct);
 
             logger.LogInformation(
                 "Health classification for {MachineId}: {Status} (probability: {Probability:P2})",
@@ -113,10 +96,15 @@ public class PredictionsController(
 
             return Ok(result);
         }
+        catch (InvalidOperationException ex)
+        {
+            logger.LogWarning(ex, "Insufficient telemetry data for machine {MachineId}", machineId);
+            return BadRequest(new { Error = ex.Message });
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error getting health classification for machine {MachineId}", machineId);
-            return StatusCode(500, new { Message = "Internal server error" });
+            return StatusCode(500, new { Error = "Failed to classify health due to an internal error" });
         }
     }
 
@@ -125,30 +113,23 @@ public class PredictionsController(
     /// </summary>
     [HttpGet("rul/{machineId}/summary")]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<object>> GetRulSummary(Guid machineId, CancellationToken ct)
     {
-        var telemetry = await GetTelemetryForMachine(machineId, ct);
-
-        if (telemetry.Count < 20)
+        try
         {
-            return BadRequest(new { Message = "Insufficient telemetry data" });
+            var summary = await predictionService.GetDetailedRulSummaryAsync(machineId, ct);
+            return Ok(summary);
         }
-
-        var features = featureExtractor.ExtractFeatures(telemetry);
-        var result = rulPredictor.PredictWithDetails(machineId.ToString(), features);
-        var healthResult = healthClassifier.ClassifyWithDetails(machineId.ToString(), features);
-
-        return Ok(new
+        catch (InvalidOperationException)
         {
-            machineId,
-            rul = result.Rul,
-            rulUnit = result.RulUnit,
-            confidence = result.Confidence,
-            healthStatus = healthResult.HealthStatus.ToString(),
-            predictionTime = result.PredictionTime
-        });
+            return BadRequest(new { Error = "Insufficient telemetry data" });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error getting RUL summary for machine {MachineId}", machineId);
+            return StatusCode(500, new { Error = "Failed to get RUL summary due to an internal error" });
+        }
     }
 
     /// <summary>
@@ -157,7 +138,6 @@ public class PredictionsController(
     [HttpPost("train")]
     [ProducesResponseType(typeof(TrainingResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<TrainingResultDto>> TrainModels(
         [FromBody] TrainModelRequestDto? request,
@@ -179,31 +159,16 @@ public class PredictionsController(
 
             return Ok(result);
         }
-        catch (InvalidOperationException ex)
+        catch (InvalidOperationException)
         {
-            logger.LogWarning(ex, "Training validation failed");
-            return BadRequest(new { ex.Message });
+            logger.LogWarning("Training validation failed");
+            return BadRequest(new { Error = "Model training validation failed. Please check training data density." });
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Model training failed");
-            return StatusCode(500, new { Message = "Internal server error during training" });
+            return StatusCode(500, new { Error = "Failed to train models due to an internal error" });
         }
-    }
-
-    /// <summary>
-    /// Triggers retraining via MediatR command (for backward compatibility).
-    /// </summary>
-    [HttpPost("ai/train")]
-    [ProducesResponseType(typeof(TrainingResultDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<TrainingResultDto>> TrainModelsAiEndpoint(
-        [FromBody] TrainModelRequestDto? request,
-        CancellationToken ct)
-    {
-        return await TrainModels(request, ct);
     }
 
     /// <summary>
@@ -211,16 +176,10 @@ public class PredictionsController(
     /// </summary>
     [HttpGet("status")]
     [ProducesResponseType(typeof(ModelStatusDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<ModelStatusDto> GetModelStatus()
+    public async Task<ActionResult<ModelStatusDto>> GetModelStatus()
     {
-        return Ok(new ModelStatusDto
-        {
-            RulModelLoaded = rulPredictor.IsModelLoaded,
-            HealthModelLoaded = healthClassifier.IsModelLoaded,
-            ModelVersion = "1.0.0",
-            LastUpdated = DateTime.UtcNow
-        });
+        var status = await predictionService.GetModelStatus();
+        return Ok(status);
     }
 
     /// <summary>
@@ -228,21 +187,18 @@ public class PredictionsController(
     /// </summary>
     [HttpPost]
     [ProducesResponseType(typeof(PredictionDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<PredictionDto>> RequestPrediction([FromBody] PredictionRequestDto request, CancellationToken ct)
     {
-        var result = await predictionService.PredictAsync(request, ct);
-        return Ok(result);
-    }
-
-    private async Task<List<TelemetryData>> GetTelemetryForMachine(Guid machineId, CancellationToken ct)
-    {
-        var telemetry = await telemetryRepository.GetRecentAsync(
-            machineId: machineId,
-            limit: 100,
-            ct: ct);
-
-        return telemetry.ToList();
+        try
+        {
+            var result = await predictionService.PredictAsync(request, ct);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error requesting prediction for machine {MachineId}", request.MachineId);
+            return StatusCode(500, new { Error = "Failed to request prediction due to an internal error" });
+        }
     }
 
     /// <summary>
@@ -251,7 +207,6 @@ public class PredictionsController(
     [HttpGet]
     [HttpGet("{machineId:guid}")]
     [ProducesResponseType(typeof(IEnumerable<PredictionDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<PredictionDto>>> GetPredictions(
         Guid? machineId = null,
@@ -276,67 +231,19 @@ public class PredictionsController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error getting predictions list");
-            return StatusCode(500, new { Message = "Internal server error" });
-        }
-    }
-
-    /// <summary>
-    /// Gets RUL prediction for a specific machine using GET method.
-    /// </summary>
-    /// <param name="machineId">The unique identifier of the machine.</param>
-    /// <param name="ct">Cancellation token for the operation.</param>
-    /// <returns>RUL prediction result with confidence and contributing factors.</returns>
-    [HttpGet("rul/{machineId}")] 
-    [ProducesResponseType(typeof(RulPredictionResult), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<RulPredictionResult>> GetRulPredictionGet(
-        Guid machineId,
-        CancellationToken ct)
-    {
-        try
-        {
-            logger.LogInformation("Getting RUL prediction (GET) for machine {MachineId}", machineId);
-
-            var telemetry = await GetTelemetryForMachine(machineId, ct);
-
-            if (telemetry.Count < 20)
-            {
-                logger.LogWarning("Insufficient telemetry data for machine {MachineId}: {Count} points", machineId, telemetry.Count);
-                return BadRequest(new { Message = $"Insufficient telemetry data. Required: 20, Available: {telemetry.Count}" });
-            }
-
-            var features = featureExtractor.ExtractFeatures(telemetry);
-            var result = rulPredictor.PredictWithDetails(machineId.ToString(), features);
-
-            logger.LogInformation(
-                "RUL prediction for {MachineId}: {RUL} {Unit} (confidence: {Confidence:P2})",
-                machineId, result.Rul, result.RulUnit, result.Confidence);
-
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error getting RUL prediction for machine {MachineId}", machineId);
-            return StatusCode(500, new { Message = "Internal server error during prediction" });
+            return StatusCode(500, new { Error = "Failed to retrieve predictions due to an internal error" });
         }
     }
 
     /// <summary>
     /// Gets anomaly prediction for a specific machine.
     /// </summary>
-    /// <param name="machineId">The unique identifier of the machine.</param>
-    /// <param name="ct">Cancellation token for the operation.</param>
-    /// <returns>Anomaly detection result.</returns>
     [HttpGet("anomaly/{machineId}")]
-    [ProducesResponseType(typeof(DigitalTwinPlatform.API.Services.Analytics.Advanced.AnomalyDetectionResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(AnomalyDetectionResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<DigitalTwinPlatform.API.Services.Analytics.Advanced.AnomalyDetectionResult>> GetAnomalyPrediction(
+    public async Task<ActionResult<AnomalyDetectionResult>> GetAnomalyPrediction(
         Guid machineId,
         CancellationToken ct)
     {
@@ -355,23 +262,15 @@ public class PredictionsController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error getting anomaly prediction for machine {MachineId}", machineId);
-            return StatusCode(500, new { Message = "Internal server error during anomaly detection" });
+            return StatusCode(500, new { Error = "Failed to detect anomalies due to an internal error" });
         }
     }
 
     /// <summary>
     /// Searches prediction data across all machines based on a text query.
     /// </summary>
-    /// <param name="query">Text query to search in prediction data fields.</param>
-    /// <param name="machineId">Optional machine ID filter.</param>
-    /// <param name="ct">Cancellation token for the operation.</param>
-    /// <returns>List of predictions matching the search criteria.</returns>
-    /// <response code="200">Returns search results successfully.</response>
-    /// <response code="401">Unauthorized - Authentication required.</response>
-    /// <response code="500">Internal server error.</response>
     [HttpGet("search")]
     [ProducesResponseType(typeof(IEnumerable<RulPredictionResult>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<RulPredictionResult>>> Search(
         [FromQuery] string query,
@@ -403,32 +302,8 @@ public class PredictionsController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error searching predictions");
-            return StatusCode(500, new { Message = "Internal server error during search" });
+            return StatusCode(500, new { Error = "Failed to search predictions due to an internal error" });
         }
     }
 
-    /// <summary>
-    /// Manually requests a new prediction for a machine.
-    /// </summary>
-    [HttpPost("manual")]
-    [ProducesResponseType(typeof(PredictionDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<PredictionDto>> RequestPredictionManual(
-        [FromBody] PredictionRequestDto request,
-        CancellationToken ct)
-    {
-        try
-        {
-            logger.LogInformation("Manually requesting prediction for machine {MachineId}", request.MachineId);
-            var result = await predictionService.PredictAsync(request, ct);
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error requesting prediction for machine {MachineId}", request.MachineId);
-            return StatusCode(500, new { Message = "Internal server error during manual prediction request" });
-        }
-    }
 }

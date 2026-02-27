@@ -1,4 +1,5 @@
 import axiosClient from '@/api/axiosClient'
+import { errorReporter } from './errorReporter.service'
 
 // Define TypeScript interfaces
 export interface BenchmarkDataset {
@@ -68,7 +69,7 @@ class BenchmarkValidationService {
       const response = await axiosClient.get<BenchmarkDataset[]>(`${this.baseUrl}/benchmarks`)
       return response.data
     } catch (error) {
-      console.error('Failed to fetch benchmark datasets:', error)
+      errorReporter.error('Failed to fetch benchmark datasets:', error)
       throw error
     }
   }
@@ -78,7 +79,7 @@ class BenchmarkValidationService {
       const response = await axiosClient.get<BenchmarkDataset>(`${this.baseUrl}/benchmarks/${encodeURIComponent(datasetName)}`)
       return response.data
     } catch (error) {
-      console.error(`Failed to fetch dataset ${datasetName}:`, error)
+      errorReporter.error(`Failed to fetch dataset ${datasetName}:`, error)
       throw error
     }
   }
@@ -88,7 +89,7 @@ class BenchmarkValidationService {
       const response = await axiosClient.post<ValidationResult>(`${this.baseUrl}/validate`, request)
       return response.data
     } catch (error) {
-      console.error('Failed to validate model:', error)
+      errorReporter.error('Failed to validate model:', error)
       throw error
     }
   }

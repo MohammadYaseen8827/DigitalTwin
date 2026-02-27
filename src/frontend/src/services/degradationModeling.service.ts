@@ -1,5 +1,6 @@
 // File: src/services/degradationModeling.service.ts
 import axiosClient from '@/api/axiosClient'
+import { errorReporter } from './errorReporter.service'
 import type { 
   DegradationModelDto,
   CreateDegradationModelDto,
@@ -72,7 +73,7 @@ export async function solveExponentialDegradation(request: ExponentialDegradatio
     const response = await axiosClient.post('/DegradationModeling/solve/exponential', request)
     return response.data
   } catch (error) {
-    console.error('Failed to solve exponential degradation:', error)
+    errorReporter.error('Failed to solve exponential degradation:', error)
     throw error
   }
 }
@@ -85,7 +86,7 @@ export async function solvePowerLawDegradation(request: PowerLawDegradationReque
     const response = await axiosClient.post('/DegradationModeling/solve/powerlaw', request)
     return response.data
   } catch (error) {
-    console.error('Failed to solve power-law degradation:', error)
+    errorReporter.error('Failed to solve power-law degradation:', error)
     throw error
   }
 }
@@ -98,7 +99,7 @@ export async function solveMultiVariableDegradation(request: MultiVariableDegrad
     const response = await axiosClient.post('/DegradationModeling/solve/multivariable', request)
     return response.data
   } catch (error) {
-    console.error('Failed to solve multi-variable degradation:', error)
+    errorReporter.error('Failed to solve multi-variable degradation:', error)
     throw error
   }
 }
@@ -111,7 +112,7 @@ export async function solveStochasticDegradation(request: StochasticDegradationR
     const response = await axiosClient.post('/DegradationModeling/solve/stochastic', request)
     return response.data
   } catch (error) {
-    console.error('Failed to solve stochastic degradation:', error)
+    errorReporter.error('Failed to solve stochastic degradation:', error)
     throw error
   }
 }
@@ -138,7 +139,7 @@ export async function estimateExponentialParameters(request: ParameterEstimation
     const response = await axiosClient.post('/DegradationModeling/estimate/exponential', request)
     return response.data
   } catch (error) {
-    console.error('Failed to estimate exponential parameters:', error)
+    errorReporter.error('Failed to estimate exponential parameters:', error)
     throw error
   }
 }
@@ -151,7 +152,7 @@ export async function estimatePowerLawParameters(request: ParameterEstimationReq
     const response = await axiosClient.post('/DegradationModeling/estimate/powerlaw', request)
     return response.data
   } catch (error) {
-    console.error('Failed to estimate power-law parameters:', error)
+    errorReporter.error('Failed to estimate power-law parameters:', error)
     throw error
   }
 }
@@ -168,7 +169,7 @@ export async function estimateMultiVariableParameters(request: {
     const response = await axiosClient.post('/DegradationModeling/estimate/multivariable', request)
     return response.data
   } catch (error) {
-    console.error('Failed to estimate multi-variable parameters:', error)
+    errorReporter.error('Failed to estimate multi-variable parameters:', error)
     throw error
   }
 }
@@ -184,7 +185,7 @@ export async function compareModels(request: {
     const response = await axiosClient.post('/DegradationModeling/compare', request)
     return response.data
   } catch (error) {
-    console.error('Failed to compare models:', error)
+    errorReporter.error('Failed to compare models:', error)
     throw error
   }
 }
@@ -201,7 +202,7 @@ export async function validateParameters(request: {
     const response = await axiosClient.post('/DegradationModeling/validate', request)
     return response.data
   } catch (error) {
-    console.error('Failed to validate parameters:', error)
+    errorReporter.error('Failed to validate parameters:', error)
     throw error
   }
 }
@@ -217,7 +218,7 @@ export async function validateSolution(request: {
     const response = await axiosClient.post('/DegradationModeling/validate/solution', request)
     return response.data
   } catch (error) {
-    console.error('Failed to validate solution:', error)
+    errorReporter.error('Failed to validate solution:', error)
     throw error
   }
 }

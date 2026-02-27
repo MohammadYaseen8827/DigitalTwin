@@ -77,7 +77,7 @@ public class MachineConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to save configuration for machine type: {MachineType}", configuration.MachineType);
-            return BadRequest(new { message = $"Failed to save configuration: {ex.Message}" });
+            return BadRequest(new { message = "Failed to save configuration due to an internal error" });
         }
     }
 

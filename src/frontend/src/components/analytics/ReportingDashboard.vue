@@ -7,6 +7,7 @@ import BaseSelect from '@/components/base/BaseSelect.vue'
 import BaseTextarea from '@/components/base/BaseInput.vue'
 import { useToast } from '@/composables/useToast'
 import { FileText, Download, Calendar, Filter, Send, Clock, BarChart3, PieChart, FileSpreadsheet } from 'lucide-vue-next'
+import { reportingService } from '@/services/reporting.service'
 
 // Import ECharts
 import * as echarts from 'echarts/core'
@@ -115,59 +116,28 @@ const isFormValid = computed(() => {
 const loadTemplates = async () => {
   try {
     loadingTemplates.value = true
-    
-    // Mock API call - in real implementation this would call the actual service
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    templates.value = [
-      {
-        id: 'equipment-health',
-        name: 'Equipment Health Report',
-        description: 'Comprehensive overview of equipment health and performance metrics',
-        category: 'Maintenance',
-        parameters: [
-          { name: 'machineIds', displayName: 'Machines', type: 'machine-list', required: false },
-          { name: 'dateRange', displayName: 'Date Range', type: 'date-range', required: true }
-        ],
-        supportedFormats: ['pdf', 'excel', 'csv'],
-        isDefault: true
-      },
-      {
-        id: 'maintenance-effectiveness',
-        name: 'Maintenance Effectiveness Report',
-        description: 'ROI analysis of maintenance activities and cost savings',
-        category: 'Maintenance',
-        parameters: [
-          { name: 'period', displayName: 'Analysis Period', type: 'string', required: true, options: ['monthly', 'quarterly', 'yearly'] }
-        ],
-        supportedFormats: ['pdf', 'excel'],
-        isDefault: false
-      },
-      {
-        id: 'production-impact',
-        name: 'Production Impact Analysis',
-        description: 'Downtime analysis and production loss quantification',
-        category: 'Production',
-        parameters: [
-          { name: 'startDate', displayName: 'Start Date', type: 'date', required: true },
-          { name: 'endDate', displayName: 'End Date', type: 'date', required: true }
-        ],
-        supportedFormats: ['pdf', 'excel', 'csv'],
-        isDefault: false
-      }
-    ]
+    templates.value = await reportingService.getReportTemplates()
     
     // Set default template
     if (templates.value.length > 0) {
       selectedTemplate.value = templates.value[0].id
       initializeParameters()
     }
-    
   } catch (error) {
     console.error('Failed to load templates:', error)
     toast.error('Failed to load report templates')
   } finally {
     loadingTemplates.value = false
+  }
+}
+
+const loadHistory = async () => {
+  try {
+    const response = await reportingService.getReportHistory()
+    reportHistory.value = response.items
+    renderReportStatsChart()
+  } catch (error) {
+    console.error('Failed to load report history:', error)
   }
 }
 
@@ -191,26 +161,14 @@ const initializeParameters = () => {
 const generateReport = async () => {
   try {
     generating.value = true
-    
-    // Mock API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    const newReport = {
-      id: `report_${Date.now()}`,
+    const response = await reportingService.generateReport({
       templateId: selectedTemplate.value,
-      templateName: selectedTemplateDetails.value?.name || selectedTemplate.value,
-      format: reportFormat.value,
-      fileName: `${selectedTemplate.value}_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.${reportFormat.value}`,
-      generatedAt: new Date().toISOString(),
-      fileSize: Math.floor(Math.random() * 5000000) + 1000000, // Random size between 1MB-5MB
-      status: 'completed',
-      downloadUrl: '#'
-    }
+      parameters: reportParameters.value,
+      format: reportFormat.value
+    })
     
-    reportHistory.value.unshift(newReport)
-    renderReportStatsChart()
-    
-    toast.success(`Report "${newReport.fileName}" generated successfully`)
+    toast.success(`Report "${response.fileName}" generated successfully`)
+    await loadHistory()
   } catch (error) {
     console.error('Failed to generate report:', error)
     toast.error('Failed to generate report')
@@ -222,23 +180,15 @@ const generateReport = async () => {
 const exportData = async () => {
   try {
     exporting.value = true
-    
-    // Mock API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    const exportRecord = {
-      id: `export_${Date.now()}`,
-      entity: exportEntity.value,
-      format: exportFormat.value,
-      filters: { ...exportFilters.value },
-      fileName: `${exportEntity.value}_export_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.${exportFormat.value}`,
-      exportedAt: new Date().toISOString(),
-      recordCount: Math.floor(Math.random() * 10000) + 100, // Random count between 100-10000
-      fileSize: Math.floor(Math.random() * 2000000) + 500000, // Random size between 0.5MB-2MB
-      status: 'completed'
-    }
-    
-    toast.success(`Exported ${exportRecord.recordCount} records to ${exportRecord.fileName}`)
+    const blob = await reportingService.exportData([], exportFormat.value as any)
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `${exportEntity.value}_export.${exportFormat.value}`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    toast.success('Data exported successfully')
   } catch (error) {
     console.error('Failed to export data:', error)
     toast.error('Failed to export data')
@@ -263,9 +213,21 @@ const scheduleReport = () => {
   toast.success('Report scheduled successfully')
 }
 
-const downloadReport = (report: any) => {
-  toast.success(`Downloading ${report.fileName}`)
-  // In real implementation, this would trigger actual file download
+const downloadReport = async (report: any) => {
+  try {
+    toast.info(`Downloading ${report.fileName}...`)
+    const blob = await reportingService.downloadReport(report.id)
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', report.fileName)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  } catch (error) {
+    console.error('Download failed:', error)
+    toast.error('Failed to download report')
+  }
 }
 
 const renderReportStatsChart = () => {
@@ -380,6 +342,7 @@ const resizeCharts = () => {
 // Lifecycle
 onMounted(() => {
   loadTemplates()
+  loadHistory()
   window.addEventListener('resize', resizeCharts)
 })
 

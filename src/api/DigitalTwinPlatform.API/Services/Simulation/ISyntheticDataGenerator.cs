@@ -1,4 +1,5 @@
 using DigitalTwinPlatform.Domain.Entities;
+using DigitalTwinPlatform.Application.Analytics.Degradation.Models;
 
 namespace DigitalTwinPlatform.API.Services.Simulation;
 

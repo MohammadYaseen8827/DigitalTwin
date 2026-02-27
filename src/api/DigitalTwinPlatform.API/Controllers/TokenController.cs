@@ -1,4 +1,5 @@
 using DigitalTwinPlatform.API.Services.Auth;
+using DigitalTwinPlatform.Application.Auth.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -46,14 +47,12 @@ public class TokenController(RefreshTokenService refreshTokenService) : Controll
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> RevokeToken([FromBody] RevokeTokenRequest request)
     {
-        await Task.CompletedTask.ConfigureAwait(false);
-        // In a real implementation, you would invalidate the refresh token
-        // This is a simplified version
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
+        {
+            return BadRequest(new { error = "Refresh token is required" });
+        }
+
+        await refreshTokenService.RevokeRefreshTokenAsync(request.RefreshToken);
         return Ok(new { message = "Token revoked successfully" });
     }
-}
-
-public class RevokeTokenRequest
-{
-    public string RefreshToken { get; set; } = string.Empty;
 }

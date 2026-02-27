@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using DigitalTwinPlatform.Application.Common.Models;
 using DigitalTwinPlatform.Application.Machines.Commands;
 using DigitalTwinPlatform.Application.Machines.Models;
 using DigitalTwinPlatform.Application.Machines.Queries;
@@ -22,17 +23,22 @@ public class MachinesController(IMediator mediator) : ControllerBase
     /// <summary>
     /// Retrieves all machines registered in the system.
     /// </summary>
+    /// <param name="page">The page number for pagination.</param>
+    /// <param name="pageSize">The number of items per page.</param>
     /// <param name="ct">Cancellation token for the operation.</param>
     /// <returns>A list of all machines with their current status and health metrics.</returns>
     /// <response code="200">Returns the list of machines successfully.</response>
     /// <response code="401">Unauthorized - Authentication required.</response>
     /// <response code="500">Internal server error.</response>
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<MachineDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PaginatedResponse<MachineDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<MachineDto>>> GetMachines(CancellationToken ct)
-        => Ok(await mediator.Send(new GetMachinesQuery(), ct));
+    public async Task<ActionResult<PaginatedResponse<MachineDto>>> GetMachines(
+        [FromQuery] int page = 1, 
+        [FromQuery] int pageSize = 20, 
+        CancellationToken ct = default)
+        => Ok(await mediator.Send(new GetMachinesQuery(page, pageSize), ct));
 
     /// <summary>
     /// Retrieves a specific machine by its unique identifier.

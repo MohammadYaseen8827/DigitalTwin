@@ -5,6 +5,7 @@ using DigitalTwinPlatform.Application.Predictions.Models;
 using Microsoft.Extensions.Logging;
 using DigitalTwinPlatform.Application.Abstractions.Services;
 using DigitalTwinPlatform.Domain.Entities.Enums;
+using DigitalTwinPlatform.Application.ML.Models;
 
 namespace DigitalTwinPlatform.Application.Services;
 
@@ -17,19 +18,25 @@ public class PredictionService : IPredictionService
     private readonly ITelemetryRepository _telemetryRepository;
     private readonly IFeatureExtractionService _featureExtractor;
     private readonly IMLModelService _mlModelService;
+    private readonly IRulPredictor _rulPredictor;
+    private readonly IHealthClassifier _healthClassifier;
     private readonly ILogger<PredictionService> _logger;
-
+ 
     public PredictionService(
         IUnitOfWork unitOfWork,
         ITelemetryRepository telemetryRepository,
         IFeatureExtractionService featureExtractor,
         IMLModelService mlModelService,
+        IRulPredictor rulPredictor,
+        IHealthClassifier healthClassifier,
         ILogger<PredictionService> logger)
     {
         _unitOfWork = unitOfWork;
         _telemetryRepository = telemetryRepository;
         _featureExtractor = featureExtractor;
         _mlModelService = mlModelService;
+        _rulPredictor = rulPredictor;
+        _healthClassifier = healthClassifier;
         _logger = logger;
     }
 
@@ -330,5 +337,78 @@ public class PredictionService : IPredictionService
         {
             _logger.LogError(ex, "Failed to broadcast prediction for machine {MachineId}", machineId);
         }
+    }
+
+    public async Task<RulPredictionResult> GetRulPredictionWithDetailsAsync(Guid machineId, CancellationToken ct = default)
+    {
+        var telemetry = await GetTelemetryForMachineInternal(machineId, ct);
+
+        if (telemetry.Count < 20)
+        {
+            _logger.LogWarning("Insufficient telemetry data for machine {MachineId}: {Count} points", machineId, telemetry.Count);
+            throw new InvalidOperationException($"Insufficient telemetry data. Required: 20, Available: {telemetry.Count}");
+        }
+
+        var features = _featureExtractor.ExtractFeatures(telemetry);
+        return _rulPredictor.PredictWithDetails(machineId.ToString(), features);
+    }
+
+    public async Task<HealthClassificationResult> GetHealthClassificationWithDetailsAsync(Guid machineId, CancellationToken ct = default)
+    {
+        var telemetry = await GetTelemetryForMachineInternal(machineId, ct);
+
+        if (telemetry.Count < 20)
+        {
+            _logger.LogWarning("Insufficient telemetry data for machine {MachineId}: {Count} points", machineId, telemetry.Count);
+            throw new InvalidOperationException($"Insufficient telemetry data. Required: 20, Available: {telemetry.Count}");
+        }
+
+        var features = _featureExtractor.ExtractFeatures(telemetry);
+        return _healthClassifier.ClassifyWithDetails(machineId.ToString(), features);
+    }
+
+    public async Task<object> GetDetailedRulSummaryAsync(Guid machineId, CancellationToken ct = default)
+    {
+        var telemetry = await GetTelemetryForMachineInternal(machineId, ct);
+
+        if (telemetry.Count < 20)
+        {
+            throw new InvalidOperationException("Insufficient telemetry data");
+        }
+
+        var features = _featureExtractor.ExtractFeatures(telemetry);
+        var result = _rulPredictor.PredictWithDetails(machineId.ToString(), features);
+        var healthResult = _healthClassifier.ClassifyWithDetails(machineId.ToString(), features);
+
+        return new
+        {
+            machineId,
+            rul = result.Rul,
+            rulUnit = result.RulUnit,
+            confidence = result.Confidence,
+            healthStatus = healthResult.HealthStatus.ToString(),
+            predictionTime = result.PredictionTime
+        };
+    }
+
+    public async Task<ModelStatusDto> GetModelStatus()
+    {
+        return await Task.FromResult(new ModelStatusDto
+        {
+            RulModelLoaded = _rulPredictor.IsModelLoaded,
+            HealthModelLoaded = _healthClassifier.IsModelLoaded,
+            ModelVersion = "1.0.0",
+            LastUpdated = DateTime.UtcNow
+        });
+    }
+
+    private async Task<List<DigitalTwinPlatform.Domain.Entities.TelemetryData>> GetTelemetryForMachineInternal(Guid machineId, CancellationToken ct)
+    {
+        var telemetry = await _telemetryRepository.GetRecentAsync(
+            machineId: machineId,
+            limit: 100,
+            ct: ct);
+
+        return telemetry.ToList();
     }
 }

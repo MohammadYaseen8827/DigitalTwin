@@ -1,31 +1,26 @@
-using System.Net;
-using System.Net.Sockets;
 using System.Text;
-using System.Collections.Generic;
 using DigitalTwinPlatform.API.Services.Analytics;
 using DigitalTwinPlatform.API.Services.Analytics.ML;
 using DigitalTwinPlatform.API.Services.Core;
 using DigitalTwinPlatform.API.Services.Infrastructure;
 using DigitalTwinPlatform.API.Services.Simulation;
-using DigitalTwinPlatform.API.Services.Telemetry;
 using DigitalTwinPlatform.API.Services.Maintenance;
 using DigitalTwinPlatform.API.Services.Simulation.DegradationModels;
+using DigitalTwinPlatform.Infrastructure.Services;
 using DigitalTwinPlatform.Application.Abstractions.Services;
 using DigitalTwinPlatform.Application.Abstractions.Analytics;
 using DigitalTwinPlatform.Infrastructure.Exporters;
 using DigitalTwinPlatform.Application.Maintenance;
 using DigitalTwinPlatform.Application.Services;
-using DigitalTwinPlatform.Application.Tenants.Services;
 using Microsoft.AspNetCore.Identity;
 using DigitalTwinPlatform.Domain.Entities.Auth;
 using DigitalTwinPlatform.Infrastructure.Persistence;
 using Asp.Versioning;
 using DigitalTwinPlatform.API.Hubs;
 using DigitalTwinPlatform.API.Services.MathematicalModeling;
-using DigitalTwinPlatform.API.Services.Analytics.Advanced;
+
 using DigitalTwinPlatform.Application.ExternalSystems.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using IHubPublisher = DigitalTwinPlatform.API.Services.Infrastructure.IHubPublisher;
 
@@ -41,14 +36,14 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddSecurityServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Configure Identity
+        // Configure Identity with production-ready password requirements
         services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {
-                options.Password.RequireDigit = false;
-                options.Password.RequiredLength = 6;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireUppercase = false;
-                options.Password.RequireLowercase = false;
+                options.Password.RequireDigit = true;
+                options.Password.RequiredLength = 8;
+                options.Password.RequireNonAlphanumeric = true;
+                options.Password.RequireUppercase = true;
+                options.Password.RequireLowercase = true;
             })
             .AddEntityFrameworkStores<DigitalTwinDbContext>()
             .AddDefaultTokenProviders();
@@ -119,10 +114,12 @@ public static class ServiceCollectionExtensions
                     {
                         policy.SetIsOriginAllowed(origin =>
                         {
-                            if (origin.StartsWith("http://localhost") ||
+                            // In non-production, we allow localhost/127.0.0.1 for testing
+                            if (!isProduction && 
+                                (origin.StartsWith("http://localhost") ||
                                 origin.StartsWith("http://127.0.0.1") ||
                                 origin.StartsWith("https://localhost") ||
-                                origin.StartsWith("https://127.0.0.1"))
+                                origin.StartsWith("https://127.0.0.1")))
                             {
                                 return true;
                             }
@@ -137,9 +134,29 @@ public static class ServiceCollectionExtensions
                     }
                 }
 
-                policy.AllowAnyHeader()
-                       .AllowAnyMethod()
-                       .AllowCredentials();
+                // In production, restrict headers and methods; in development allow more flexibility
+                if (isProduction)
+                {
+                    policy.WithHeaders(
+                        "Content-Type",
+                        "Authorization",
+                        "X-CSRF-TOKEN",
+                        "X-Requested-With"
+                    ).WithMethods(
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "DELETE",
+                        "PATCH"
+                    );
+                }
+                else
+                {
+                    policy.AllowAnyHeader()
+                          .AllowAnyMethod();
+                }
+                
+                policy.AllowCredentials();
             });
         });
 
@@ -282,7 +299,8 @@ https://api.digitaltwin.example.com/v1
     /// Registers application-specific services.
     /// </summary>
     public static IServiceCollection AddApplicationServices(this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IHostEnvironment environment)
     {
         // Machine configuration service
         services.Configure<ConfigurationOptions>(configuration.GetSection("Configuration"));
@@ -318,6 +336,9 @@ https://api.digitaltwin.example.com/v1
         services.AddScoped<IPredictiveXaiService, PredictiveXaiService>();
         services.AddSingleton<IDataValidationService, DataValidationService>();
         services.AddScoped<IAlertService, AlertService>();
+        services.AddScoped<IReportService, ReportService>();
+        services.AddSingleton<IDifferentialEquationSolver, DifferentialEquationSolver>();
+        services.AddSingleton<IOptimizationService, OptimizationService>();
         services.AddHttpClient<INotificationService, NotificationService>();
         services.AddScoped<IMaintenanceService, MaintenanceService>();
         // Twin Engine Service (used by both API and Application layers)
@@ -350,37 +371,32 @@ https://api.digitaltwin.example.com/v1
         services.AddScoped<IDifferentialEquationSolver, DifferentialEquationSolver>();
         services.AddScoped<IOptimizationService, OptimizationService>();
 
-        // Advanced analytics services
-        services.AddScoped<IAdvancedPredictiveService, AdvancedPredictiveService>();
-        services.AddScoped<IPrescriptiveAnalyticsService, PrescriptiveAnalyticsService>();
+
         services
             .AddScoped<Application.Workflows.Services.IWorkflowService,
                 Application.Workflows.Services.WorkflowService>();
 
-        // External System Integration: mock in development; use real implementation for production.
-        var environment = configuration.GetSection("Environment").Value?.ToLower() ?? "development";
-        if (environment == "development" || environment == "staging")
+        // Tenant Service - always use real EF Core-backed implementation
+        services.AddScoped<DigitalTwinPlatform.Application.Tenants.Services.ITenantService, 
+            DigitalTwinPlatform.Infrastructure.Tenancy.TenantCrudService>();
+        services.AddScoped<DigitalTwinPlatform.Application.Abstractions.Tenancy.ITenantService, 
+            DigitalTwinPlatform.Infrastructure.Tenancy.TenantService>();
+
+        // External System Integration - always use real implementation
+        services.AddHttpClient<IExternalSystemService, ExternalSystemService>(client =>
         {
-            services.AddScoped<IExternalSystemService, MockExternalSystemService>();
-            // Use mock tenant service for development
-            services.AddScoped<Application.Tenants.Services.ITenantService, MockTenantService>();
-        }
-        else
-        {
-            // In production, register the real implementation
-            services.AddHttpClient<IExternalSystemService, ExternalSystemService>(client =>
+            var baseUrl = configuration["ExternalSystems:BaseUrl"] ??
+                         configuration.GetConnectionString("ExternalSystemsApi");
+            
+            if (string.IsNullOrWhiteSpace(baseUrl))
             {
-                // Configure base address from configuration
-                client.BaseAddress = new Uri(configuration["ExternalSystems:BaseUrl"] ??
-                                             configuration.GetConnectionString("ExternalSystemsApi") ??
-                                             "https://localhost:8080/api/");
-            });
-            services.AddScoped<IExternalSystemService, ExternalSystemService>();
-            // Use mock tenant service
-            services
-                .AddScoped<ITenantService,
-                    MockTenantService>();
-        }
+                throw new InvalidOperationException(
+                    "ExternalSystems:BaseUrl configuration is required. " +
+                    "Please set ExternalSystems:BaseUrl in configuration or environment variables.");
+            }
+            
+            client.BaseAddress = new Uri(baseUrl);
+        });
 
         return services;
     }
@@ -435,7 +451,7 @@ https://api.digitaltwin.example.com/v1
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="configuration">Application configuration.</param>
-    /// <param name="environment">Hosting environment; when not Development, TelemetryMockHostedService is not registered.</param>
+    /// <param name="environment">Hosting environment.</param>
     public static IServiceCollection AddInfrastructureServices(
         this IServiceCollection services,
         IConfiguration configuration,
@@ -447,11 +463,7 @@ https://api.digitaltwin.example.com/v1
         // Data archival
         services.AddScoped<IDataArchivalService, DataArchivalService>();
 
-        // Only seed mock telemetry in Development; production should use real ingestion only.
-        if (environment == null || environment.IsDevelopment())
-        {
-            services.AddHostedService<TelemetryMockHostedService>();
-        }
+        // Note: TelemetryMockHostedService removed - production must use real telemetry ingestion only
 
         return services;
     }

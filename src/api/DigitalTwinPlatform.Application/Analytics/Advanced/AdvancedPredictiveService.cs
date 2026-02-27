@@ -1,48 +1,19 @@
 using System.Diagnostics;
 using DigitalTwinPlatform.Application.Abstractions.Repositories;
 using DigitalTwinPlatform.Application.Abstractions.UnitOfWork;
+using DigitalTwinPlatform.Application.Analytics.Advanced.Models;
 using DigitalTwinPlatform.Application.Predictions.Models;
+using DigitalTwinPlatform.Domain.Entities;
 using DigitalTwinPlatform.Domain.Entities.Enums;
-using Microsoft.ML.Data;
+using Microsoft.Extensions.Logging;
 
-namespace DigitalTwinPlatform.API.Services.Analytics.Advanced;
-
-public interface IAdvancedPredictiveService
-{
-    /// <summary>
-    /// Implements ensemble methods combining multiple ML models
-    /// </summary>
-    Task<PredictionDto> EnsemblePredictionAsync(Guid machineId, CancellationToken ct = default);
-
-    /// <summary>
-    /// Deep learning-based prediction using time series forecasting
-    /// </summary>
-    Task<PredictionDto> DeepLearningPredictionAsync(Guid machineId, CancellationToken ct = default);
-
-    /// <summary>
-    /// Anomaly detection using statistical and ML-based methods
-    /// </summary>
-    Task<AnomalyDetectionResult> DetectAnomaliesAsync(
-        Guid machineId, 
-        DateTime? startTime = null, 
-        DateTime? endTime = null,
-        CancellationToken ct = default);
-
-    /// <summary>
-    /// Time series forecasting with multiple methods
-    /// </summary>
-    Task<ForecastResult> ForecastTimeSeriesAsync(
-        Guid machineId,
-        string metric,
-        int forecastHorizon,
-        CancellationToken ct = default);
-}
+namespace DigitalTwinPlatform.Application.Analytics.Advanced;
 
 public class AdvancedPredictiveService(
     ITelemetryRepository telemetryRepository,
     IRepository<Prediction> predictionRepository,
     IUnitOfWork unitOfWork,
-    IPredictiveAnalyticsService basicPredictiveService,
+    Services.IPredictiveAnalyticsService basicPredictiveService,
     ILogger<AdvancedPredictiveService> logger)
     : IAdvancedPredictiveService
 {
@@ -387,6 +358,19 @@ public class AdvancedPredictiveService(
         return result;
     }
 
+    public double CalculateHealthScore(
+        PredictionDto prediction, 
+        AnomalyDetectionResult anomalies, 
+        PrescriptiveRecommendation recommendation)
+    {
+        // Weighted health score calculation from the original controller logic
+        var predictionScore = 1.0 - (prediction.FailureProbability * 0.5); // 50% weight
+        var anomalyScore = 1.0 - (anomalies.OverallRiskScore * 0.3); // 30% weight
+        var recommendationScore = 1.0 - (recommendation.PriorityScore * 0.2); // 20% weight
+
+        return Math.Max(0, Math.Min(1, predictionScore + anomalyScore + recommendationScore));
+    }
+
     #region Private Helper Methods
 
     private Dictionary<string, double> ExtractEnsembleFeatures(List<FlatTelemetry> telemetry)
@@ -448,6 +432,14 @@ public class AdvancedPredictiveService(
     }
 
     private double CalculateStandardDeviation(double[] values)
+    {
+        if (values.Length <= 1) return 0;
+        var mean = values.Average();
+        var variance = values.Select(x => Math.Pow(x - mean, 2)).Average();
+        return Math.Sqrt(variance);
+    }
+
+    private double CalculateStandardDeviation(float[] values)
     {
         if (values.Length <= 1) return 0;
         var mean = values.Average();
@@ -838,118 +830,3 @@ public class AdvancedPredictiveService(
 
     #endregion
 }
-
-#region Data Models
-
-public class TimeSeriesData
-{
-    public float Temperature { get; set; }
-    public float Vibration { get; set; }
-    public float Pressure { get; set; }
-    public DateTime Timestamp { get; set; }
-}
-
-public class RulPrediction
-{
-    [VectorType(1)]
-    public float[] ForecastedRul { get; set; } = new float[1];
-    
-    [VectorType(2)]
-    public float[] ConfidenceInterval { get; set; } = new float[2];
-}
-
-public class AnomalyDetectionResult
-{
-    public Guid MachineId { get; set; }
-    public int TotalAnomalies { get; set; }
-    public int CriticalAnomalies { get; set; }
-    public int HighAnomalies { get; set; }
-    public int MediumAnomalies { get; set; }
-    public int LowAnomalies { get; set; }
-    public List<Anomaly> Anomalies { get; set; } = [];
-    public DateTimeRange DetectionPeriod { get; set; } = new();
-    public double OverallRiskScore { get; set; }
-}
-
-public class Anomaly
-{
-    public Guid Id { get; set; }
-    public string Metric { get; set; } = string.Empty;
-    public double Value { get; set; }
-    public double ExpectedValue { get; set; }
-    public double Deviation { get; set; }
-    public AnomalySeverity Severity { get; set; }
-    public double SeverityScore { get; set; }
-    public DateTime Timestamp { get; set; }
-    public AnomalyType Type { get; set; }
-}
-
-public enum AnomalySeverity
-{
-    Low,
-    Medium,
-    High,
-    Critical
-}
-
-public enum AnomalyType
-{
-    Statistical,
-    Multivariate,
-    Pattern,
-    Threshold
-}
-
-public class DateTimeRange
-{
-    public DateTime Start { get; set; }
-    public DateTime End { get; set; }
-}
-
-public class ForecastResult
-{
-    public Guid MachineId { get; set; }
-    public string Metric { get; set; } = string.Empty;
-    public int ForecastHorizon { get; set; }
-    public List<ForecastMethodResult> IndividualForecasts { get; set; } = [];
-    public double[] EnsembleForecast { get; set; } = [];
-    public DateTime GeneratedAt { get; set; }
-    public bool PeriodicityDetected { get; set; }
-}
-
-public class ForecastMethodResult
-{
-    public string Method { get; set; } = string.Empty;
-    public double[] ForecastedValues { get; set; } = [];
-    public (double lower, double upper)[] ConfidenceIntervals { get; set; } = [];
-    public ForecastAccuracy AccuracyMetrics { get; set; } = new();
-}
-
-public class ForecastAccuracy
-{
-    public double MAPE { get; set; }
-    public double RMSE { get; set; }
-}
-
-public class ArimaForecastResult
-{
-    public double[] Values { get; set; } = [];
-    public (double lower, double upper)[] ConfidenceIntervals { get; set; } = [];
-    public ForecastAccuracy Accuracy { get; set; } = new();
-}
-
-public class ExpSmoothForecastResult
-{
-    public double[] Values { get; set; } = [];
-    public (double lower, double upper)[] ConfidenceIntervals { get; set; } = [];
-    public ForecastAccuracy Accuracy { get; set; } = new();
-}
-
-public class SeasonalForecastResult
-{
-    public double[] Values { get; set; } = [];
-    public (double lower, double upper)[] ConfidenceIntervals { get; set; } = [];
-    public ForecastAccuracy Accuracy { get; set; } = new();
-}
-
-#endregion

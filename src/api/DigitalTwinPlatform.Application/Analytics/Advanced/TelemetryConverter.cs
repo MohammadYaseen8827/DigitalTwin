@@ -1,7 +1,7 @@
 using System.Text.Json;
 using DigitalTwinPlatform.Domain.Entities;
 
-namespace DigitalTwinPlatform.API.Services.Analytics.Advanced;
+namespace DigitalTwinPlatform.Application.Analytics.Advanced;
 
 /// <summary>
 /// Helper class to convert TelemetryData entities to flat telemetry objects for analytics processing

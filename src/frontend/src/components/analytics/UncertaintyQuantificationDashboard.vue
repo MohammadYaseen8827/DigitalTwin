@@ -67,7 +67,13 @@ const toast = useToast()
 // State
 const activeTab = ref('monte-carlo')
 const analyzing = ref(false)
-const machineId = ref('00000000-0000-0000-0000-000000000001')
+const machineId = ref('')
+
+// Validation
+const isValidMachineId = computed(() => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  return uuidRegex.test(machineId.value)
+})
 
 // Monte Carlo State
 const mcIterations = ref(1000)

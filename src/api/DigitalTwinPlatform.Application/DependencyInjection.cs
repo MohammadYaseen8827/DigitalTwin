@@ -54,6 +54,10 @@ public static class DependencyInjection
         
         // Add Core Services
         services.AddScoped<IParameterEstimation, ParameterEstimationService>();
+        
+        // Add Advanced Analytics Services
+        services.AddScoped<Analytics.Advanced.IAdvancedPredictiveService, Analytics.Advanced.AdvancedPredictiveService>();
+        services.AddScoped<Analytics.Advanced.IPrescriptiveAnalyticsService, Analytics.Advanced.PrescriptiveAnalyticsService>();
 
         return services;
     }

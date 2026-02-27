@@ -1,6 +1,7 @@
 import axiosClient from '@/api/axiosClient'
 import type { Ref } from 'vue'
 import { ref, reactive } from 'vue'
+import { errorReporter } from './errorReporter.service'
 
 // Define TypeScript interfaces
 export interface Tenant {
@@ -77,7 +78,7 @@ class TenantService {
       const response = await axiosClient.get<Tenant[]>(this.baseUrl)
       return response.data
     } catch (error) {
-      console.error('Failed to fetch tenants:', error)
+      errorReporter.error('Failed to fetch tenants:', error)
       throw error
     }
   }
@@ -87,7 +88,7 @@ class TenantService {
       const response = await axiosClient.get<Tenant[]>(`${this.baseUrl}/active`)
       return response.data
     } catch (error) {
-      console.error('Failed to fetch active tenants:', error)
+      errorReporter.error('Failed to fetch active tenants:', error)
       throw error
     }
   }
@@ -97,7 +98,7 @@ class TenantService {
       const response = await axiosClient.get<Tenant>(`${this.baseUrl}/${id}`)
       return response.data
     } catch (error) {
-      console.error(`Failed to fetch tenant ${id}:`, error)
+      errorReporter.error(`Failed to fetch tenant ${id}:`, error)
       throw error
     }
   }
@@ -107,7 +108,7 @@ class TenantService {
       const response = await axiosClient.get<Tenant>(`${this.baseUrl}/slug/${slug}`)
       return response.data
     } catch (error) {
-      console.error(`Failed to fetch tenant by slug ${slug}:`, error)
+      errorReporter.error(`Failed to fetch tenant by slug ${slug}:`, error)
       throw error
     }
   }
@@ -117,7 +118,7 @@ class TenantService {
       const response = await axiosClient.post<Tenant>(this.baseUrl, tenant)
       return response.data
     } catch (error) {
-      console.error('Failed to create tenant:', error)
+      errorReporter.error('Failed to create tenant:', error)
       throw error
     }
   }
@@ -127,7 +128,7 @@ class TenantService {
       const response = await axiosClient.put<Tenant>(`${this.baseUrl}/${id}`, tenant)
       return response.data
     } catch (error) {
-      console.error(`Failed to update tenant ${id}:`, error)
+      errorReporter.error(`Failed to update tenant ${id}:`, error)
       throw error
     }
   }
@@ -136,7 +137,7 @@ class TenantService {
     try {
       await axiosClient.delete(`${this.baseUrl}/${id}`)
     } catch (error) {
-      console.error(`Failed to delete tenant ${id}:`, error)
+      errorReporter.error(`Failed to delete tenant ${id}:`, error)
       throw error
     }
   }
@@ -145,7 +146,7 @@ class TenantService {
     try {
       await axiosClient.post(`${this.baseUrl}/${id}/activate`)
     } catch (error) {
-      console.error(`Failed to activate tenant ${id}:`, error)
+      errorReporter.error(`Failed to activate tenant ${id}:`, error)
       throw error
     }
   }
@@ -154,7 +155,7 @@ class TenantService {
     try {
       await axiosClient.post(`${this.baseUrl}/${id}/deactivate`)
     } catch (error) {
-      console.error(`Failed to deactivate tenant ${id}:`, error)
+      errorReporter.error(`Failed to deactivate tenant ${id}:`, error)
       throw error
     }
   }
@@ -165,7 +166,7 @@ class TenantService {
       const response = await axiosClient.get<TenantUser[]>(`${this.baseUrl}/${tenantId}/users`)
       return response.data
     } catch (error) {
-      console.error(`Failed to fetch tenant users for ${tenantId}:`, error)
+      errorReporter.error(`Failed to fetch tenant users for ${tenantId}:`, error)
       throw error
     }
   }
@@ -175,7 +176,7 @@ class TenantService {
       const response = await axiosClient.post<TenantUser>(`${this.baseUrl}/${tenantId}/users`, user)
       return response.data
     } catch (error) {
-      console.error(`Failed to add user to tenant ${tenantId}:`, error)
+      errorReporter.error(`Failed to add user to tenant ${tenantId}:`, error)
       throw error
     }
   }
@@ -184,7 +185,7 @@ class TenantService {
     try {
       await axiosClient.delete(`${this.baseUrl}/${tenantId}/users/${userId}`)
     } catch (error) {
-      console.error(`Failed to remove user ${userId} from tenant ${tenantId}:`, error)
+      errorReporter.error(`Failed to remove user ${userId} from tenant ${tenantId}:`, error)
       throw error
     }
   }
@@ -193,7 +194,7 @@ class TenantService {
     try {
       await axiosClient.put(`${this.baseUrl}/${tenantId}/users/${userId}/role`, role)
     } catch (error) {
-      console.error(`Failed to update role for user ${userId} in tenant ${tenantId}:`, error)
+      errorReporter.error(`Failed to update role for user ${userId} in tenant ${tenantId}:`, error)
       throw error
     }
   }
@@ -204,7 +205,7 @@ class TenantService {
       const response = await axiosClient.get<TenantSetting[]>(`${this.baseUrl}/${tenantId}/settings`)
       return response.data
     } catch (error) {
-      console.error(`Failed to fetch tenant settings for ${tenantId}:`, error)
+      errorReporter.error(`Failed to fetch tenant settings for ${tenantId}:`, error)
       throw error
     }
   }
@@ -214,7 +215,7 @@ class TenantService {
       const response = await axiosClient.post<TenantSetting>(`${this.baseUrl}/${tenantId}/settings`, setting)
       return response.data
     } catch (error) {
-      console.error(`Failed to create tenant setting for ${tenantId}:`, error)
+      errorReporter.error(`Failed to create tenant setting for ${tenantId}:`, error)
       throw error
     }
   }
@@ -224,7 +225,7 @@ class TenantService {
       const response = await axiosClient.put<TenantSetting>(`${this.baseUrl}/${tenantId}/settings/${settingId}`, setting)
       return response.data
     } catch (error) {
-      console.error(`Failed to update tenant setting ${settingId} for ${tenantId}:`, error)
+      errorReporter.error(`Failed to update tenant setting ${settingId} for ${tenantId}:`, error)
       throw error
     }
   }
@@ -233,7 +234,7 @@ class TenantService {
     try {
       await axiosClient.delete(`${this.baseUrl}/${tenantId}/settings/${settingId}`)
     } catch (error) {
-      console.error(`Failed to delete tenant setting ${settingId} for ${tenantId}:`, error)
+      errorReporter.error(`Failed to delete tenant setting ${settingId} for ${tenantId}:`, error)
       throw error
     }
   }
@@ -243,7 +244,7 @@ class TenantService {
       const response = await axiosClient.get<TenantSetting>(`${this.baseUrl}/${tenantId}/settings/key/${key}`)
       return response.data
     } catch (error) {
-      console.error(`Failed to fetch tenant setting by key ${key} for ${tenantId}:`, error)
+      errorReporter.error(`Failed to fetch tenant setting by key ${key} for ${tenantId}:`, error)
       throw error
     }
   }
@@ -273,7 +274,7 @@ export function useTenants() {
       tenants.value = await tenantService.getAllTenants()
     } catch (err) {
       error.value = 'Failed to fetch tenants'
-      console.error(err)
+      errorReporter.error(err)
     } finally {
       loading.value = false
     }
@@ -286,7 +287,7 @@ export function useTenants() {
       tenants.value = await tenantService.getActiveTenants()
     } catch (err) {
       error.value = 'Failed to fetch active tenants'
-      console.error(err)
+      errorReporter.error(err)
     } finally {
       loading.value = false
     }
@@ -299,7 +300,7 @@ export function useTenants() {
       currentTenant.value = await tenantService.getTenantById(tenantId)
     } catch (err) {
       error.value = 'Failed to select tenant'
-      console.error(err)
+      errorReporter.error(err)
     } finally {
       loading.value = false
     }
@@ -314,7 +315,7 @@ export function useTenants() {
       return newTenant
     } catch (err) {
       error.value = 'Failed to create tenant'
-      console.error(err)
+      errorReporter.error(err)
       throw err
     } finally {
       loading.value = false
@@ -336,7 +337,7 @@ export function useTenants() {
       return updatedTenant
     } catch (err) {
       error.value = 'Failed to update tenant'
-      console.error(err)
+      errorReporter.error(err)
       throw err
     } finally {
       loading.value = false
@@ -354,7 +355,7 @@ export function useTenants() {
       }
     } catch (err) {
       error.value = 'Failed to delete tenant'
-      console.error(err)
+      errorReporter.error(err)
       throw err
     } finally {
       loading.value = false
@@ -373,7 +374,7 @@ export function useTenants() {
       }
     } catch (err) {
       error.value = 'Failed to activate tenant'
-      console.error(err)
+      errorReporter.error(err)
       throw err
     } finally {
       loading.value = false
@@ -392,7 +393,7 @@ export function useTenants() {
       }
     } catch (err) {
       error.value = 'Failed to deactivate tenant'
-      console.error(err)
+      errorReporter.error(err)
       throw err
     } finally {
       loading.value = false

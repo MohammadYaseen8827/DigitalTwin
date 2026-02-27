@@ -1,6 +1,7 @@
 // File: src/services/modelLifecycle.service.ts
 import axiosClient from '@/api/axiosClient'
 import { useToast } from '@/lib/magic-mcp-ui'
+import { errorReporter } from './errorReporter.service'
 
 const toast = useToast()
 
@@ -63,7 +64,7 @@ export async function registerModelVersion(request: RegisterModelVersionRequest)
     toast.success('Model version registered successfully')
     return response.data
   } catch (error) {
-    console.error('Failed to register model version:', error)
+    errorReporter.error('Failed to register model version:', error)
     throw error
   }
 }
@@ -78,7 +79,7 @@ export async function promoteModelVersion(modelId: string, request: PromoteModel
     toast.success(`Model promoted to ${request.targetStatus}`)
     return response.data
   } catch (error) {
-    console.error(`Failed to promote model ${modelId}:`, error)
+    errorReporter.error(`Failed to promote model ${modelId}:`, error)
     throw error
   }
 }
@@ -93,7 +94,7 @@ export async function fetchModelLifecycles(modelType?: string): Promise<ModelVer
     const response = await axiosClient.get('/ModelLifecycle', { params })
     return response.data
   } catch (error) {
-    console.error('Failed to fetch model lifecycles:', error)
+    errorReporter.error('Failed to fetch model lifecycles:', error)
     throw error
   }
 }
@@ -110,7 +111,7 @@ export async function getProductionVersion(modelType: string): Promise<ModelVers
     if (error.response?.status === 404) {
       return null
     }
-    console.error(`Failed to get production version for ${modelType}:`, error)
+    errorReporter.error(`Failed to get production version for ${modelType}:`, error)
     throw error
   }
 }
@@ -124,7 +125,7 @@ export async function compareModelVersions(request: CompareModelsRequest): Promi
     const response = await axiosClient.post('/ModelLifecycle/compare', request)
     return response.data
   } catch (error) {
-    console.error('Failed to compare models:', error)
+    errorReporter.error('Failed to compare models:', error)
     throw error
   }
 }
@@ -138,7 +139,7 @@ export async function getModelPerformance(modelId: string): Promise<ModelPerform
     const response = await axiosClient.get(`/ModelLifecycle/${encodeURIComponent(modelId)}/performance`)
     return response.data
   } catch (error) {
-    console.error(`Failed to get performance for model ${modelId}:`, error)
+    errorReporter.error(`Failed to get performance for model ${modelId}:`, error)
     throw error
   }
 }

@@ -1,5 +1,6 @@
 using DigitalTwinPlatform.Application.Abstractions.Services;
 using DigitalTwinPlatform.Application.Predictions.Models;
+using DigitalTwinPlatform.Application.ML.Models;
 using DigitalTwinPlatform.Application.Services;
 
 namespace DigitalTwinPlatform.API.Services.Analytics;
@@ -53,5 +54,25 @@ public class PredictionServiceAdapter : IPredictionService
     public async Task<IEnumerable<PredictionDto>> SearchPredictionsAsync(string query, Guid? machineId = null, CancellationToken cancellationToken = default)
     {
         return await _predictionService.SearchPredictionsAsync(query, machineId, cancellationToken);
+    }
+
+    public async Task<RulPredictionResult> GetRulPredictionWithDetailsAsync(Guid machineId, CancellationToken ct = default)
+    {
+        return await _predictionService.GetRulPredictionWithDetailsAsync(machineId, ct);
+    }
+
+    public async Task<HealthClassificationResult> GetHealthClassificationWithDetailsAsync(Guid machineId, CancellationToken ct = default)
+    {
+        return await _predictionService.GetHealthClassificationWithDetailsAsync(machineId, ct);
+    }
+
+    public async Task<object> GetDetailedRulSummaryAsync(Guid machineId, CancellationToken ct = default)
+    {
+        return await _predictionService.GetDetailedRulSummaryAsync(machineId, ct);
+    }
+
+    public async Task<ModelStatusDto> GetModelStatus()
+    {
+        return await _predictionService.GetModelStatus();
     }
 }

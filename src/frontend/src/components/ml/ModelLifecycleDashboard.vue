@@ -6,7 +6,8 @@ import BaseInput from '@/components/base/BaseInput.vue'
 import BaseSelect from '@/components/base/BaseSelect.vue'
 import BaseTextarea from '@/components/base/BaseInput.vue'
 import { useToast } from '@/composables/useToast'
-import { Package, Upload, GitBranch, BarChart3, Calendar, CheckCircle, Clock, AlertTriangle, XCircle, GitCommit, Tag, FileText } from 'lucide-vue-next'
+import { Package, Upload, GitBranch, BarChart3, Calendar, CheckCircle, Clock, AlertTriangle, XCircle, GitCommit, Tag, FileText, RefreshCw } from 'lucide-vue-next'
+import { modelLifecycleService } from '@/services/modelLifecycle.service'
 
 // Import ECharts
 import * as echarts from 'echarts/core'
@@ -133,61 +134,19 @@ const getStatusBgColor = (status: string) => {
 const loadModels = async () => {
   try {
     loadingModels.value = true
-    
-    // Mock API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    models.value = [
-      {
-        id: 'model_001',
-        modelType: 'RUL',
-        version: '1.2.0',
-        modelPath: '/models/rul/v1.2.0/model.onnx',
-        trainedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        metrics: { rmse: 15.2, mae: 12.1, r2: 0.87 },
-        trainingDatasetHash: 'abc123...',
-        status: 'Production',
-        promotedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        notes: 'Stable production model with good performance',
-        createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 'model_002',
-        modelType: 'RUL',
-        version: '1.3.0',
-        modelPath: '/models/rul/v1.3.0/model.onnx',
-        trainedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        metrics: { rmse: 13.8, mae: 10.9, r2: 0.89 },
-        trainingDatasetHash: 'def456...',
-        status: 'Staging',
-        promotedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        notes: 'Improved version with better feature engineering',
-        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 'model_003',
-        modelType: 'Anomaly',
-        version: '2.1.0',
-        modelPath: '/models/anomaly/v2.1.0/model.onnx',
-        trainedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        metrics: { accuracy: 0.92, precision: 0.88, recall: 0.91 },
-        trainingDatasetHash: 'ghi789...',
-        status: 'Testing',
-        notes: 'New anomaly detection model',
-        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
-      }
-    ]
+    models.value = await modelLifecycleService.fetchModelLifecycles()
     
     if (models.value.length > 0) {
-      selectedModel.value = models.value[0]
+      if (!selectedModel.value) {
+        selectedModel.value = models.value[0]
+      } else {
+        // Update selected model with new data
+        selectedModel.value = models.value.find(m => m.id === selectedModel.value.id) || models.value[0]
+      }
       renderStatusChart()
       renderPerformanceChart()
       renderTimelineChart()
     }
-    
   } catch (error) {
     console.error('Failed to load models:', error)
     toast.error('Failed to load model versions')
@@ -200,7 +159,6 @@ const registerModel = async () => {
   try {
     registering.value = true
     
-    // Parse metrics JSON
     let metricsObj = {}
     try {
       metricsObj = JSON.parse(trainingMetrics.value)
@@ -209,25 +167,15 @@ const registerModel = async () => {
       return
     }
     
-    // Mock API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    const newModel = {
-      id: `model_${Date.now()}`,
+    const newModel = await modelLifecycleService.registerModelVersion({
       modelType: modelType.value,
-      version: '1.0.0', // Would be auto-generated
       modelPath: modelPath.value,
-      trainedAt: new Date().toISOString(),
       metrics: metricsObj,
       trainingDatasetHash: datasetHash.value || undefined,
-      status: 'Development',
-      notes: notes.value || undefined,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
+      notes: notes.value || undefined
+    })
     
-    models.value.unshift(newModel)
-    selectedModel.value = newModel
+    toast.success(`Model registered successfully`)
     
     // Reset form
     modelPath.value = ''
@@ -235,10 +183,9 @@ const registerModel = async () => {
     datasetHash.value = ''
     notes.value = ''
     
-    renderStatusChart()
-    renderPerformanceChart()
-    
-    toast.success(`Model ${newModel.id} registered successfully`)
+    await loadModels()
+    activeTab.value = 'models'
+    selectedModel.value = newModel
   } catch (error) {
     console.error('Failed to register model:', error)
     toast.error('Failed to register model version')
@@ -250,25 +197,14 @@ const registerModel = async () => {
 const promoteModel = async (modelId: string, status: string) => {
   try {
     promoting.value = true
+    await modelLifecycleService.promoteModelVersion(modelId, {
+      targetStatus: status,
+      notes: promotionNotes.value || undefined
+    })
     
-    // Mock API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    const model = models.value.find(m => m.id === modelId)
-    if (model) {
-      model.status = status
-      model.promotedAt = new Date().toISOString()
-      model.notes = promotionNotes.value || model.notes
-      
-      if (status === 'Production') {
-        toast.success(`Model ${modelId} promoted to Production`)
-      } else {
-        toast.success(`Model ${modelId} status updated to ${status}`)
-      }
-      
-      promotionNotes.value = ''
-      renderStatusChart()
-    }
+    toast.success(`Model status updated to ${status}`)
+    promotionNotes.value = ''
+    await loadModels()
   } catch (error) {
     console.error('Failed to promote model:', error)
     toast.error('Failed to promote model version')
@@ -286,36 +222,10 @@ const compareModels = async () => {
       return
     }
     
-    // Mock API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    const model1 = getModelById(compareModel1.value)
-    const model2 = getModelById(compareModel2.value)
-    
-    if (!model1 || !model2) {
-      toast.error('Selected models not found')
-      return
-    }
-    
-    comparisonResult.value = {
-      model1: {
-        id: model1.id,
-        version: model1.version,
-        metrics: model1.metrics
-      },
-      model2: {
-        id: model2.id,
-        version: model2.version,
-        metrics: model2.metrics
-      },
-      differences: {
-        rmse: (model1.metrics.rmse || 0) - (model2.metrics.rmse || 0),
-        mae: (model1.metrics.mae || 0) - (model2.metrics.mae || 0),
-        r2: (model1.metrics.r2 || 0) - (model2.metrics.r2 || 0)
-      },
-      winner: (model1.metrics.r2 || 0) > (model2.metrics.r2 || 0) ? model1.id : model2.id,
-      comparedAt: new Date().toISOString()
-    }
+    comparisonResult.value = await modelLifecycleService.compareModelVersions({
+      modelVersionId1: compareModel1.value,
+      modelVersionId2: compareModel2.value
+    })
     
     toast.success('Models compared successfully')
   } catch (error) {

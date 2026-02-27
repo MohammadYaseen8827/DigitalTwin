@@ -2,6 +2,9 @@ import * as signalR from '@microsoft/signalr'
 import type { Ref } from 'vue'
 import { ref } from 'vue'
 import { toast } from 'vue-sonner'
+import { errorReporter } from './errorReporter.service'
+
+import { apiConfig } from '@/utils/apiConfig'
 
 interface RealTimeDataPoint {
   timestamp: Date
@@ -17,9 +20,11 @@ interface StreamSubscription {
 
 export class RealTimeAnalyticsService {
   private connection: signalR.HubConnection | null = null
-  private apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
-  private hubUrl = this.apiUrl.replace('/api', '/hubs/realtime-analytics')
-  
+  private apiUrl = apiConfig.getBaseUrl()
+  private hubUrl = this.apiUrl.endsWith('/')
+    ? this.apiUrl.replace(/\/api\/$/, '/hubs/realtime-analytics')
+    : this.apiUrl.replace('/api', '/hubs/realtime-analytics')
+
   // Reactive state
   public isConnected = ref(false)
   public subscriptions = ref<StreamSubscription[]>([])
@@ -27,7 +32,7 @@ export class RealTimeAnalyticsService {
   public predictionData = ref<any[]>([])
   public alertData = ref<any[]>([])
   public systemHealthData = ref<any[]>([])
-  
+
   // Callback handlers
   private onTelemetryCallback: ((data: any) => void) | null = null
   private onPredictionCallback: ((data: any) => void) | null = null
@@ -49,14 +54,14 @@ export class RealTimeAnalyticsService {
 
       // Setup event handlers
       this.setupEventHandlers()
-      
+
       // Start connection
       await this.connection.start()
       this.isConnected.value = true
       toast.success('Real-time analytics connected')
-      
+
     } catch (error) {
-      console.error('Failed to connect to real-time analytics:', error)
+      errorReporter.error('Failed to connect to real-time analytics:', error)
       toast.error('Failed to connect to real-time analytics')
       throw error
     }
@@ -103,13 +108,13 @@ export class RealTimeAnalyticsService {
         metric: data.metric,
         machineId: data.machineId
       }
-      
+
       this.telemetryData.value.unshift(dataPoint)
       // Keep only last 1000 data points
       if (this.telemetryData.value.length > 1000) {
         this.telemetryData.value = this.telemetryData.value.slice(0, 1000)
       }
-      
+
       this.onTelemetryCallback?.(data)
     })
 
@@ -118,7 +123,7 @@ export class RealTimeAnalyticsService {
       if (this.predictionData.value.length > 100) {
         this.predictionData.value = this.predictionData.value.slice(0, 100)
       }
-      
+
       this.onPredictionCallback?.(data)
     })
 
@@ -127,7 +132,7 @@ export class RealTimeAnalyticsService {
       if (this.alertData.value.length > 50) {
         this.alertData.value = this.alertData.value.slice(0, 50)
       }
-      
+
       this.onAlertCallback?.(data)
     })
 
@@ -136,7 +141,7 @@ export class RealTimeAnalyticsService {
       if (this.systemHealthData.value.length > 50) {
         this.systemHealthData.value = this.systemHealthData.value.slice(0, 50)
       }
-      
+
       this.onSystemHealthCallback?.(data)
     })
 
@@ -285,10 +290,10 @@ export class RealTimeAnalyticsService {
   /**
    * Get current connection status
    */
-  public getStatus(): { 
-    isConnected: boolean; 
-    subscriptions: StreamSubscription[]; 
-    connectionId?: string 
+  public getStatus(): {
+    isConnected: boolean;
+    subscriptions: StreamSubscription[];
+    connectionId?: string
   } {
     return {
       isConnected: this.isConnected.value,

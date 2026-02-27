@@ -1,10 +1,13 @@
+using DigitalTwinPlatform.API.Services.Simulation.DegradationModels;
+using DigitalTwinPlatform.Application.Abstractions.Services;
+using DigitalTwinPlatform.Application.Analytics.Degradation.Models;
 using DigitalTwinPlatform.Application.Abstractions.Repositories;
 using DigitalTwinPlatform.Application.Abstractions.UnitOfWork;
 using DigitalTwinPlatform.Application.Services;
-using DigitalTwinPlatform.Domain.Common;
+using DigitalTwinPlatform.Domain.Entities;
 using DigitalTwinPlatform.Domain.Models;
+using DigitalTwinPlatform.Domain.Common;
 using DigitalTwinPlatform.Domain.ValueObjects;
-using DigitalTwinPlatform.API.Services.Simulation.DegradationModels;
 
 namespace DigitalTwinPlatform.API.Services.Simulation;
 
@@ -474,9 +477,6 @@ public class RunToFailureOrchestrator : IRunToFailureOrchestrator
     }
 }
 
-/// <summary>
-/// Internal context for tracking simulation state.
-/// </summary>
 internal class SimulationContext
 {
     public Guid MachineId { get; set; }
@@ -487,9 +487,6 @@ internal class SimulationContext
     public DateTime StartTime { get; set; }
 }
 
-/// <summary>
-/// Internal result tracking simulation execution.
-/// </summary>
 public class RunToFailureSimulationResult
 {
     public int Step { get; set; }

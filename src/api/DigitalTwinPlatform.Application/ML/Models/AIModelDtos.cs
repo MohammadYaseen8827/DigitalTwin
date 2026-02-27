@@ -120,4 +120,41 @@ namespace DigitalTwinPlatform.Application.ML.Models
         public string ModelVersion { get; init; } = string.Empty;
         public DateTime LastUpdated { get; init; }
     }
+
+    public class RegisterModelVersionRequest
+    {
+        public string ModelType { get; set; } = string.Empty;
+        public string ModelPath { get; set; } = string.Empty;
+        public Dictionary<string, double> Metrics { get; set; } = new();
+        public string? TrainingDatasetHash { get; set; }
+        public string? Notes { get; set; }
+    }
+
+    public class PromoteModelRequest
+    {
+        public DigitalTwinPlatform.Domain.Enums.ModelStatus TargetStatus { get; set; }
+        public string? Notes { get; set; }
+    }
+
+    public class CompareModelsRequest
+    {
+        public Guid ModelVersionId1 { get; set; }
+        public Guid ModelVersionId2 { get; set; }
+    }
+
+    public class ModelVersionDto
+    {
+        public Guid Id { get; set; }
+        public string ModelType { get; set; } = string.Empty;
+        public string Version { get; set; } = string.Empty;
+        public string ModelPath { get; set; } = string.Empty;
+        public DateTime TrainedAt { get; set; }
+        public Dictionary<string, double> Metrics { get; set; } = new();
+        public string? TrainingDatasetHash { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public DateTime? PromotedAt { get; set; }
+        public string? Notes { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+    }
 }

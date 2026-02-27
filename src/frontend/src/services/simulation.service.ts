@@ -1,6 +1,7 @@
 import axiosClient from '@/api/axiosClient'
 import { retryWithBackoff, type RetryOptions } from '@/composables/useRetryBackoff'
 import { useToast } from '@/lib/magic-mcp-ui'
+import { errorReporter } from './errorReporter.service'
 import type { SimulationStatusDto } from '@/api/types'
 
 const toast = useToast()
@@ -90,7 +91,7 @@ export async function createSimulation(
     toast.success('Simulation created successfully')
     return response as any
   } catch (error) {
-    console.error(`Failed to create simulation for machine ${machineId}:`, error)
+    errorReporter.error(`Failed to create simulation for machine ${machineId}:`, error)
     const message = (error as any)?.response?.data?.message ?? 'Failed to create simulation'
     toast.error(message)
     throw error
@@ -115,7 +116,7 @@ export async function getSimulation(
       ) as any
     )
   } catch (error) {
-    console.error(`Failed to get simulation ${simulationId}:`, error)
+    errorReporter.error(`Failed to get simulation ${simulationId}:`, error)
     throw error
   }
 }
@@ -140,7 +141,7 @@ export async function runSimulationStep(
     )
     return response as any
   } catch (error) {
-    console.error(`Failed to run simulation step for ${simulationId}:`, error)
+    errorReporter.error(`Failed to run simulation step for ${simulationId}:`, error)
     const message = (error as any)?.response?.data?.message ?? 'Failed to run simulation'
     toast.error(message)
     throw error
@@ -168,7 +169,7 @@ export async function pauseSimulation(
     toast.success('Simulation paused')
     return response as any
   } catch (error) {
-    console.error(`Failed to pause simulation ${simulationId}:`, error)
+    errorReporter.error(`Failed to pause simulation ${simulationId}:`, error)
     const message = (error as any)?.response?.data?.message ?? 'Failed to pause simulation'
     toast.error(message)
     throw error
@@ -196,7 +197,7 @@ export async function resumeSimulation(
     toast.success('Simulation resumed')
     return response as any
   } catch (error) {
-    console.error(`Failed to resume simulation ${simulationId}:`, error)
+    errorReporter.error(`Failed to resume simulation ${simulationId}:`, error)
     const message = (error as any)?.response?.data?.message ?? 'Failed to resume simulation'
     toast.error(message)
     throw error
@@ -224,7 +225,7 @@ export async function cancelSimulation(
     toast.success('Simulation cancelled')
     return response as any
   } catch (error) {
-    console.error(`Failed to cancel simulation ${simulationId}:`, error)
+    errorReporter.error(`Failed to cancel simulation ${simulationId}:`, error)
     const message = (error as any)?.response?.data?.message ?? 'Failed to cancel simulation'
     toast.error(message)
     throw error
@@ -252,7 +253,7 @@ export async function cancelSimulationById(
     toast.success('Simulation cancelled')
     return response as any
   } catch (error) {
-    console.error(`Failed to cancel simulation ${simulationId}:`, error)
+    errorReporter.error(`Failed to cancel simulation ${simulationId}:`, error)
     const message = (error as any)?.response?.data?.message ?? 'Failed to cancel simulation'
     toast.error(message)
     throw error
@@ -277,7 +278,7 @@ export async function listSimulations(
     )
     return response as any
   } catch (error) {
-    console.error(`Failed to list simulations for machine ${machineId}:`, error)
+    errorReporter.error(`Failed to list simulations for machine ${machineId}:`, error)
     return []
   }
 }
@@ -299,7 +300,7 @@ export async function getSimulationStatus(
     )
     return response as any
   } catch (error) {
-    console.error(`Failed to get simulation status for machine ${machineId}:`, error)
+    errorReporter.error(`Failed to get simulation status for machine ${machineId}:`, error)
     return {
       machineId,
       isRunning: false,
@@ -322,7 +323,7 @@ export async function getAllSimulationStatuses(): Promise<Record<string, Simulat
     )
     return response as any
   } catch (error) {
-    console.error('Failed to get all simulation statuses:', error)
+    errorReporter.error('Failed to get all simulation statuses:', error)
     return {}
   }
 }

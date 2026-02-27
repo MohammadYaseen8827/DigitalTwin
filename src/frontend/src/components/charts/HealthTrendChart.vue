@@ -182,7 +182,12 @@ async function fetchHealthData() {
         healthData.value = response.data
     } catch (error) {
         console.error('Error fetching health trend data:', error)
-        generateMockData()
+        // Only show mock data in development; in production show empty state
+        if (import.meta.env.DEV) {
+            generateMockData()
+        } else {
+            healthData.value = []
+        }
     } finally {
         isLoading.value = false
     }

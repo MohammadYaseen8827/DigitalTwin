@@ -205,7 +205,10 @@ namespace DigitalTwinPlatform.Application.ML.Services
                                 configDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(machine.Configuration.RootElement.GetRawText()) 
                                     ?? new Dictionary<string, object>();
                             }
-                            catch { /* ignore */ }
+                            catch (Exception ex) 
+                            {
+                                _logger.LogWarning(ex, "Failed to deserialize machine configuration for machine {MachineId}", machine.Id);
+                            }
                         }
                         
                         configDict["activeModelId"] = modelId;
@@ -247,7 +250,10 @@ namespace DigitalTwinPlatform.Application.ML.Services
                         });
                     }
                 }
-                catch { /* ignore */ }
+                catch (Exception ex) 
+                {
+                    _logger.LogWarning(ex, "Failed to parse deployment status for machine {MachineId}", m.Id);
+                }
             }
 
             return new DeploymentStatusDto
@@ -287,7 +293,10 @@ namespace DigitalTwinPlatform.Application.ML.Services
                         var sample = System.Text.Json.JsonSerializer.Deserialize<ModelTrainingData>(data);
                         if (sample != null) samples.Add(sample);
                     }
-                    catch { /* ignore or fallback */ }
+                    catch (Exception ex) 
+                    {
+                        _logger.LogWarning(ex, "Failed to deserialize training data sample");
+                    }
                 }
 
                 if (samples.Count == 0 && trainingData.Any())

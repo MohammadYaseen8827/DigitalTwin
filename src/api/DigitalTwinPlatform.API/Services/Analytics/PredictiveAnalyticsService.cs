@@ -9,6 +9,7 @@ using DigitalTwinPlatform.Domain.Constants;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 using DigitalTwinPlatform.Domain.Entities.Enums;
+using DigitalTwinPlatform.Application.Services;
 
 namespace DigitalTwinPlatform.API.Services.Analytics;
 

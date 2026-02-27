@@ -248,8 +248,8 @@ const chartHasData = computed(() => machines.value.some(machine => normalizeStat
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useToast } from '@/composables/useToast'
-
 import * as echarts from 'echarts'
+
 import SectionContainer from '../components/base/SectionContainer.vue'
 import BaseCard from '../components/base/BaseCard.vue'
 import BaseButton from '../components/base/BaseButton.vue'
@@ -266,6 +266,7 @@ import FloorPlanHeatmap from '../components/visualizations/FloorPlanHeatmap.vue'
 import PredictiveAnalyticsDashboard from '../components/visualizations/PredictiveAnalyticsDashboard.vue'
 import MaintenanceDashboard from '../components/visualizations/MaintenanceDashboard.vue'
 import PrescriptiveAnalysis from '../components/visualizations/PrescriptiveAnalysis.vue'
+
 import { fetchMachines as fetchMachinesService } from '@/services/machines.service'
 import {
   listSimulations,
@@ -274,18 +275,18 @@ import {
   runSimulationStep,
   type SimulationStateDto
 } from '@/services/simulation.service'
-
+import { dashboardService, type DashboardStatsDto } from '@/services/dashboard.service'
 import { requestPrediction } from '@/services/predictions.service'
 import type { MachineDto, EquipmentStatus } from '@/api/types'
 
 // Reactive references
 const machines = ref<MachineDto[]>([])
+const dashboardStats = ref<DashboardStatsDto | null>(null)
 const selectedMachine = ref<MachineDto | null>(null)
 const showMachineForm = ref(false)
 const showDeleteDialog = ref(false)
 const isEditing = ref(false)
 const simulationMap = ref<Record<string, string>>({})
-const showSimulationPanel = ref(false)
 
 const activeTab = ref('overview')
 const refreshing = ref(false)
@@ -316,25 +317,24 @@ const totalMachines = computed(() => machines.value.length)
 const activeMachines = computed(() =>
   machines.value.filter(m => normalizeStatus(m.status) === 'operational').length
 )
-const avgEfficiency = computed(() => {
-  // Simulate average efficiency
-  return Math.floor(Math.random() * 20 + 80)
-})
-const avgTemperature = computed(() => {
-  // Simulate average temperature
-  return Math.floor(Math.random() * 30 + 180)
-})
+const avgEfficiency = computed(() => dashboardStats.value?.overallEfficiency ?? 0)
+const avgTemperature = computed(() => dashboardStats.value?.averageTemperature ?? 0)
 
 // Methods
-const fetchMachines = async () => {
+const fetchData = async () => {
   try {
     loading.value = true
-    machines.value = await fetchMachinesService()
+    const [machinesData, statsData] = await Promise.all([
+      fetchMachinesService(),
+      dashboardService.getDashboardStats()
+    ])
+    machines.value = machinesData
+    dashboardStats.value = statsData
     updateStatusChart()
     lastRefreshed.value = new Date()
   } catch (error) {
-    console.error('Error fetching machines:', error)
-    toast.error('Unable to load machine overview right now.')
+    console.error('Error fetching dashboard data:', error)
+    toast.error('Unable to load dashboard data right now.')
   } finally {
     loading.value = false
   }
@@ -343,7 +343,7 @@ const fetchMachines = async () => {
 const refreshAllData = async () => {
   refreshing.value = true
   try {
-    await fetchMachines()
+    await fetchData()
     toast.success('Dashboard data refreshed.')
   } catch (error) {
     console.error('Error refreshing data:', error)
@@ -368,27 +368,26 @@ const startAllSimulations = async () => {
       })
     )
     toast.success('Simulations started across all machines.')
-    await fetchMachines()
+    await fetchData()
   } catch (error) {
-    console.error('Failed to start simulations for all machines:', error)
-    toast.error('Unable to start simulations for some machines.')
+    console.error('Failed to start simulations:', error)
+    toast.error('Unable to start simulations.')
   }
 }
 
 const stopAllSimulations = async () => {
   try {
     const cancelPromises = Object.entries(simulationMap.value).map(([machineId, simulationId]) => {
-      if (simulationId) {
-        return cancelSimulation(simulationId, machineId)
-      }
+      if (simulationId) return cancelSimulation(simulationId, machineId)
       return Promise.resolve()
     })
     await Promise.all(cancelPromises)
+    simulationMap.value = {}
     toast.info('Stopped all active simulations.')
-    await fetchMachines()
+    await fetchData()
   } catch (error) {
-    console.error('Failed to stop simulations for all machines:', error)
-    toast.error('Unable to cancel simulations for some machines.')
+    console.error('Failed to stop simulations:', error)
+    toast.error('Unable to cancel simulations.')
   }
 }
 
@@ -402,158 +401,69 @@ const generateAllData = async () => {
           intervalSeconds: 15,
           persistTelemetry: true
         })
-        simulationMap.value[machine.id] = simulation.id
         return runSimulationStep(simulation.id, machine.id)
       })
     )
-    toast.success('Telemetry generation started across the fleet.')
-    await fetchMachines()
+    toast.success('Telemetry generation started.')
   } catch (error) {
     console.error('Failed to generate telemetry:', error)
-    toast.error('Unable to generate telemetry right now.')
+    toast.error('Unable to generate telemetry.')
   }
 }
 
 const runPredictiveAnalytics = async () => {
   try {
-    await Promise.all(
-      machines.value.map(machine => requestPrediction(machine.id))
-    )
-    toast.success('Predictive analytics pipeline triggered for all machines.')
+    await Promise.all(machines.value.map(m => requestPrediction(m.id)))
+    toast.success('Predictive analytics triggered.')
   } catch (error) {
-    console.error('Failed to run predictive analytics for all machines:', error)
-    toast.error('Unable to trigger predictive analytics at the moment.')
+    console.error('Failed to run analytics:', error)
   }
 }
 
-// Initialize status distribution chart
 const updateStatusChart = () => {
   if (!statusChart.value) return
+  if (!statusChartInstance) statusChartInstance = echarts.init(statusChart.value)
   
-  if (!statusChartInstance) {
-    statusChartInstance = echarts.init(statusChart.value)
-  }
-  
-  // Count machines by status
   const statusCounts: Record<string, number> = {}
-  machines.value.forEach(machine => {
-    const normalized = normalizeStatus(machine.status)
+  machines.value.forEach(m => {
+    const normalized = normalizeStatus(m.status)
     statusCounts[normalized] = (statusCounts[normalized] || 0) + 1
   })
 
-  const hasData = Object.keys(statusCounts).length > 0 && Object.values(statusCounts).some(count => count > 0)
-  if (!hasData) {
-    statusChartInstance.clear()
-    return
-  }
-
   const statuses = Object.keys(statusCounts)
-  const counts = Object.values(statusCounts)
+  const data = statuses.map(s => ({
+    value: statusCounts[s],
+    name: formatStatus(s),
+    itemStyle: { color: statusColorMap[s as keyof typeof statusColorMap] || statusColorMap.unknown }
+  }))
 
   statusChartInstance.setOption({
-    tooltip: {
-      trigger: 'item'
-    },
-    legend: {
-      top: '5%',
-      left: 'center',
-      textStyle: {
-        color: '#ffffff'
-      }
-    },
-    series: [
-      {
-        name: 'Machine Status',
-        type: 'pie',
-        radius: ['40%', '70%'],
-        avoidLabelOverlap: false,
-        itemStyle: {
-          borderRadius: 10,
-          borderColor: '#fff',
-          borderWidth: 2
-        },
-        label: {
-          show: false,
-          position: 'center'
-        },
-        emphasis: {
-          label: {
-            show: true,
-            fontSize: 20,
-            fontWeight: 'bold'
-          }
-        },
-        labelLine: {
-          show: false
-        },
-        data: statuses.map((normalizedStatus, index) => {
-          const color = statusColorMap[normalizedStatus] ?? statusColorMap.unknown
-
-          return {
-            value: counts[index],
-            name: formatStatus(normalizedStatus),
-            itemStyle: { color }
-          }
-        })
-      }
-    ]
+    tooltip: { trigger: 'item' },
+    legend: { top: '5%', left: 'center', textStyle: { color: '#ffffff' } },
+    series: [{
+      name: 'Machine Status',
+      type: 'pie',
+      radius: ['40%', '70%'],
+      avoidLabelOverlap: false,
+      itemStyle: { borderRadius: 10, borderColor: '#fff', borderWidth: 2 },
+      label: { show: false, position: 'center' },
+      emphasis: { label: { show: true, fontSize: 20, fontWeight: 'bold' } },
+      data
+    }]
   })
 }
 
-// Update current time
-const updateTime = () => {
-  currentTime.value = new Date().toLocaleTimeString()
-}
+const updateTime = () => currentTime.value = new Date().toLocaleTimeString()
+const handleResize = () => statusChartInstance?.resize()
 
-// Handle window resize
-const handleResize = () => {
-  if (statusChartInstance) {
-    statusChartInstance.resize()
-  }
-}
-
-// Normalize machine status
 const normalizeStatus = (status: EquipmentStatus): string => {
-  switch (status) {
-    case 'operational':
-    case 'Operational':
-      return 'operational'
-    case 'maintenance':
-    case 'Maintenance':
-      return 'maintenance'
-    case 'warning':
-    case 'Warning':
-      return 'warning'
-    case 'critical':
-    case 'Critical':
-      return 'critical'
-    case 'offline':
-    case 'Offline':
-      return 'offline'
-    default:
-      return 'unknown'
-  }
+  const s = status.toLowerCase()
+  if (['operational', 'maintenance', 'warning', 'critical', 'offline'].includes(s)) return s
+  return 'unknown'
 }
 
-// Format machine status for display
-const formatStatus = (status: string): string => {
-  switch (status) {
-    case 'operational':
-      return 'Operational'
-    case 'maintenance':
-      return 'Maintenance'
-    case 'warning':
-      return 'Warning'
-    case 'critical':
-      return 'Critical'
-    case 'offline':
-      return 'Offline'
-    default:
-      return 'Unknown'
-  }
-}
+const formatStatus = (status: string) => status.charAt(0).toUpperCase() + status.slice(1)
 
-// Status color map
 const statusColorMap = {
   operational: '#22c55e',
   maintenance: '#3b82f6',
@@ -563,7 +473,6 @@ const statusColorMap = {
   unknown: '#0ea5e9'
 }
 
-// Machine CRUD handlers
 const openCreateMachine = () => {
   selectedMachine.value = null
   isEditing.value = false
@@ -592,40 +501,32 @@ const closeDeleteDialog = () => {
   selectedMachine.value = null
 }
 
-const handleMachineSuccess = async (machine: MachineDto) => {
+const handleMachineSuccess = async () => {
   closeMachineForm()
-  await fetchMachines()
-  toast.success(isEditing.value ? 'Machine updated successfully' : 'Machine created successfully')
+  await fetchData()
+  toast.success(isEditing.value ? 'Machine updated' : 'Machine created')
 }
 
 const handleDeleteSuccess = async () => {
   closeDeleteDialog()
-  await fetchMachines()
+  await fetchData()
 }
 
 const handleSimulationUpdated = (simulation: SimulationStateDto | null) => {
-  if (simulation) {
-    simulationMap.value[simulation.machineId] = simulation.id
-  }
+  if (simulation) simulationMap.value[simulation.machineId] = simulation.id
 }
 
-// Initialize
 onMounted(() => {
-  fetchMachines()
+  fetchData()
   updateTime()
   timeInterval = window.setInterval(updateTime, 1000)
   window.addEventListener('resize', handleResize)
 })
 
-// Cleanup
 onBeforeUnmount(() => {
-  if (timeInterval) {
-    clearInterval(timeInterval)
-  }
+  if (timeInterval) clearInterval(timeInterval)
   window.removeEventListener('resize', handleResize)
-  if (statusChartInstance) {
-    statusChartInstance.dispose()
-  }
+  statusChartInstance?.dispose()
 })
 </script>
 

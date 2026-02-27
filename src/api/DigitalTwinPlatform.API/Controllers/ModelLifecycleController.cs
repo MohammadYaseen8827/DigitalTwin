@@ -1,4 +1,5 @@
 using DigitalTwinPlatform.API.Services.Analytics;
+using DigitalTwinPlatform.Application.ML.Models;
 using DigitalTwinPlatform.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -44,7 +45,7 @@ public class ModelLifecycleController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error registering model version");
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "Internal server error during model registration" });
         }
     }
 
@@ -70,7 +71,7 @@ public class ModelLifecycleController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error promoting model version");
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "Internal server error during model promotion" });
         }
     }
 
@@ -90,7 +91,7 @@ public class ModelLifecycleController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving model versions");
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "Internal server error retrieving model list" });
         }
     }
 
@@ -115,7 +116,7 @@ public class ModelLifecycleController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving production version");
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "Internal server error retrieving production model" });
         }
     }
 
@@ -139,7 +140,7 @@ public class ModelLifecycleController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error comparing models");
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "Internal server error during model comparison" });
         }
     }
 
@@ -159,7 +160,7 @@ public class ModelLifecycleController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving model performance");
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "Internal server error retrieving performance data" });
         }
     }
 
@@ -181,41 +182,4 @@ public class ModelLifecycleController : ControllerBase
             UpdatedAt = version.UpdatedAt
         };
     }
-}
-
-public class RegisterModelVersionRequest
-{
-    public string ModelType { get; set; } = string.Empty;
-    public string ModelPath { get; set; } = string.Empty;
-    public Dictionary<string, double> Metrics { get; set; } = new();
-    public string? TrainingDatasetHash { get; set; }
-    public string? Notes { get; set; }
-}
-
-public class PromoteModelRequest
-{
-    public ModelStatus TargetStatus { get; set; }
-    public string? Notes { get; set; }
-}
-
-public class CompareModelsRequest
-{
-    public Guid ModelVersionId1 { get; set; }
-    public Guid ModelVersionId2 { get; set; }
-}
-
-public class ModelVersionDto
-{
-    public Guid Id { get; set; }
-    public string ModelType { get; set; } = string.Empty;
-    public string Version { get; set; } = string.Empty;
-    public string ModelPath { get; set; } = string.Empty;
-    public DateTime TrainedAt { get; set; }
-    public Dictionary<string, double> Metrics { get; set; } = new();
-    public string? TrainingDatasetHash { get; set; }
-    public string Status { get; set; } = string.Empty;
-    public DateTime? PromotedAt { get; set; }
-    public string? Notes { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
 }

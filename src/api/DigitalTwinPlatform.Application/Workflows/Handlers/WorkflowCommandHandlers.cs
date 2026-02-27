@@ -42,9 +42,9 @@ namespace DigitalTwinPlatform.Application.Workflows.Handlers
                 Enabled = false, // Newly created workflows start disabled
                 Status = "inactive",
                 Trigger = request.Trigger ?? new WorkflowTriggerDto { Type = "manual" },
-                Actions = request.Actions ?? new List<WorkflowActionDto>(),
+                Actions = (request.Actions ?? new List<WorkflowActionDto>()).ToList(),
                 Target = request.Target ?? new WorkflowTargetDto { Type = "all" },
-                Tags = request.Tags ?? new List<string>(),
+                Tags = (request.Tags ?? new List<string>()).ToList(),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 CreatedBy = request.CreatedBy ?? "unknown"
@@ -101,13 +101,13 @@ namespace DigitalTwinPlatform.Application.Workflows.Handlers
                 existingWorkflow.Trigger = request.Trigger;
                 
             if (request.Actions != null)
-                existingWorkflow.Actions = request.Actions;
+                existingWorkflow.Actions = request.Actions.ToList();
                 
             if (request.Target != null)
                 existingWorkflow.Target = request.Target;
                 
             if (request.Tags != null)
-                existingWorkflow.Tags = request.Tags;
+                existingWorkflow.Tags = request.Tags.ToList();
 
             existingWorkflow.UpdatedAt = DateTime.UtcNow;
 

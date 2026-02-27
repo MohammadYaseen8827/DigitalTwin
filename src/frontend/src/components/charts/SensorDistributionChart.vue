@@ -163,7 +163,12 @@ async function fetchSensorReadings() {
         updateSensorReadings()
     } catch (error) {
         console.error('Error fetching sensor readings:', error)
-        generateMockData()
+        // Only show mock data in development; in production show empty state
+        if (import.meta.env.DEV) {
+            generateMockData()
+        } else {
+            sensorReadings.value = {}
+        }
     } finally {
         isLoading.value = false
     }

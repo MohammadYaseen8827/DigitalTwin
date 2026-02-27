@@ -350,7 +350,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useToast } from '@/composables/useToast'
 import { 
   optimizeProductionSchedule,
@@ -362,6 +362,8 @@ import type {
   ResourceAllocationPlan,
   CostOptimizationResult
 } from '@/services/advancedAnalytics.service'
+import { machinesService } from '@/services/machines.service'
+import type { MachineDto } from '@/api/types'
 import { 
   Zap, 
   AlertTriangle, 
@@ -375,6 +377,7 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 const currentStep = ref(0)
 const toast = useToast()
+const machines = ref<MachineDto[]>([])
 
 const optimizationResults = ref<{
   scheduling: SchedulingRecommendation
@@ -396,15 +399,20 @@ const optimizationSteps = [
   { label: 'Cost Optimization', icon: DollarSign }
 ]
 
-const machineNames: Record<string, string> = {
-  'M001': 'CNC Machine Alpha',
-  'M002': 'Injection Molder Beta',
-  'M003': 'Press Gamma',
-  'M004': 'Robot Delta',
-  'M005': 'Conveyor Epsilon'
+const fetchInitialData = async () => {
+  try {
+    machines.value = await machinesService.fetchMachines()
+  } catch (err) {
+    console.error('Failed to fetch machines:', err)
+  }
 }
 
-const getMachineName = (id: string) => machineNames[id] || `Machine ${id}`
+onMounted(fetchInitialData)
+
+const getMachineName = (id: string) => {
+  const machine = machines.value.find(m => m.id === id)
+  return machine ? machine.name : `Machine ${id.substring(0, 8)}`
+}
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -429,8 +437,9 @@ const getPriorityClass = (priority: number) => {
 }
 
 const calculateDowntimeReduction = () => {
-  // Mock calculation - would be based on actual scheduling improvements
-  return Math.floor(Math.random() * 30) + 15
+  if (!optimizationResults.value) return 0
+  // Derived from optimization score as a proxy
+  return Math.floor(optimizationResults.value.scheduling.optimizationScore * 0.25)
 }
 
 const resetConfig = () => {
