@@ -20,205 +20,213 @@ const lastUpdatedLabel = computed(() => {
 const chartHasData = computed(() => machines.value.some(machine => normalizeStatus(machine.status) !== 'unknown'))
 
 <template>
-  <SectionContainer title="Enhanced Operations Dashboard" eyebrow="Simulation Insights" maxWidth="full">
+  <SectionContainer title="Operations Intelligence" eyebrow="Digital Twin Ecosystem" maxWidth="full">
     <template #actions>
-      <div class="refresh-controls">
+      <div class="header-actions">
         <div class="refresh-meta">
           <span class="label">Last updated</span>
           <span class="value">{{ lastUpdatedLabel }}</span>
         </div>
-        <BaseButton variant="primary" size="sm" :disabled="refreshing" @click="refreshAllData">
-          <span v-if="refreshing">Refreshing...</span>
-          <span v-else>↻ Refresh All</span>
-        </BaseButton>
+        <UiButton variant="outline" size="sm" :loading="refreshing" @click="refreshAllData">
+          <RefreshCw :width="14" :height="14" :class="{ 'spin': refreshing }" />
+          Refresh Workspace
+        </UiButton>
       </div>
     </template>
 
-    <BaseCard variant="glass" class="status-summary">
-      <div class="status-time">
-        <span class="label">Current Time</span>
-        <span class="value">{{ currentTime }}</span>
+    <!-- Top Status Bar -->
+    <UiCard variant="glass" padding="sm" class="navigation-bar">
+      <div class="system-time">
+        <div class="time-label">System Time</div>
+        <div class="time-value">{{ currentTime }}</div>
       </div>
-      <div class="tab-group" role="tablist">
-        <BaseButton
-          v-for="tab in tabs"
-          :key="tab.id"
-          size="sm"
-          :variant="activeTab === tab.id ? 'primary' : 'ghost'"
-          class="tab-pill"
-          role="tab"
-          :aria-selected="activeTab === tab.id"
-          @click="activeTab = tab.id"
-        >
-          <span class="tab-label">{{ tab.name }}</span>
-          <span v-if="tab.caption" class="tab-caption">{{ tab.caption }}</span>
-        </BaseButton>
+      
+      <div class="tab-scroller">
+        <div class="tab-list" role="tablist">
+          <button
+            v-for="tab in tabs"
+            :key="tab.id"
+            :class="['tab-item', { 'tab-item--active': activeTab === tab.id }]"
+            role="tab"
+            :aria-selected="activeTab === tab.id"
+            @click="activeTab = tab.id"
+          >
+            <component :is="tab.icon" :width="14" :height="14" />
+            <span>{{ tab.name }}</span>
+            <div v-if="activeTab === tab.id" class="tab-indicator" />
+          </button>
+        </div>
       </div>
-    </BaseCard>
+    </UiCard>
 
-    <div class="tab-panels">
-      <div v-if="activeTab === 'overview'" class="tab-panel">
-        <div class="overview-grid">
-          <BaseCard :loading="loading" variant="soft" class="metrics-card">
-            <template #header>Key Metrics</template>
-            <template #loading>
-              <div class="metric-skeleton-grid">
-                <BaseStatSkeleton v-for="i in 4" :key="`metric-skeleton-${i}`" />
+    <div class="viewport-stage">
+      <!-- OVERVIEW PANEL -->
+      <div v-if="activeTab === 'overview'" class="stage-panel">
+        <div class="bento-grid">
+          <!-- Metrics Section -->
+          <UiCard variant="default" padding="lg" class="bento-item metrics-panel">
+            <template #header>
+              <div class="panel-header">
+                <LayoutDashboard :width="16" :height="16" />
+                <span>Performance KPIs</span>
               </div>
             </template>
-            <div v-if="!loading" class="metrics-grid">
-              <BaseCard variant="solid" class="stat-card">
-                <div class="metric-icon">🏭</div>
-                <MetricValue :value="totalMachines" />
-                <div class="metric-label">Total Machines</div>
-              </BaseCard>
-              <BaseCard variant="solid" class="stat-card">
-                <div class="metric-icon">⚙️</div>
-                <MetricValue :value="activeMachines" />
-                <div class="metric-label">Active Machines</div>
-              </BaseCard>
-              <BaseCard variant="solid" class="stat-card">
-                <div class="metric-icon">⚡</div>
-                <MetricValue :value="avgEfficiency" :precision="1" suffix="%" />
-                <div class="metric-label">Avg. Efficiency</div>
-              </BaseCard>
-              <BaseCard variant="solid" class="stat-card">
-                <div class="metric-icon">🌡️</div>
-                <MetricValue :value="avgTemperature" :precision="0" suffix="°C" />
-                <div class="metric-label">Avg. Temperature</div>
-              </BaseCard>
+            
+            <div class="metrics-container">
+              <div class="stat-box">
+                <span class="stat-label">Total Fleet</span>
+                <MetricValue :value="totalMachines" class="stat-number" />
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">Active Units</span>
+                <MetricValue :value="activeMachines" class="stat-number" />
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">Efficiency</span>
+                <MetricValue :value="avgEfficiency" :precision="1" suffix="%" class="stat-number" />
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">Temperature</span>
+                <MetricValue :value="avgTemperature" :precision="0" suffix="°C" class="stat-number" />
+              </div>
             </div>
-          </BaseCard>
+          </UiCard>
 
-          <BaseCard :loading="loading" variant="soft" class="chart-card">
-            <template #header>Machine Status Distribution</template>
-            <template #loading>
-              <div class="loading-stack">
-                <BaseSkeleton height="220px" radius="var(--radius-lg)" />
+          <!-- Distribution Chart -->
+          <UiCard variant="default" padding="lg" class="bento-item chart-panel">
+            <template #header>
+              <div class="panel-header">
+                <Activity :width="16" :height="16" />
+                <span>Status Distribution</span>
               </div>
             </template>
-            <div v-if="chartHasData && !loading" ref="statusChart" class="chart-container" role="img" aria-label="Machine status distribution chart"></div>
-            <div v-else-if="!loading" class="chart-empty">
-              <div class="chart-empty-icon">📈</div>
-              <h4>No machine telemetry yet</h4>
-              <p>Refresh the dashboard or start simulations to populate the status distribution.</p>
+            <div v-if="chartHasData && !loading" ref="statusChart" class="status-chart" role="img"></div>
+            <div v-else class="empty-chart">
+              <Database :width="32" :height="32" />
+              <p>Waiting for telemetry stream...</p>
             </div>
-          </BaseCard>
+          </UiCard>
 
-          <BaseCard :loading="loading" variant="soft" class="actions-card">
-            <template #header>Quick Actions</template>
-            <template #loading>
-              <div class="actions-skeleton">
-                <BaseSkeleton v-for="i in 4" :key="`action-skeleton-${i}`" height="48px" />
+          <!-- Quick Actions -->
+          <UiCard variant="default" padding="lg" class="bento-item actions-panel">
+            <template #header>
+              <div class="panel-header">
+                <Zap :width="16" :height="16" />
+                <span>Quick Orchestration</span>
               </div>
             </template>
-            <div class="actions-grid" v-if="!loading">
-              <BaseButton class="action-button" variant="primary" size="md" @click="startAllSimulations">
-                <span class="action-icon">▶️</span>
-                <span class="action-label">Start All Simulations</span>
-              </BaseButton>
-              <BaseButton class="action-button" variant="secondary" size="md" @click="stopAllSimulations">
-                <span class="action-icon">⏹️</span>
-                <span class="action-label">Stop All Simulations</span>
-              </BaseButton>
-              <BaseButton class="action-button" variant="outline" size="md" @click="generateAllData">
-                <span class="action-icon">📊</span>
-                <span class="action-label">Generate Telemetry Data</span>
-              </BaseButton>
-              <BaseButton class="action-button" variant="ghost" size="md" @click="runPredictiveAnalytics">
-                <span class="action-icon">🔮</span>
-                <span class="action-label">Run Predictive Analytics</span>
-              </BaseButton>
+            <div class="action-stack">
+              <UiButton variant="primary" size="md" @click="startAllSimulations">
+                <Play :width="14" :height="14" />
+                Start All Simulations
+              </UiButton>
+              <UiButton variant="outline" size="md" @click="stopAllSimulations">
+                <Square :width="14" :height="14" />
+                Stop All Processes
+              </UiButton>
+              <UiButton variant="ghost" size="md" @click="runPredictiveAnalytics">
+                <BrainCircuit :width="14" :height="14" />
+                Execute Prediction Cycle
+              </UiButton>
             </div>
-          </BaseCard>
+          </UiCard>
         </div>
       </div>
 
-      <BaseCard v-else-if="activeTab === '3d-view'" variant="soft" class="tab-card">
+      <UiCard v-else-if="activeTab === '3d-view'" variant="glass" padding="none" class="viz-stage">
         <Machine3DViewer />
-      </BaseCard>
+      </UiCard>
 
-      <BaseCard v-else-if="activeTab === 'telemetry'" variant="soft" class="tab-card">
+      <UiCard v-else-if="activeTab === 'telemetry'" variant="glass" padding="none" class="viz-stage">
         <TelemetryDashboard />
-      </BaseCard>
+      </UiCard>
 
-      <BaseCard v-else-if="activeTab === 'floor-plan'" variant="soft" class="tab-card">
+      <UiCard v-else-if="activeTab === 'floor-plan'" variant="glass" padding="none" class="viz-stage">
         <FloorPlanHeatmap />
-      </BaseCard>
+      </UiCard>
 
-      <BaseCard v-else-if="activeTab === 'analytics'" variant="soft" class="tab-card">
+      <UiCard v-else-if="activeTab === 'analytics'" variant="glass" padding="none" class="viz-stage">
         <PredictiveAnalyticsDashboard />
-      </BaseCard>
+      </UiCard>
 
-      <BaseCard v-else-if="activeTab === 'maintenance-lifecycle'" variant="soft" class="tab-card">
+      <UiCard v-else-if="activeTab === 'maintenance-lifecycle'" variant="glass" padding="none" class="viz-stage">
         <MaintenanceDashboard />
-      </BaseCard>
+      </UiCard>
 
-      <div v-else-if="activeTab === 'prescriptive'" class="tab-panel">
-        <div class="prescriptive-layout">
-          <BaseCard variant="soft" class="machine-picker">
-            <template #header>Select Machine for Analysis</template>
-            <div class="picker-list">
-              <div 
-                v-for="m in machines" 
-                :key="m.id" 
-                class="picker-item" 
-                :class="{ active: selectedMachine?.id === m.id }"
-                @click="selectedMachine = m"
-              >
-                {{ m.name }}
-              </div>
-            </div>
-          </BaseCard>
-          <PrescriptiveAnalysis v-if="selectedMachine" :machine-id="selectedMachine.id" />
-          <div v-else class="empty-state glass-panel">
-            <p>Please select a machine to run prescriptive what-if simulations.</p>
+      <div v-else-if="activeTab === 'prescriptive'" class="prescriptive-stage">
+        <UiCard variant="default" padding="sm" class="machine-selector">
+          <template #header>Analyze Asset</template>
+          <div class="selector-list">
+            <button 
+              v-for="m in machines" 
+              :key="m.id" 
+              :class="['selector-item', { active: selectedMachine?.id === m.id }]"
+              @click="selectedMachine = m"
+            >
+              {{ m.name }}
+            </button>
           </div>
+        </UiCard>
+        <PrescriptiveAnalysis v-if="selectedMachine" :machine-id="selectedMachine.id" />
+        <div v-else class="empty-viz">
+          <BrainCircuit :width="48" :height="48" />
+          <p>Select a digital twin to initialize prescriptive analysis.</p>
         </div>
       </div>
 
-      <div v-else-if="activeTab === 'machine-management'" class="tab-panel">
-        <BaseCard variant="soft" class="machine-management-card">
+      <div v-else-if="activeTab === 'machine-management'" class="stage-panel">
+        <UiCard variant="default" padding="none" class="management-card">
           <template #header>
-            <div class="card-header-row">
-              <span>Machine Inventory</span>
-              <BaseButton variant="primary" size="sm" @click="openCreateMachine">
-                + Add Machine
-              </BaseButton>
+            <div class="panel-header-row">
+              <div class="header-copy">
+                <h3>Industrial Fleet Inventory</h3>
+                <p>Manage and orchestrate machine digital twins</p>
+              </div>
+              <UiButton variant="primary" size="sm" @click="openCreateMachine">
+                <Plus :width="14" :height="14" />
+                Register Machine
+              </UiButton>
             </div>
           </template>
 
-          <div v-if="loading" class="machine-list-skeleton">
-            <BaseSkeleton v-for="i in 3" :key="`machine-skeleton-${i}`" height="80px" />
+          <div v-if="loading" class="skeleton-list">
+            <BaseSkeleton v-for="i in 4" :key="i" height="84px" radius="12px" />
           </div>
 
-          <div v-else-if="machines.length === 0" class="empty-machines">
-            <p>No machines found. Create your first machine to get started.</p>
+          <div v-else-if="machines.length === 0" class="empty-list">
+            <Database :width="40" :height="40" />
+            <p>Fleet database is empty.</p>
           </div>
 
-          <div v-else class="machine-list">
-            <div v-for="machine in machines" :key="machine.id" class="machine-item">
-              <div class="machine-info">
-                <h4>{{ machine.name }}</h4>
-                <p class="machine-meta">
-                  <span class="machine-type">{{ machine.type }}</span>
-                  <span class="machine-status" :class="`status-${normalizeStatus(machine.status)}`">
-                    {{ formatStatus(normalizeStatus(machine.status)) }}
-                  </span>
-                  <span v-if="machine.location" class="machine-location">📍 {{ machine.location }}</span>
-                </p>
+          <div v-else class="data-list">
+            <div v-for="machine in machines" :key="machine.id" class="list-row">
+              <div class="row-main">
+                <div class="row-icon">
+                  <SettingsIcon :width="18" :height="18" />
+                </div>
+                <div class="row-info">
+                  <div class="row-title">{{ machine.name }}</div>
+                  <div class="row-meta">
+                    <span class="meta-tag">{{ machine.type }}</span>
+                    <UiBadge :variant="normalizeStatus(machine.status) as any" size="sm" dot>
+                      {{ normalizeStatus(machine.status) }}
+                    </UiBadge>
+                    <span v-if="machine.location" class="meta-loc">📍 {{ machine.location }}</span>
+                  </div>
+                </div>
               </div>
-              <div class="machine-actions">
-                <BaseButton variant="outline" size="sm" @click="openEditMachine(machine)">
-                  Edit
-                </BaseButton>
-                <BaseButton variant="critical" size="sm" @click="openDeleteMachine(machine)">
-                  Delete
-                </BaseButton>
+              
+              <div class="row-actions">
+                <UiButton variant="outline" size="sm" @click="openEditMachine(machine)">
+                  Configure
+                </UiButton>
+                <UiButton variant="danger" size="sm" @click="openDeleteMachine(machine)">
+                  Decommission
+                </UiButton>
               </div>
             </div>
           </div>
-        </BaseCard>
+        </UiCard>
 
         <SimulationControlPanel
           v-if="selectedMachine"
@@ -251,8 +259,9 @@ import { useToast } from '@/composables/useToast'
 import * as echarts from 'echarts'
 
 import SectionContainer from '../components/base/SectionContainer.vue'
-import BaseCard from '../components/base/BaseCard.vue'
-import BaseButton from '../components/base/BaseButton.vue'
+import UiCard from '../components/ui/UiCard.vue'
+import UiButton from '../components/ui/UiButton.vue'
+import UiBadge from '../components/ui/UiBadge.vue'
 import BaseSkeleton from '../components/base/BaseSkeleton.vue'
 import BaseStatSkeleton from '../components/base/BaseStatSkeleton.vue'
 import MetricValue from '../components/base/MetricValue.vue'
@@ -278,6 +287,7 @@ import {
 import { dashboardService, type DashboardStatsDto } from '@/services/dashboard.service'
 import { requestPrediction } from '@/services/predictions.service'
 import type { MachineDto, EquipmentStatus } from '@/api/types'
+import { RefreshCw, Play, Square, Activity, Database, Zap, Map as MapIcon, BarChart3, Settings as SettingsIcon, Plus, LayoutDashboard, BrainCircuit, Wrench } from 'lucide-vue-next'
 
 // Reactive references
 const machines = ref<MachineDto[]>([])
@@ -300,16 +310,16 @@ let timeInterval: number | null = null
 
 const toast = useToast()
 
-// Tabs configuration
+// Updated Tabs with Icons
 const tabs = [
-  { id: 'overview', name: 'Operations Overview', caption: 'Fleet status & KPIs' },
-  { id: 'machine-management', name: 'Machine Management', caption: 'CRUD & simulations' },
-  { id: '3d-view', name: '3D Layout', caption: 'Spatial awareness' },
-  { id: 'telemetry', name: 'Telemetry', caption: 'Live signals' },
-  { id: 'floor-plan', name: 'Factory Map', caption: 'Floor heatmap' },
-  { id: 'analytics', name: 'Predictive Analytics', caption: 'Forecasts & risks' },
-  { id: 'prescriptive', name: 'Prescriptive', caption: 'Optimization' },
-  { id: 'maintenance-lifecycle', name: 'Maintenance Hub', caption: 'Job tracking' }
+  { id: 'overview', name: 'Overview', icon: LayoutDashboard },
+  { id: 'machine-management', name: 'Fleet', icon: SettingsIcon },
+  { id: '3d-view', name: '3D Spatial', icon: Zap },
+  { id: 'telemetry', name: 'Signals', icon: Activity },
+  { id: 'floor-plan', name: 'Factory Map', icon: MapIcon },
+  { id: 'analytics', name: 'Predictive', icon: BarChart3 },
+  { id: 'prescriptive', name: 'Optimization', icon: BrainCircuit },
+  { id: 'maintenance-lifecycle', name: 'Maintenance', icon: Wrench }
 ]
 
 // Computed properties for metrics
@@ -422,7 +432,7 @@ const runPredictiveAnalytics = async () => {
 
 const updateStatusChart = () => {
   if (!statusChart.value) return
-  if (!statusChartInstance) statusChartInstance = echarts.init(statusChart.value)
+  if (!statusChartInstance) statusChartInstance = echarts.init(statusChart.value, 'hub-dark')
   
   const statusCounts: Record<string, number> = {}
   machines.value.forEach(m => {
@@ -531,295 +541,333 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.status-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--space-20);
+.header-actions {
+  display: flex;
   align-items: center;
+  gap: var(--space-16);
 }
 
-.status-time {
+.refresh-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.refresh-meta .label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+}
+
+.refresh-meta .value {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.navigation-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-32);
+  border-radius: var(--radius-md);
+  border-color: var(--color-border-subtle);
+}
+
+.system-time {
+  padding: 0 var(--space-8);
+  border-right: 1px solid var(--color-border-subtle);
+  flex-shrink: 0;
+}
+
+.time-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+}
+
+.time-value {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--color-primary);
+  font-family: var(--font-mono);
+}
+
+.tab-scroller {
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tab-scroller::-webkit-scrollbar { display: none; }
+
+.tab-list {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.tab-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-16);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  position: relative;
+}
+
+.tab-item:hover {
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tab-item--active {
+  color: var(--color-primary);
+  background: var(--color-primary-muted);
+}
+
+.tab-indicator {
+  position: absolute;
+  bottom: 4px;
+  left: var(--space-16);
+  right: var(--space-16);
+  height: 2px;
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+  box-shadow: var(--glow-sm);
+}
+
+.viewport-stage {
+  min-height: 600px;
+}
+
+.stage-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24);
+  animation: fade-rise 0.4s ease-out;
+}
+
+/* Bento Grid */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--space-20);
+}
+
+.metrics-panel { grid-column: span 12; }
+.chart-panel { grid-column: span 8; }
+.actions-panel { grid-column: span 4; }
+
+@media (max-width: 1200px) {
+  .chart-panel { grid-column: span 12; }
+  .actions-panel { grid-column: span 12; }
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metrics-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-24);
+}
+
+.stat-box {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
 }
 
-.status-time .label {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.status-time .value {
-  font-size: var(--font-size-xl);
-  color: var(--color-text-primary);
+.stat-label {
+  font-size: var(--font-size-xs);
   font-weight: 600;
+  color: var(--color-text-muted);
 }
 
-.tab-group {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: var(--space-8);
+.stat-number {
+  font-size: var(--font-size-4xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
 }
 
-.tab-pill {
-  min-width: 130px;
-  justify-content: center;
+.status-chart {
+  height: 320px;
+  width: 100%;
 }
 
-.tab-panels {
+.action-stack {
   display: flex;
   flex-direction: column;
-  gap: var(--space-24);
+  gap: var(--space-12);
 }
 
-.tab-panel {
+/* Management List */
+.management-card {
+  border-color: var(--color-border-subtle);
+}
+
+.panel-header-row {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-24);
-}
-
-.overview-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: var(--space-24);
-  align-items: start;
-}
-
-.metrics-card {
-  display: flex;
-  flex-direction: column;
-}
-
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--space-16);
-}
-
-.stat-card {
-  text-align: center;
-  padding: var(--space-24);
-  gap: var(--space-16);
+  justify-content: space-between;
   align-items: center;
+  padding: var(--space-4) 0;
 }
 
-.metric-icon {
-  font-size: var(--font-size-2xl);
-}
-
-.metric-value {
-  font-size: var(--font-size-3xl);
+.header-copy h3 {
+  margin: 0;
+  font-size: var(--font-size-lg);
   font-weight: 700;
   color: var(--color-text-primary);
 }
 
-.metric-label {
-  font-size: var(--font-size-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--color-text-secondary);
+.header-copy p {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
 }
 
-.chart-card {
-  min-height: 420px;
+.data-list {
+  display: flex;
+  flex-direction: column;
 }
 
-.chart-container {
-  width: 100%;
-  height: 360px;
+.list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-16) var(--space-20);
+  border-bottom: 1px solid var(--color-border-subtle);
+  transition: background var(--transition-fast);
 }
 
-.actions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+.list-row:hover {
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.row-main {
+  display: flex;
+  align-items: center;
   gap: var(--space-16);
 }
 
-.action-button {
+.row-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--color-depth-0);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-12);
-  width: 100%;
+  color: var(--color-text-dim);
 }
 
-.action-icon {
-  font-size: var(--font-size-xl);
-}
-
-.tab-card {
-  padding: var(--space-24);
-}
-
-.card-header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
-
-.machine-list-skeleton {
-  display: grid;
-  gap: var(--space-16);
-}
-
-.empty-machines {
-  text-align: center;
-  padding: var(--space-32);
-  color: var(--color-text-secondary);
-}
-
-.machine-list {
-  display: grid;
-  gap: var(--space-16);
-}
-
-.machine-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-20);
-  background: var(--color-surface-alt);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  transition: all 0.2s ease;
-}
-
-.machine-item:hover {
-  background: var(--color-surface-hover);
-  border-color: var(--color-primary);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-medium);
-}
-
-.machine-info h4 {
-  margin: 0 0 var(--space-8) 0;
-  font-size: var(--font-size-lg);
+.row-title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
   color: var(--color-text-primary);
 }
 
-.machine-meta {
-  display: flex;
-  gap: var(--space-12);
-  flex-wrap: wrap;
-  margin: 0;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-}
-
-.machine-type {
-  padding: var(--space-4) var(--space-8);
-  background: var(--color-surface);
-  border-radius: var(--radius-sm);
-  text-transform: capitalize;
-}
-
-.machine-status {
-  padding: var(--space-4) var(--space-8);
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-}
-
-.machine-status.status-operational {
-  background: color-mix(in srgb, #22c55e 20%, transparent);
-  color: #22c55e;
-}
-
-.machine-status.status-warning {
-  background: color-mix(in srgb, #facc15 20%, transparent);
-  color: #facc15;
-}
-
-.machine-status.status-critical {
-  background: color-mix(in srgb, #ef4444 20%, transparent);
-  color: #ef4444;
-}
-
-.machine-status.status-maintenance {
-  background: color-mix(in srgb, #3b82f6 20%, transparent);
-  color: #3b82f6;
-}
-
-.machine-status.status-offline {
-  background: color-mix(in srgb, #64748b 20%, transparent);
-  color: #64748b;
-}
-
-.machine-location {
+.row-meta {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-12);
+  margin-top: 2px;
 }
 
-.machine-actions {
+.meta-tag {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+}
+
+.meta-loc {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.row-actions {
   display: flex;
   gap: var(--space-8);
 }
 
-@media (max-width: 768px) {
-  .status-summary {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-
-  .tab-group {
-    justify-content: center;
-  }
-
-  .overview-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .chart-container {
-    height: 300px;
-  }
+.viz-stage {
+  height: 700px;
+  border-color: var(--color-border-subtle);
+  background: var(--color-depth-0);
 }
 
-.prescriptive-layout {
+/* Prescriptive */
+.prescriptive-stage {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 1.5rem;
+  grid-template-columns: 300px 1fr;
+  gap: var(--space-24);
   align-items: start;
 }
 
-.machine-picker {
-  max-height: 600px;
-  overflow-y: auto;
-}
-
-.picker-list {
+.selector-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-4);
 }
 
-.picker-item {
-  padding: 0.75rem 1rem;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 6px;
+.selector-item {
+  width: 100%;
+  text-align: left;
+  padding: var(--space-10) var(--space-12);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
   cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.9rem;
+  transition: all var(--transition-fast);
 }
 
-.picker-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+.selector-item:hover {
+  background: var(--color-surface-elevated);
+  color: var(--color-text-primary);
 }
 
-.picker-item.active {
-  background: rgba(24, 144, 255, 0.15);
-  border: 1px solid rgba(24, 144, 255, 0.3);
-  color: #1890ff;
+.selector-item.active {
+  background: var(--color-primary-muted);
+  color: var(--color-primary);
+  border-color: var(--color-border-focus);
 }
 
-.empty-state {
-  padding: 4rem;
-  text-align: center;
-  color: #8c8c8c;
+.empty-viz {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  padding: var(--space-64);
+  color: var(--color-text-dim);
+  text-align: center;
+  gap: var(--space-16);
+}
+
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fade-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>

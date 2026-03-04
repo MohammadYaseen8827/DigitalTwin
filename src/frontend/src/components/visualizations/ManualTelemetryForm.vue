@@ -1,55 +1,79 @@
 <template>
-  <div class="manual-data-form glass-panel">
-    <header class="form-header">
-      <h3>Manual Telemetry Logging</h3>
-      <p>Ingest real-world observations directly into the twin</p>
+  <div :class="styles['manual-data-form']">
+    <header :class="styles['form-header']">
+      <h3 :class="styles['form-title']">Manual Telemetry Ingestion</h3>
+      <p :class="styles['form-sub']">Directly inject technical observations into the active digital cluster.</p>
     </header>
 
-    <form @submit.prevent="handleSubmit" class="form-content">
-      <div class="form-row">
-        <div class="form-group">
-          <label>Machine</label>
-          <select v-model="form.machineId" required>
+    <form @submit.prevent="handleSubmit" :class="styles['form-content']">
+      <div :class="styles['form-grid']">
+        <div :class="styles['form-column']">
+          <label :class="styles['label']">Target Node</label>
+          <UiSelect v-model="form.machineId" required :class="styles['select']">
             <option v-for="m in machines" :key="m.id" :value="m.id">{{ m.name }}</option>
-          </select>
+          </UiSelect>
         </div>
-        <div class="form-group">
-          <label>Data Type</label>
-          <select v-model="form.dataType" required>
+
+        <div :class="styles['form-column']">
+          <label :class="styles['label']">Stream Type</label>
+          <UiSelect v-model="form.dataType" required :class="styles['select']">
             <option value="Temperature">Temperature (°C)</option>
             <option value="Vibration">Vibration (mm/s)</option>
             <option value="Pressure">Pressure (PSI)</option>
             <option value="NoiseLevel">Noise Level (dB)</option>
-          </select>
+          </UiSelect>
+        </div>
+
+        <div :class="styles['form-column']">
+          <UiInput
+            v-model="form.value"
+            type="number"
+            step="0.01"
+            label="Metric Value"
+            required
+          >
+            <template #prefix><Zap :width="14" :height="14" /></template>
+          </UiInput>
+        </div>
+
+        <div :class="styles['form-column']">
+          <UiInput
+            v-model="form.timestamp"
+            type="datetime-local"
+            label="Historical Timestamp"
+            required
+          >
+            <template #prefix><Clock :width="14" :height="14" /></template>
+          </UiInput>
         </div>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label>Value</label>
-          <input type="number" step="0.01" v-model="form.value" required />
-        </div>
-        <div class="form-group">
-          <label>Timestamp</label>
-          <input type="datetime-local" v-model="form.timestamp" />
-        </div>
-      </div>
-
-      <div class="form-actions">
-        <BaseButton type="submit" variant="primary" :loading="submitting">Log Telemetry</BaseButton>
+      <div :class="styles['form-actions']">
+        <UiButton 
+          type="submit" 
+          variant="primary" 
+          :loading="submitting"
+          :class="styles['submit-btn']"
+        >
+          Inject Stream Record
+        </UiButton>
       </div>
     </form>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, useCssModule } from 'vue'
 import { useToast } from '@/composables/useToast'
-import BaseButton from '../base/BaseButton.vue'
+import UiButton from '../ui/UiButton.vue'
+import UiInput from '../ui/UiInput.vue'
+import UiSelect from '../ui/UiSelect.vue'
+import { Zap, Clock } from 'lucide-vue-next'
 import { fetchMachines } from '@/services/machines.service'
 import { ingestTelemetry } from '@/services/telemetry.service'
 import type { MachineDto } from '@/api/types'
 
+const styles = useCssModule()
 const toast = useToast()
 const machines = ref<MachineDto[]>([])
 const submitting = ref(false)
@@ -62,7 +86,10 @@ const form = reactive({
 })
 
 async function handleSubmit() {
-  if (!form.machineId) return
+  if (!form.machineId) {
+    toast.error('Target node must be identified')
+    return
+  }
   submitting.value = true
   try {
     await ingestTelemetry({
@@ -71,75 +98,96 @@ async function handleSubmit() {
       data: { value: form.value },
       timestamp: new Date(form.timestamp).toISOString()
     })
-    toast.success(`${form.dataType} logged successfully`)
+    toast.success(`${form.dataType} telemetry synchronized`)
     form.value = 0
   } catch (err) {
-    toast.error('Failed to log telemetry')
+    toast.error('Asynchronous injection failed')
   } finally {
     submitting.value = false
   }
 }
 
 onMounted(async () => {
-  machines.value = await fetchMachines()
-  if (machines.value.length > 0) form.machineId = machines.value[0].id
+  try {
+    machines.value = await fetchMachines()
+    if (machines.value.length > 0) form.machineId = machines.value[0].id
+  } catch (err) {
+    toast.error('Failed to resolve cluster nodes')
+  }
 })
 </script>
 
-<style scoped>
+<style module>
 .manual-data-form {
-  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24);
 }
 
 .form-header {
-  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
-.form-header h3 {
+.form-title {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--color-text-primary);
   margin: 0;
-  font-size: 1.1rem;
 }
 
-.form-header p {
-  margin: 0.25rem 0 0;
-  font-size: 0.85rem;
-  color: #8c8c8c;
+.form-sub {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin: 0;
 }
 
 .form-content {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-24);
 }
 
-.form-row {
+.form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-20);
 }
 
-.form-group {
+.form-column {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: var(--space-8);
 }
 
-.form-group label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #595959;
+.label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-dim);
+  margin-left: var(--space-2);
 }
 
-.form-group input, .form-group select {
-  padding: 0.6rem;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  font-size: 0.9rem;
+.select {
+  width: 100%;
 }
 
 .form-actions {
-  margin-top: 0.5rem;
   display: flex;
   justify-content: flex-end;
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.submit-btn {
+  min-width: 160px;
+}
+
+@media (max-width: 640px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

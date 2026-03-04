@@ -46,7 +46,7 @@ export interface DriftDetectionRequest {
  * Get current drift status for all models
  */
 export async function getCurrentDriftStatus(): Promise<Record<string, DriftDetectionResult>> {
-  const response = await axiosClient.get<Record<string, DriftDetectionResult>>('/Drift/status')
+  const response = await axiosClient.get<Record<string, DriftDetectionResult>>('Drift/status')
   return response.data
 }
 
@@ -89,7 +89,7 @@ export async function generateDriftReport(modelName?: string, days: number = 7):
  * Manually detect drift
  */
 export async function detectDrift(request: DriftDetectionRequest): Promise<DriftDetectionResult> {
-  const response = await axiosClient.post<DriftDetectionResult>('/Drift/detect', request)
+  const response = await axiosClient.post<DriftDetectionResult>('Drift/detect', request)
   return response.data
 }
 
@@ -104,7 +104,7 @@ export async function getRecentDriftDetections(): Promise<Record<string, DriftDe
  * Get drift monitoring configuration
  */
 export async function getMonitoringConfig(): Promise<Record<string, any>> {
-  const response = await axiosClient.get<Record<string, any>>('/Drift/monitoring/config')
+  const response = await axiosClient.get<Record<string, any>>('Drift/monitoring/config')
   return response.data
 }
 

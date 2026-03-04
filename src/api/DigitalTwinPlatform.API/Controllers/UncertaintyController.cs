@@ -1,6 +1,4 @@
 using DigitalTwinPlatform.API.Services.Analytics;
-using DigitalTwinPlatform.Application.Abstractions.Services;
-using DigitalTwinPlatform.Application.Uncertainty.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -64,7 +62,7 @@ public class UncertaintyController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error performing Monte Carlo analysis for machine {MachineId}", machineId);
-            return StatusCode(500, new { Error = "Failed to perform Monte Carlo analysis" });
+            return StatusCode(500, new { Error = "Failed to perform Monte Carlo analysis", Details = ex.Message });
         }
     }
 
@@ -109,7 +107,7 @@ public class UncertaintyController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error performing Bayesian analysis for machine {MachineId}", machineId);
-            return StatusCode(500, new { Error = "Failed to perform Bayesian analysis" });
+            return StatusCode(500, new { Error = "Failed to perform Bayesian analysis", Details = ex.Message });
         }
     }
 
@@ -147,7 +145,7 @@ public class UncertaintyController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error calculating bootstrap intervals for machine {MachineId}", machineId);
-            return StatusCode(500, new { Error = "Failed to calculate bootstrap intervals" });
+            return StatusCode(500, new { Error = "Failed to calculate bootstrap intervals", Details = ex.Message });
         }
     }
 
@@ -191,7 +189,7 @@ public class UncertaintyController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error quantifying model uncertainty for machine {MachineId}", machineId);
-            return StatusCode(500, new { Error = "Failed to quantify model uncertainty" });
+            return StatusCode(500, new { Error = "Failed to quantify model uncertainty", Details = ex.Message });
         }
     }
 
@@ -283,7 +281,7 @@ public class UncertaintyController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error generating comprehensive uncertainty report for machine {MachineId}", machineId);
-            return StatusCode(500, new { Error = "Failed to generate uncertainty report" });
+            return StatusCode(500, new { Error = "Failed to generate uncertainty report", Details = ex.Message });
         }
     }
 
@@ -330,3 +328,93 @@ public class UncertaintyController : ControllerBase
         return (rulFactor * 0.4) + (uncertaintyFactor * 0.4) + (confidenceFactor * 0.2);
     }
 }
+
+#region DTOs
+
+public class MonteCarloRequest
+{
+    public Dictionary<string, double> BaseFeatures { get; set; } = [];
+    public int Iterations { get; set; } = 1000;
+    public double NoiseLevel { get; set; } = 0.1;
+}
+
+public class BayesianRequest
+{
+    public Dictionary<string, double> ObservedData { get; set; } = [];
+    public Dictionary<string, (double mean, double stdDev)> PriorDistributions { get; set; } = [];
+    public int Samples { get; set; } = 2000;
+}
+
+public class ModelUncertaintyRequest
+{
+    public Dictionary<string, double> Features { get; set; } = [];
+}
+
+public class UncertaintyAnalysisResponse
+{
+    public string AnalysisType { get; set; } = string.Empty;
+    public Guid MachineId { get; set; }
+    public double MeanPrediction { get; set; }
+    public double StandardDeviation { get; set; }
+    public ConfidenceIntervalDto ConfidenceInterval { get; set; } = new();
+    public Dictionary<string, double> FeatureUncertainties { get; set; } = [];
+    public double PredictionVariance { get; set; }
+    public int SampleCount { get; set; }
+    public DateTime Timestamp { get; set; }
+}
+
+public class ConfidenceIntervalDto
+{
+    public double LowerBound { get; set; }
+    public double UpperBound { get; set; }
+    public double ConfidenceLevel { get; set; }
+    public double? CoverageProbability { get; set; }
+    public DateTime Timestamp { get; set; }
+}
+
+public class ModelUncertaintyResponse
+{
+    public Guid MachineId { get; set; }
+    public double AleatoricUncertainty { get; set; }
+    public double EpistemicUncertainty { get; set; }
+    public double TotalUncertainty { get; set; }
+    public Dictionary<string, double> FeatureImportanceWithUncertainty { get; set; } = [];
+    public double ModelConfidence { get; set; }
+    public UncertaintyComponentsDto UncertaintyComponents { get; set; } = new();
+    public DateTime Timestamp { get; set; }
+}
+
+public class UncertaintyComponentsDto
+{
+    public double DataNoise { get; set; }
+    public double ModelVariance { get; set; }
+    public double Total { get; set; }
+}
+
+public class ComprehensiveUncertaintyReport
+{
+    public Guid MachineId { get; set; }
+    public DateTime GeneratedAt { get; set; }
+    public UncertaintyAnalysisResponse MonteCarloAnalysis { get; set; } = new();
+    public ModelUncertaintyResponse ModelUncertainty { get; set; } = new();
+    public ConfidenceIntervalDto BootstrapInterval { get; set; } = new();
+    public RiskAssessment RiskAssessment { get; set; } = new();
+}
+
+public class RiskAssessment
+{
+    public double RiskScore { get; set; }
+    public RiskLevel RiskLevel { get; set; }
+    public string Recommendation { get; set; } = string.Empty;
+    public Dictionary<string, double> Factors { get; set; } = [];
+}
+
+public enum RiskLevel
+{
+    Low,
+    Medium,
+    High,
+    Critical
+}
+
+#endregion

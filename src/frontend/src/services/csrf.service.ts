@@ -51,12 +51,13 @@ class CsrfTokenManager {
    */
   private async fetchToken(): Promise<string> {
     try {
-      const response = await axiosClient.get<AntiForgeryTokenResponse>('/AntiForgery/tokens')
-      const { requestToken, headerName, formFieldName } = response.data
+      const response = await axiosClient.get<AntiForgeryTokenResponse>('AntiForgery/tokens')
+      // Note: axiosClient returns response.data directly due to interceptors
+      const { requestToken, headerName, formFieldName } = response as any
 
       this.token = requestToken
-      this.headerName = headerName
-      this.formFieldName = formFieldName
+      this.headerName = headerName || this.headerName
+      this.formFieldName = formFieldName || this.formFieldName
 
       return this.token
     } catch (error) {

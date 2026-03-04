@@ -118,7 +118,7 @@ export interface DataSynchronizationCreateDto {
 
 // External System Service Class
 class ExternalSystemService {
-  private baseUrl = '/ExternalSystems'
+  private baseUrl = 'ExternalSystems'
 
   // External System Management
   async getAllExternalSystems(): Promise<ExternalSystem[]> {

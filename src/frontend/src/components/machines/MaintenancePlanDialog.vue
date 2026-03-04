@@ -1,49 +1,12 @@
-<template>
-  <div v-if="open" class="modal-overlay">
-    <div class="modal-content glass-panel animate-slide-up">
-      <header class="modal-header">
-        <h2>Plan Maintenance</h2>
-        <button class="close-btn" @click="$emit('cancel')">&times;</button>
-      </header>
-
-      <form @submit.prevent="handleSubmit" class="maintenance-form">
-        <div class="form-group">
-          <label>Maintenance Type</label>
-          <select v-model="form.type" required>
-            <option value="Preventive">Preventive</option>
-            <option value="Corrective">Corrective</option>
-            <option value="Inspection">Inspection</option>
-            <option value="PartReplacement">Part Replacement</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Planned Date</label>
-          <input type="datetime-local" v-model="form.plannedDate" required />
-        </div>
-
-        <div class="form-group">
-          <label>Notes</label>
-          <textarea v-model="form.notes" placeholder="Describe the maintenance tasks..." rows="4"></textarea>
-        </div>
-
-        <div v-if="alertMessage" class="alert-info">
-          <strong>Linked Alert:</strong> {{ alertMessage }}
-        </div>
-
-        <div class="form-actions">
-          <BaseButton type="button" variant="ghost" @click="$emit('cancel')">Cancel</BaseButton>
-          <BaseButton type="submit" variant="primary" :loading="submitting">Schedule Maintenance</BaseButton>
-        </div>
-      </form>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import BaseButton from '../base/BaseButton.vue'
+import { ref, reactive, useCssModule } from 'vue'
+import UiModal from '@/components/ui/UiModal.vue'
+import UiCard from '@/components/ui/UiCard.vue'
+import UiButton from '@/components/ui/UiButton.vue'
+import UiInput from '@/components/ui/UiInput.vue'
+import UiSelect from '@/components/ui/UiSelect.vue'
 import { useMaintenanceStore } from '@/stores/maintenance.store'
+import { Calendar, Wrench, Info } from 'lucide-vue-next'
 
 const props = defineProps<{
   open: boolean
@@ -54,6 +17,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['cancel', 'success'])
 
+const styles = useCssModule()
 const maintenanceStore = useMaintenanceStore()
 const submitting = ref(false)
 
@@ -62,6 +26,13 @@ const form = reactive({
   plannedDate: new Date(Date.now() + 86400000).toISOString().slice(0, 16), // Default to tomorrow
   notes: ''
 })
+
+const typeOptions = [
+  { label: 'PREVENTIVE', value: 'Preventive' },
+  { label: 'CORRECTIVE', value: 'Corrective' },
+  { label: 'INSPECTION', value: 'Inspection' },
+  { label: 'PART REPLACEMENT', value: 'PartReplacement' }
+]
 
 async function handleSubmit() {
   submitting.value = true
@@ -82,84 +53,157 @@ async function handleSubmit() {
 }
 </script>
 
-<style scoped>
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-}
+<template>
+  <UiModal :is-open="open" maxWidth="md" @close="$emit('cancel')">
+    <UiCard variant="glass" padding="xl">
+      <template #header>
+        <div :class="styles['modal-header']">
+          <div :class="styles['modal-eyebrow']">MAINTENANCE SCHEDULER</div>
+          <h2 :class="styles['modal-title']">Plan Maintenance</h2>
+          <p :class="styles['modal-sub']">Provisioning technical intervention for asset optimization</p>
+        </div>
+      </template>
 
-.modal-content {
-  width: 100%;
-  max-width: 500px;
-  padding: 2rem;
-  background: white;
-  border-radius: var(--radius-lg, 12px);
-}
+      <form @submit.prevent="handleSubmit" :class="styles['modal-form']">
+        <div :class="styles['form-grid']">
+          <UiSelect v-model="form.type" label="Intervention Type" required>
+            <option v-for="opt in typeOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+          </UiSelect>
 
+          <UiInput 
+            v-model="form.plannedDate" 
+            type="datetime-local" 
+            label="Target Schedule" 
+            required 
+          />
+
+          <div :class="styles['full-width']">
+            <label :class="styles['field-label']">Technical Notes</label>
+            <textarea 
+              v-model="form.notes" 
+              placeholder="Describe the maintenance protocol and required components..." 
+              rows="4"
+              :class="styles['textarea']"
+            ></textarea>
+          </div>
+        </div>
+
+        <div v-if="alertMessage" :class="styles['alert-info']">
+          <Info :width="14" :height="14" />
+          <div :class="styles['alert-text']">
+            <strong>LINKED ANOMALY:</strong> {{ alertMessage }}
+          </div>
+        </div>
+
+        <div :class="styles['modal-footer']">
+          <UiButton variant="ghost" type="button" @click="$emit('cancel')">Abort</UiButton>
+          <UiButton variant="primary" type="submit" :loading="submitting">
+            <Wrench :width="16" :height="16" />
+            Schedule Protocol
+          </UiButton>
+        </div>
+      </form>
+    </UiCard>
+  </UiModal>
+</template>
+
+<style module>
 .modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: var(--space-32);
 }
 
-.modal-header h2 {
+.modal-eyebrow {
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--color-primary);
+  letter-spacing: 0.2em;
+  margin-bottom: var(--space-6);
+}
+
+.modal-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
   margin: 0;
-  font-size: 1.5rem;
+  letter-spacing: -0.02em;
 }
 
-.close-btn {
-  background: transparent;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: var(--color-text-secondary);
+.modal-sub {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-top: var(--space-6);
 }
 
-.maintenance-form {
+.modal-form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-32);
 }
 
-.form-group {
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-20);
+}
+
+.full-width {
+  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-6);
 }
 
-.form-group label {
+.field-label {
+  font-size: var(--font-size-xs);
   font-weight: 600;
-  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
-  padding: 0.75rem;
-  border: 1px solid var(--color-border, #d9d9d9);
-  border-radius: var(--radius-md, 8px);
-  font-size: 1rem;
+.textarea {
+  width: 100%;
+  background: var(--color-depth-0);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-12);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  resize: none;
+  transition: all var(--transition-fast);
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-muted);
 }
 
 .alert-info {
-  padding: 1rem;
-  background: rgba(24, 144, 255, 0.1);
-  border-radius: 8px;
-  font-size: 0.85rem;
-  color: var(--primary-color, #1890ff);
+  padding: var(--space-16);
+  background: var(--color-primary-muted);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  display: flex;
+  gap: var(--space-12);
+  color: var(--color-primary);
+  font-size: 11px;
 }
 
-.form-actions {
+.alert-text {
+  line-height: 1.4;
+}
+
+.modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: var(--space-12);
+  padding-top: var(--space-24);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+@media (max-width: 640px) {
+  .form-grid { grid-template-columns: 1fr; }
 }
 </style>

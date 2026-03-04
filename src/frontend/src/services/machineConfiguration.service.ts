@@ -33,7 +33,7 @@ export interface MachineConfiguration {
  */
 export async function fetchAllConfigurations(): Promise<MachineConfiguration[]> {
   const response = await axiosClient.get<MachineConfiguration[]>(
-    '/MachineConfiguration'
+    'MachineConfiguration'
   )
   return response.data || []
 }
@@ -57,7 +57,7 @@ export async function saveConfiguration(
   configuration: MachineConfiguration
 ): Promise<MachineConfiguration> {
   const response = await axiosClient.post<MachineConfiguration>(
-    '/MachineConfiguration',
+    'MachineConfiguration',
     configuration
   )
   return response.data

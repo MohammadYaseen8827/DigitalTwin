@@ -23,7 +23,7 @@ export interface MessageResponse {
  * Refresh access token using refresh token.
  */
 export async function refreshToken(request: RefreshTokenRequest): Promise<TokenResponse> {
-  const response = await axiosClient.post<TokenResponse>('/Token/refresh', request)
+  const response = await axiosClient.post<TokenResponse>('Token/refresh', request)
   return response as unknown as TokenResponse
 }
 
@@ -31,7 +31,7 @@ export async function refreshToken(request: RefreshTokenRequest): Promise<TokenR
  * Revoke refresh token (logout from server).
  */
 export async function revokeToken(request: RevokeTokenRequest = {}): Promise<MessageResponse> {
-  const response = await axiosClient.post<MessageResponse>('/Token/revoke', request)
+  const response = await axiosClient.post<MessageResponse>('Token/revoke', request)
   return response as unknown as MessageResponse
 }
 

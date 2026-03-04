@@ -1,4 +1,4 @@
-namespace DigitalTwinPlatform.Domain.Enums;
+namespace DigitalTwinPlatform.Domain.Entities.Enums;
 
 public enum EquipmentStatus
 {

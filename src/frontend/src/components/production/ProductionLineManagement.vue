@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import BaseCard from '@/components/base/BaseCard.vue'
-import BaseButton from '@/components/base/BaseButton.vue'
-import BaseInput from '@/components/base/BaseInput.vue'
-import BaseSelect from '@/components/base/BaseSelect.vue'
+import { ref, computed, onMounted, useCssModule } from 'vue'
+import UiCard from '@/components/ui/UiCard.vue'
+import UiButton from '@/components/ui/UiButton.vue'
+import UiInput from '@/components/ui/UiInput.vue'
+import UiSelect from '@/components/ui/UiSelect.vue'
+import UiBadge from '@/components/ui/UiBadge.vue'
+import UiModal from '@/components/ui/UiModal.vue'
 import { useToast } from '@/composables/useToast'
 import { 
   fetchProductionLines,
@@ -27,31 +29,37 @@ import {
   Search,
   RefreshCw,
   Link,
-  Unlink
+  Unlink,
+  Box,
+  Cpu,
+  Activity,
+  ChevronRight,
+  Database
 } from 'lucide-vue-next'
 
+const styles = useCssModule()
 const toast = useToast()
 
 // State
-const productionLines: any = ref([])
-const machines: any = ref([])
+const productionLines = ref<any[]>([])
+const machines = ref<any[]>([])
 const loading = ref(false)
 const searchQuery = ref('')
 const machineFilter = ref('all')
 
 // Modal state
-const showCreateModal = ref(false)
-const showEditModal = ref(false)
-const showAssignModal = ref(false)
-const selectedLine: any = ref(null)
+const isManageModalOpen = ref(false)
+const isAssignModalOpen = ref(false)
+const selectedLine = ref<any>(null)
+const isEditing = computed(() => !!selectedLine.value)
 
 // Form state
-const lineForm: any = ref({
+const lineForm = ref({
   name: '',
-  configuration: {}
+  configuration: {} as Record<string, any>
 })
 
-const assignForm: any = ref({
+const assignForm = ref({
   machineIds: [] as string[]
 })
 
@@ -59,7 +67,6 @@ const assignForm: any = ref({
 const filteredLines = computed(() => {
   let filtered = [...productionLines.value]
   
-  // Apply search filter
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
     filtered = filtered.filter((line: any) => 
@@ -68,7 +75,6 @@ const filteredLines = computed(() => {
     )
   }
   
-  // Apply machine filter
   if (machineFilter.value !== 'all') {
     filtered = filtered.filter((line: any) => 
       line.machineIds?.includes(machineFilter.value)
@@ -80,459 +86,677 @@ const filteredLines = computed(() => {
 
 const machineOptions = computed(() => {
   return [
-    { label: 'All Machines', value: 'all' },
-    ...machines.value.map((machine: any) => ({
-      label: `${machine.name} (${machine.type})`,
-      value: machine.id
+    { label: 'ALL CLUSTERS', value: 'all' },
+    ...machines.value.map((m: any) => ({
+      label: `${m.name.toUpperCase()} (${m.type})`,
+      value: m.id
     }))
   ]
 })
 
 const availableMachines = computed(() => {
-  return machines.value.map((machine: any) => ({
-    ...machine,
-    assigned: selectedLine.value?.machineIds?.includes(machine.id) || false
+  return machines.value.map((m: any) => ({
+    ...m,
+    assigned: assignForm.value.machineIds.includes(m.id)
   }))
 })
 
 // Methods
-const loadProductionLines = async () => {
+const loadData = async () => {
   try {
     loading.value = true
-    productionLines.value = await fetchProductionLines()
+    const [lines, machs] = await Promise.all([
+      fetchProductionLines(),
+      fetchMachines()
+    ])
+    productionLines.value = lines || []
+    machines.value = machs || []
   } catch (error) {
-    console.error('Failed to load production lines:', error)
-    toast.error('Unable to load production lines')
+    toast.error('Registry synchronization failed')
   } finally {
     loading.value = false
   }
 }
 
-const loadMachines = async () => {
-  try {
-    machines.value = await fetchMachines()
-  } catch (error) {
-    console.error('Failed to load machines:', error)
-    // Continue without machines - not critical
-  }
-}
-
-const refreshData = async () => {
-  await Promise.all([
-    loadProductionLines(),
-    loadMachines()
-  ])
-  toast.success('Data refreshed')
-}
-
 const openCreateModal = () => {
-  resetLineForm()
-  showCreateModal.value = true
+  selectedLine.value = null
+  lineForm.value = { name: '', configuration: {} }
+  isManageModalOpen.value = true
 }
 
 const openEditModal = (line: any) => {
   selectedLine.value = line
   lineForm.value = {
     name: line.name,
-    configuration: line.configuration || {}
+    configuration: { ...(line.configuration || {}) }
   }
-  showEditModal.value = true
+  isManageModalOpen.value = true
 }
 
 const openAssignModal = (line: any) => {
   selectedLine.value = line
   assignForm.value.machineIds = [...(line.machineIds || [])]
-  showAssignModal.value = true
+  isAssignModalOpen.value = true
 }
 
-const closeModals = () => {
-  showCreateModal.value = false
-  showEditModal.value = false
-  showAssignModal.value = false
-  selectedLine.value = null
-  resetLineForm()
-}
-
-const resetLineForm = () => {
-  lineForm.value = {
-    name: '',
-    configuration: {}
-  }
-  assignForm.value = {
-    machineIds: []
-  }
-}
-
-const handleCreateLine = async () => {
+const handleSaveLine = async () => {
   try {
-    await createProductionLine(lineForm.value)
-    toast.success('Production line created successfully')
-    closeModals()
-    await loadProductionLines()
-  } catch (error) {
-    console.error('Failed to create production line:', error)
-    toast.error('Failed to create production line')
-  }
-}
-
-const handleUpdateLine = async () => {
-  if (!selectedLine.value) return
-  
-  try {
-    const updateData: ProductionLineUpdateDto = {
-      name: lineForm.value.name,
-      configuration: lineForm.value.configuration
+    if (isEditing.value) {
+      await updateProductionLine(selectedLine.value.id, lineForm.value)
+      toast.success('Protocol updated')
+    } else {
+      await createProductionLine(lineForm.value)
+      toast.success('Line provisioned')
     }
-    
-    await updateProductionLine(selectedLine.value.id, updateData)
-    toast.success('Production line updated successfully')
-    closeModals()
-    await loadProductionLines()
-  } catch (error) {
-    console.error('Failed to update production line:', error)
-    toast.error('Failed to update production line')
+    isManageModalOpen.value = false
+    await loadData()
+  } catch {
+    toast.error('Commit failed')
   }
 }
 
 const handleDeleteLine = async (line: any) => {
-  if (!confirm(`Are you sure you want to delete production line "${line.name}"?`)) {
-    return
-  }
+  if (!confirm(`Decommission production line "${line.name}"?`)) return
   
   try {
     await deleteProductionLine(line.id)
     productionLines.value = productionLines.value.filter((l: any) => l.id !== line.id)
-    toast.success('Production line deleted successfully')
-  } catch (error) {
-    console.error('Failed to delete production line:', error)
-    toast.error('Failed to delete production line')
+    toast.success('Line decommissioned')
+  } catch {
+    toast.error('Decommission failed')
   }
 }
 
-const handleAssignMachines = async () => {
+const handleUpdateAssignments = async () => {
   if (!selectedLine.value) return
   
   try {
-    const updateData: ProductionLineUpdateDto = {
-      name: selectedLine.value.name,
-      configuration: selectedLine.value.configuration || {},
+    await updateProductionLine(selectedLine.value.id, {
+      ...selectedLine.value,
       machineIds: assignForm.value.machineIds
-    }
-    
-    await updateProductionLine(selectedLine.value.id, updateData)
-    toast.success('Machine assignments updated successfully')
-    closeModals()
-    await loadProductionLines()
-  } catch (error) {
-    console.error('Failed to update machine assignments:', error)
-    toast.error('Failed to update machine assignments')
+    })
+    toast.success('Cluster mapping synchronized')
+    isAssignModalOpen.value = false
+    await loadData()
+  } catch {
+    toast.error('Mapping update failed')
   }
 }
 
-const toggleMachineAssignment = (machineId: string) => {
-  const index = assignForm.value.machineIds.indexOf(machineId)
-  if (index >= 0) {
-    assignForm.value.machineIds.splice(index, 1)
-  } else {
-    assignForm.value.machineIds.push(machineId)
-  }
+const toggleMachine = (id: string) => {
+  const idx = assignForm.value.machineIds.indexOf(id)
+  if (idx > -1) assignForm.value.machineIds.splice(idx, 1)
+  else assignForm.value.machineIds.push(id)
 }
 
-const getMachineCount = (line: any): number => {
-  return line.machineIds?.length || 0
-}
-
-const getStatusColor = (count: number): string => {
-  if (count === 0) return 'bg-red-500'
-  if (count < 3) return 'bg-yellow-500'
-  return 'bg-green-500'
-}
-
-const formatTime = (dateString?: string): string => {
-  if (!dateString) return 'N/A'
-  return new Date(dateString).toLocaleString()
-}
-
-// Lifecycle
-onMounted(async () => {
-  await refreshData()
-})
+onMounted(loadData)
 </script>
 
 <template>
-  <BaseCard>
-    <div class="production-line-management space-y-6">
-      <!-- Header -->
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-900">Production Line Management</h1>
-          <p class="text-gray-600 mt-2">Configure and manage production line configurations</p>
+  <div :class="styles['mgmt-container']">
+    <!-- Header -->
+    <header :class="styles['page-header']">
+      <div :class="styles['header-main']">
+        <div :class="styles['eyebrow']">
+          <Factory :width="14" :height="14" />
+          <span>Line Management</span>
         </div>
-        <div class="flex gap-2">
-          <BaseButton variant="outline" @click="refreshData">
-            <RefreshCw class="w-4 h-4 mr-2" />
-            Refresh
-          </BaseButton>
-          <BaseButton variant="primary" @click="openCreateModal">
-            <Plus class="w-4 h-4 mr-2" />
-            New Line
-          </BaseButton>
+        <h1 :class="styles['title']">Production Topology</h1>
+        <p :class="styles['description']">Strategic orchestration of factory floor digital clusters</p>
+      </div>
+      <div :class="styles['header-actions']">
+        <UiButton variant="secondary" @click="loadData" :loading="loading">
+          <RefreshCw :width="16" :height="16" />
+          Resync
+        </UiButton>
+        <UiButton variant="primary" @click="openCreateModal">
+          <Plus :width="16" :height="16" />
+          Provision Line
+        </UiButton>
+      </div>
+    </header>
+
+    <!-- Stats Overview -->
+    <section :class="styles['stats-grid']">
+      <UiCard variant="glass" padding="md" :class="styles['stat-card']">
+        <div :class="styles['stat-content']">
+          <div :class="[styles['stat-icon'], styles['icon--blue']]"><Box :width="20" :height="20" /></div>
+          <div>
+            <div :class="styles['stat-val']">{{ productionLines.length }}</div>
+            <div :class="styles['stat-label']">ACTIVE PROTOCOLS</div>
+          </div>
         </div>
+      </UiCard>
+      <UiCard variant="glass" padding="md" :class="styles['stat-card']">
+        <div :class="styles['stat-content']">
+          <div :class="[styles['stat-icon'], styles['icon--emerald']]"><Cpu :width="20" :height="20" /></div>
+          <div>
+            <div :class="styles['stat-val']">{{ machines.length }}</div>
+            <div :class="styles['stat-label']">LINKED ASSETS</div>
+          </div>
+        </div>
+      </UiCard>
+      <UiCard variant="glass" padding="md" :class="styles['stat-card']">
+        <div :class="styles['stat-content']">
+          <div :class="[styles['stat-icon'], styles['icon--amber']]"><Database :width="20" :height="20" /></div>
+          <div>
+            <div :class="styles['stat-val']">{{ Object.keys(machines).length }}</div>
+            <div :class="styles['stat-label']">CLUSTER NODES</div>
+          </div>
+        </div>
+      </UiCard>
+    </section>
+
+    <!-- Filter Bar -->
+    <section :class="styles['filter-section']">
+      <UiCard variant="glass" padding="sm">
+        <div :class="styles['filter-grid']">
+          <div :class="styles['search-wrap']">
+            <Search :class="styles['search-icon']" :width="14" :height="14" />
+            <UiInput v-model="searchQuery" placeholder="Filter protocols by identifier..." :class="styles['search-input']" />
+          </div>
+          <UiSelect v-model="machineFilter" :options="machineOptions" />
+        </div>
+      </UiCard>
+    </section>
+
+    <!-- Main Feed -->
+    <main :class="styles['feed-container']">
+      <div v-if="loading" :class="styles['state-box']">
+        <div :class="styles['spinner']" />
+        <span>Syncing Data Grid...</span>
       </div>
 
-      <!-- Summary Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <BaseCard>
-          <div class="p-4">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-600">Total Lines</p>
-                <p class="text-2xl font-bold">{{ productionLines.length }}</p>
-              </div>
-              <Factory class="w-8 h-8 text-blue-500" />
-            </div>
-          </div>
-        </BaseCard>
-        
-        <BaseCard>
-          <div class="p-4">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-600">Active Lines</p>
-                <p class="text-2xl font-bold">
-                  {{ productionLines.filter((l: any) => (l.machineIds?.length || 0) > 0).length }}
-                </p>
-              </div>
-              <Settings class="w-8 h-8 text-green-500" />
-            </div>
-          </div>
-        </BaseCard>
-        
-        <BaseCard>
-          <div class="p-4">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-600">Total Machines</p>
-                <p class="text-2xl font-bold">{{ machines.length }}</p>
-              </div>
-              <Link class="w-8 h-8 text-purple-500" />
-            </div>
-          </div>
-        </BaseCard>
+      <div v-else-if="filteredLines.length === 0" :class="styles['state-box']">
+        <Factory :width="48" :height="48" :class="styles['state-icon']" />
+        <h3>Empty Registry</h3>
+        <p>No production line records found in the current sector.</p>
+        <UiButton variant="secondary" size="sm" @click="openCreateModal">Initialize First Protocol</UiButton>
       </div>
 
-      <!-- Filters -->
-      <BaseCard>
-        <div class="p-4 space-y-4">
-          <div class="flex flex-col sm:flex-row gap-4">
-            <div class="flex-1">
-              <div class="relative">
-                <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <BaseInput
-                  v-model="searchQuery"
-                  placeholder="Search production lines..."
-                  class="pl-10"
-                />
-              </div>
-            </div>
-            
-            <BaseSelect
-              v-model="machineFilter"
-              :options="machineOptions"
-            />
-          </div>
-        </div>
-      </BaseCard>
-
-      <!-- Production Lines List -->
-      <BaseCard>
-        <div class="p-6">
-          <h2 class="text-xl font-semibold mb-4">
-            Production Lines ({{ filteredLines.length }})
-          </h2>
-          
-          <div v-if="loading" class="text-center py-8">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-            <p class="mt-2 text-gray-600">Loading production lines...</p>
-          </div>
-          
-          <div v-else-if="filteredLines.length === 0" class="text-center py-8">
-            <Factory class="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p class="text-gray-600">No production lines found</p>
-            <p class="text-sm text-gray-500 mt-1">Create your first production line to get started</p>
-          </div>
-          
-          <div v-else class="space-y-4">
-            <BaseCard
-              v-for="line in filteredLines"
-              :key="line.id"
-              class="hover:shadow-md transition-shadow"
-            >
-              <div class="p-4">
-                <div class="flex flex-col sm:flex-row justify-between gap-4">
-                  <div class="flex-1">
-                    <div class="flex items-start justify-between mb-3">
-                      <div>
-                        <h3 class="text-lg font-semibold text-gray-900">{{ line.name }}</h3>
-                        <p class="text-gray-600 text-sm font-mono">ID: {{ line.id }}</p>
-                      </div>
-                      <span 
-                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white"
-                        :class="getStatusColor(getMachineCount(line))"
-                      >
-                        {{ getMachineCount(line) }} machines
-                      </span>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
-                      <div>
-                        <span class="font-medium">Machines Assigned:</span>
-                        <p>{{ getMachineCount(line) }}</p>
-                      </div>
-                      <div>
-                        <span class="font-medium">Configuration:</span>
-                        <p>{{ Object.keys(line.configuration || {}).length }} settings</p>
-                      </div>
-                      <div>
-                        <span class="font-medium">Machine IDs:</span>
-                        <p class="text-xs font-mono truncate">
-                          {{ line.machineIds?.join(', ') || 'None' }}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="flex flex-col gap-2">
-                    <BaseButton
-                      size="sm"
-                      variant="primary"
-                      @click="openAssignModal(line)"
-                    >
-                      <Link class="w-4 h-4 mr-1" />
-                      Assign Machines
-                    </BaseButton>
-                    
-                    <BaseButton
-                      size="sm"
-                      variant="outline"
-                      @click="openEditModal(line)"
-                    >
-                      <Edit class="w-4 h-4 mr-1" />
-                      Edit
-                    </BaseButton>
-                    
-                    <BaseButton
-                      size="sm"
-                      variant="outline"
-                      @click="handleDeleteLine(line)"
-                      class="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 class="w-4 h-4 mr-1" />
-                      Delete
-                    </BaseButton>
-                  </div>
+      <div v-else :class="styles['line-grid']">
+        <UiCard 
+          v-for="line in filteredLines" 
+          :key="line.id" 
+          variant="default" 
+          padding="none"
+          hover
+          :class="styles['line-card']"
+        >
+          <div :class="styles['card-body']">
+            <div :class="styles['card-header']">
+              <div :class="styles['line-id-block']">
+                <div :class="styles['line-icon']"><Factory :width="18" :height="18" /></div>
+                <div :class="styles['line-titles']">
+                  <h4 :class="styles['line-name']">{{ line.name }}</h4>
+                  <span :class="styles['line-sn']">ID: {{ line.id }}</span>
                 </div>
               </div>
-            </BaseCard>
-          </div>
-        </div>
-      </BaseCard>
-    </div>
-  </BaseCard>
+              <UiBadge :variant="line.machineIds?.length ? 'operational' : 'critical'" size="sm" dot>
+                {{ line.machineIds?.length || 0 }} NODES
+              </UiBadge>
+            </div>
 
-  <!-- Create/Edit Modal -->
-  <div 
-    v-if="showCreateModal || showEditModal" 
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-    @click="closeModals"
-  >
-    <BaseCard class="w-full max-w-md" @click.stop>
-      <div class="p-6">
-        <h2 class="text-2xl font-bold mb-6">
-          {{ showEditModal ? 'Edit Production Line' : 'Create Production Line' }}
-        </h2>
-        
-        <form @submit.prevent="showEditModal ? handleUpdateLine() : handleCreateLine()" class="space-y-4">
-          <BaseInput
-            v-model="lineForm.name"
-            label="Line Name"
-            required
-          />
+            <div :class="styles['line-meta']">
+              <div :class="styles['meta-item']">
+                <span :class="styles['meta-label']">Asset Distribution</span>
+                <div :class="styles['tag-cloud']">
+                  <span v-for="mid in line.machineIds?.slice(0, 3)" :key="mid" :class="styles['machine-tag']">{{ mid }}</span>
+                  <span v-if="line.machineIds?.length > 3" :class="styles['tag-more']">+{{ line.machineIds.length - 3 }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div :class="styles['card-footer']">
+               <UiButton variant="ghost" size="sm" @click="openAssignModal(line)">
+                 <Link :width="14" :height="14" />
+                 Map Assets
+               </UiButton>
+               <UiButton variant="ghost" size="sm" @click="openEditModal(line)">
+                 <Edit :width="14" :height="14" />
+                 Config
+               </UiButton>
+               <UiButton variant="ghost" size="sm" :class="styles['btn-danger']" @click="handleDeleteLine(line)">
+                 <Trash2 :width="14" :height="14" />
+               </UiButton>
+            </div>
+          </div>
+        </UiCard>
+      </div>
+    </main>
+
+    <!-- Create/Edit Modal -->
+    <UiModal :is-open="isManageModalOpen" maxWidth="md" @close="isManageModalOpen = false">
+      <UiCard variant="glass" padding="xl">
+        <template #header>
+          <div :class="styles['modal-header']">
+            <div :class="styles['modal-eyebrow']">TOPOLOGY CONFIG v2.4</div>
+            <h2 :class="styles['modal-title']">{{ isEditing ? 'Update Protocol' : 'Provision Line' }}</h2>
+            <p :class="styles['modal-sub']">Configure structural parameters for digital twin synchronization</p>
+          </div>
+        </template>
+
+        <form @submit.prevent="handleSaveLine" :class="styles['modal-form']">
+          <UiInput v-model="lineForm.name" label="Protocol Identifier" placeholder="e.g., SECTOR-A-ASSEMBLY" required />
           
-          <div class="pt-4">
-            <BaseButton variant="ghost" @click="closeModals">
-              Cancel
-            </BaseButton>
-            <BaseButton variant="primary" type="submit" class="ml-2">
-              {{ showEditModal ? 'Update' : 'Create' }} Line
-            </BaseButton>
+          <div :class="styles['modal-footer']">
+            <UiButton variant="ghost" @click="isManageModalOpen = false">Abort</UiButton>
+            <UiButton variant="primary" type="submit">
+              {{ isEditing ? 'Commit Changes' : 'Initialize Protocol' }}
+            </UiButton>
           </div>
         </form>
-      </div>
-    </BaseCard>
-  </div>
+      </UiCard>
+    </UiModal>
 
-  <!-- Assign Machines Modal -->
-  <div 
-    v-if="showAssignModal" 
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-    @click="closeModals"
-  >
-    <BaseCard class="w-full max-w-2xl max-h-[80vh] overflow-hidden" @click.stop>
-      <div class="p-6">
-        <h2 class="text-2xl font-bold mb-6">
-          Assign Machines to {{ selectedLine?.name }}
-        </h2>
-        
-        <div class="mb-4 max-h-96 overflow-y-auto">
-          <div 
-            v-for="machine in availableMachines" 
-            :key="machine.id"
-            class="flex items-center justify-between p-3 border rounded-lg mb-2 hover:bg-gray-50"
-            :class="{ 'bg-blue-50 border-blue-200': machine.assigned }"
+    <!-- Assign Modal -->
+    <UiModal :is-open="isAssignModalOpen" maxWidth="lg" @close="isAssignModalOpen = false">
+      <UiCard variant="glass" padding="xl">
+        <template #header>
+          <div :class="styles['modal-header']">
+            <div :class="styles['modal-eyebrow']">CLUSTER MAPPING</div>
+            <h2 :class="styles['modal-title']">Asset Integration</h2>
+            <p :class="styles['modal-sub']">Mapping physical nodes to the {{ selectedLine?.name }} protocol</p>
+          </div>
+        </template>
+
+        <div :class="styles['assign-grid']">
+          <div v-if="machines.length === 0" :class="styles['empty-assign']">
+            No assets available for mapping in the current registry.
+          </div>
+          <button 
+            v-for="m in machines" 
+            :key="m.id" 
+            :class="[styles['assign-item'], assignForm.machineIds.includes(m.id) && styles['item--active']]"
+            @click="toggleMachine(m.id)"
           >
-            <div>
-              <h3 class="font-medium">{{ machine.name }}</h3>
-              <p class="text-sm text-gray-600">{{ machine.type }} • {{ machine.location }}</p>
+            <div :class="styles['item-info']">
+              <span :class="styles['item-name']">{{ m.name }}</span>
+              <span :class="styles['item-meta']">{{ m.type }} • {{ m.location }}</span>
             </div>
-            <BaseButton
-              :variant="machine.assigned ? 'primary' : 'outline'"
-              size="sm"
-              @click="toggleMachineAssignment(machine.id)"
-            >
-              {{ machine.assigned ? 'Assigned' : 'Assign' }}
-            </BaseButton>
+            <div :class="styles['item-check']">
+              <Plus v-if="!assignForm.machineIds.includes(m.id)" :width="14" :height="14" />
+              <ChevronRight v-else :width="14" :height="14" />
+            </div>
+          </button>
+        </div>
+
+        <div :class="styles['modal-footer']">
+          <div :class="styles['selection-info']">{{ assignForm.machineIds.length }} NODES LINKED</div>
+          <div :class="styles['footer-actions']">
+            <UiButton variant="ghost" @click="isAssignModalOpen = false">Cancel</UiButton>
+            <UiButton variant="primary" @click="handleUpdateAssignments">Sync Mapping</UiButton>
           </div>
         </div>
-        
-        <div class="flex justify-between pt-4">
-          <div class="text-sm text-gray-600">
-            Selected: {{ assignForm.machineIds.length }} machines
-          </div>
-          <div class="flex gap-2">
-            <BaseButton variant="ghost" @click="closeModals">
-              Cancel
-            </BaseButton>
-            <BaseButton variant="primary" @click="handleAssignMachines">
-              Save Assignments
-            </BaseButton>
-          </div>
-        </div>
-      </div>
-    </BaseCard>
+      </UiCard>
+    </UiModal>
   </div>
 </template>
 
-<style scoped>
-.production-line-management {
+<style module>
+.mgmt-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-32);
   max-width: 1400px;
   margin: 0 auto;
-  padding: 1rem;
 }
 
-@media (max-width: 640px) {
-  .production-line-management {
-    padding: 0.5rem;
-  }
+/* Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-bottom: var(--space-24);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--color-primary);
+  margin-bottom: var(--space-6);
+}
+
+.title {
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.header-actions {
+  display: flex;
+  gap: var(--space-12);
+}
+
+/* Stats */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-20);
+}
+
+.stat-card {
+  border: 1px solid var(--color-border-subtle);
+}
+
+.stat-content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-depth-1);
+}
+
+.icon--blue { color: var(--color-primary); }
+.icon--emerald { color: var(--color-emerald); }
+.icon--amber { color: var(--color-amber); }
+
+.stat-val {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--color-text-dim);
+  letter-spacing: 0.1em;
+  margin-top: 4px;
+}
+
+/* Filters */
+.filter-grid {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: var(--space-16);
+  align-items: center;
+}
+
+.search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: var(--space-12);
+  color: var(--color-text-dim);
+  z-index: 10;
+}
+
+.search-input :global(.input) {
+  padding-left: var(--space-32);
+}
+
+/* Grid */
+.line-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: var(--space-20);
+}
+
+.card-body {
+  padding: var(--space-24);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.line-id-block {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+}
+
+.line-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--color-depth-1);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+}
+
+.line-name {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 750;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+}
+
+.line-sn {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  font-family: var(--font-mono);
+}
+
+.line-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.meta-label {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+  margin-bottom: var(--space-8);
+  display: block;
+}
+
+.tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+}
+
+.machine-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+}
+
+.tag-more {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  padding-left: 4px;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-8);
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.btn-danger { color: var(--color-danger); }
+.btn-danger:hover { background: var(--color-danger-muted) !important; }
+
+/* Modals */
+.modal-header {
+  margin-bottom: var(--space-32);
+}
+
+.modal-eyebrow {
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--color-primary);
+  letter-spacing: 0.2em;
+  margin-bottom: var(--space-6);
+}
+
+.modal-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.modal-sub {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-top: var(--space-6);
+  line-height: var(--font-lineheight-relaxed);
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-32);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-16);
+  padding-top: var(--space-24);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.assign-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: var(--space-8);
+  margin-bottom: var(--space-32);
+}
+
+.assign-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-16);
+  background: var(--color-depth-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.assign-item:hover {
+  background: var(--color-surface);
+  border-color: var(--color-border-strong);
+}
+
+.item--active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-muted);
+}
+
+.item-name {
+  display: block;
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.item-meta {
+  font-size: 11px;
+  color: var(--color-text-dim);
+}
+
+.item-check {
+  color: var(--color-text-dim);
+}
+
+.item--active .item-check {
+  color: var(--color-primary);
+}
+
+.selection-info {
+  flex: 1;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--color-text-dim);
+  letter-spacing: 0.05em;
+}
+
+.footer-actions {
+  display: flex;
+  gap: var(--space-12);
+}
+
+/* States */
+.state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-64);
+  gap: var(--space-20);
+  color: var(--color-text-dim);
+  text-align: center;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 1024px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .filter-grid { grid-template-columns: 1fr; }
+  .line-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 768px) {
+  .line-grid { grid-template-columns: 1fr; }
+  .page-header { flex-direction: column; align-items: flex-start; gap: var(--space-24); }
 }
 </style>

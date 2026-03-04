@@ -71,7 +71,7 @@ export interface TenantSettingUpdateDto {
 
 // Tenant Service Class
 class TenantService {
-  private baseUrl = '/Tenants'
+  private baseUrl = 'Tenants'
 
   async getAllTenants(): Promise<Tenant[]> {
     try {

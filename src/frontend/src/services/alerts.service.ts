@@ -10,7 +10,7 @@ const toast = useToast()
 export async function fetchActiveAlerts(machineId?: string): Promise<AlertDto[]> {
   try {
     const params = machineId ? { machineId } : {}
-    const response = await axiosClient.get('/Alerts', { params })
+    const response = await axiosClient.get('Alerts', { params })
     return response.data
   } catch (error) {
     if (import.meta.env.DEV) {

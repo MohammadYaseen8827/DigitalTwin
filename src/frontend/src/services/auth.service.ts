@@ -88,7 +88,7 @@ export interface MessageResponse {
  * Register a new user account.
  */
 export async function register(request: RegisterRequest): Promise<RegisterResponse> {
-  const response = await axiosClient.post<RegisterResponse>('/Auth/register', request)
+  const response = await axiosClient.post<RegisterResponse>('Auth/register', request)
   return response as unknown as RegisterResponse
 }
 
@@ -96,7 +96,7 @@ export async function register(request: RegisterRequest): Promise<RegisterRespon
  * Authenticate user and get access tokens.
  */
 export async function login(request: LoginRequest): Promise<AuthResponse> {
-  const response = await axiosClient.post<AuthResponse>('/Auth/login', request)
+  const response = await axiosClient.post<AuthResponse>('Auth/login', request)
   return response as unknown as AuthResponse
 }
 
@@ -104,7 +104,7 @@ export async function login(request: LoginRequest): Promise<AuthResponse> {
  * Refresh access token using refresh token.
  */
 export async function refreshToken(refreshTokenValue: string): Promise<AuthResponse> {
-  const response = await axiosClient.post<AuthResponse>('/Auth/refresh', {
+  const response = await axiosClient.post<AuthResponse>('Auth/refresh', {
     refreshToken: refreshTokenValue
   })
   return response as unknown as AuthResponse
@@ -114,7 +114,7 @@ export async function refreshToken(refreshTokenValue: string): Promise<AuthRespo
  * Revoke a refresh token.
  */
 export async function revokeToken(refreshTokenValue: string): Promise<void> {
-  await axiosClient.post('/Auth/revoke', {
+  await axiosClient.post('Auth/revoke', {
     refreshToken: refreshTokenValue
   })
 }
@@ -123,7 +123,7 @@ export async function revokeToken(refreshTokenValue: string): Promise<void> {
  * Get current authenticated user's profile.
  */
 export async function getCurrentUser(): Promise<CurrentUserResponse> {
-  const response = await axiosClient.get<CurrentUserResponse>('/Auth/me')
+  const response = await axiosClient.get<CurrentUserResponse>('Auth/me')
   return response as unknown as CurrentUserResponse
 }
 
@@ -131,7 +131,7 @@ export async function getCurrentUser(): Promise<CurrentUserResponse> {
  * Update the current user's profile.
  */
 export async function updateProfile(request: UpdateProfileRequest): Promise<CurrentUserResponse> {
-  const response = await axiosClient.put<CurrentUserResponse>('/Auth/profile', request)
+  const response = await axiosClient.put<CurrentUserResponse>('Auth/profile', request)
   return response as unknown as CurrentUserResponse
 }
 
@@ -139,7 +139,7 @@ export async function updateProfile(request: UpdateProfileRequest): Promise<Curr
  * Change the current user's password.
  */
 export async function changePassword(request: ChangePasswordRequest): Promise<MessageResponse> {
-  const response = await axiosClient.post<MessageResponse>('/Auth/change-password', request)
+  const response = await axiosClient.post<MessageResponse>('Auth/change-password', request)
   return response as unknown as MessageResponse
 }
 
@@ -147,7 +147,7 @@ export async function changePassword(request: ChangePasswordRequest): Promise<Me
  * Initiate forgot password flow.
  */
 export async function forgotPassword(request: ForgotPasswordRequest): Promise<MessageResponse> {
-  const response = await axiosClient.post<MessageResponse>('/Auth/forgot-password', request)
+  const response = await axiosClient.post<MessageResponse>('Auth/forgot-password', request)
   return response as unknown as MessageResponse
 }
 
@@ -155,7 +155,7 @@ export async function forgotPassword(request: ForgotPasswordRequest): Promise<Me
  * Reset password using reset token.
  */
 export async function resetPassword(request: ResetPasswordRequest): Promise<MessageResponse> {
-  const response = await axiosClient.post<MessageResponse>('/Auth/reset-password', request)
+  const response = await axiosClient.post<MessageResponse>('Auth/reset-password', request)
   return response as unknown as MessageResponse
 }
 
@@ -163,14 +163,14 @@ export async function resetPassword(request: ResetPasswordRequest): Promise<Mess
  * Log out current user and revoke all tokens.
  */
 export async function logout(): Promise<void> {
-  await axiosClient.post('/Auth/logout')
+  await axiosClient.post('Auth/logout')
 }
 
 /**
  * Enable two-factor authentication - returns QR code for setup.
  */
 export async function enableTwoFactor(): Promise<TwoFactorSetupResponse> {
-  const response = await axiosClient.post<TwoFactorSetupResponse>('/Auth/2fa/enable')
+  const response = await axiosClient.post<TwoFactorSetupResponse>('Auth/2fa/enable')
   return response as unknown as TwoFactorSetupResponse
 }
 
@@ -178,7 +178,7 @@ export async function enableTwoFactor(): Promise<TwoFactorSetupResponse> {
  * Verify 2FA code and complete 2FA setup.
  */
 export async function verifyTwoFactor(request: TwoFactorVerifyRequest): Promise<MessageResponse> {
-  const response = await axiosClient.post<MessageResponse>('/Auth/2fa/verify', request)
+  const response = await axiosClient.post<MessageResponse>('Auth/2fa/verify', request)
   return response as unknown as MessageResponse
 }
 
@@ -186,7 +186,7 @@ export async function verifyTwoFactor(request: TwoFactorVerifyRequest): Promise<
  * Disable two-factor authentication.
  */
 export async function disableTwoFactor(request: TwoFactorVerifyRequest): Promise<MessageResponse> {
-  const response = await axiosClient.post<MessageResponse>('/Auth/2fa/disable', request)
+  const response = await axiosClient.post<MessageResponse>('Auth/2fa/disable', request)
   return response as unknown as MessageResponse
 }
 

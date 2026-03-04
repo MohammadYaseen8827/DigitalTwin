@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/composables/useToast'
 
 const authStore = useAuthStore()
+const toast = useToast()
 
 // API configuration
 const apiUrl = ref('https://api.digitaltwin.example.com')
@@ -50,7 +52,7 @@ async function exportData() {
     URL.revokeObjectURL(url)
     
     isExporting.value = false
-    alert('Data exported successfully!')
+    toast.success('Data exported successfully!')
 }
 
 // Clear cache
@@ -66,7 +68,7 @@ async function clearCache() {
     
     cacheSize.value = '0 MB'
     isClearingCache.value = false
-    alert('Cache cleared successfully!')
+    toast.success('Cache cleared successfully!')
 }
 
 // Refresh connection status
@@ -88,7 +90,7 @@ function resetToDefaults() {
     
     exportFormat.value = 'csv'
     exportDateRange.value = '7d'
-    alert('System settings reset to defaults!')
+    toast.success('System settings reset to defaults!')
 }
 
 // Check if user is admin

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace DigitalTwinPlatform.Infrastructure.Persistence;
 
@@ -23,6 +24,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<DigitalTwi
         builder.ConfigureWarnings(warnings => warnings.Ignore(
             Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 
-        return new DigitalTwinDbContext(builder.Options, null!);
+        var loggerFactory = LoggerFactory.Create(builder => { });
+        return new DigitalTwinDbContext(builder.Options, null!, loggerFactory);
     }
 }

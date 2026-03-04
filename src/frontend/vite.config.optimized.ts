@@ -56,13 +56,13 @@ export default defineConfig({
           'ui-components': ['@/components/base', '@/components/layout'],
           'charting': ['echarts', 'vue-echarts'],
           'utilities': ['lodash-es', 'moment', 'axios'],
-          
+
           // Route-based chunks for better caching
           'dashboard-pages': ['@/views/Dashboard.vue', '@/views/Overview.vue'],
           'maintenance-pages': ['@/views/Maintenance.vue', '@/views/MaintenanceSchedule.vue'],
           'analytics-pages': ['@/views/Analytics.vue', '@/views/Reports.vue'],
           'configuration-pages': ['@/views/Configuration.vue', '@/views/Settings.vue'],
-          
+
           // Heavy component chunks
           'data-tables': ['@/components/data', '@/components/grid'],
           'forms': ['@/components/forms', '@/components/input'],
@@ -87,11 +87,11 @@ export default defineConfig({
       },
       external: []
     },
-    
+
     // Performance optimizations
     chunkSizeWarningLimit: 1000,
     assetsInlineLimit: 4096, // Inline assets smaller than 4kb
-    
+
     terserOptions: {
       compress: {
         drop_console: true,
@@ -107,7 +107,7 @@ export default defineConfig({
         comments: false
       }
     },
-    
+
     // CSS optimization
     cssCodeSplit: true,
     cssMinify: 'esbuild',
@@ -119,11 +119,11 @@ export default defineConfig({
     strictPort: false,
     open: true,
     cors: true,
-    
+
     // Proxy for API requests
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:7300',
         changeOrigin: true,
         secure: false,
         ws: true

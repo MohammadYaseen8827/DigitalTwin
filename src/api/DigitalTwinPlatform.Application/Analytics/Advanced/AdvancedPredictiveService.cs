@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using DigitalTwinPlatform.Application.Abstractions.Repositories;
 using DigitalTwinPlatform.Application.Abstractions.UnitOfWork;
 using DigitalTwinPlatform.Application.Analytics.Advanced.Models;
@@ -293,11 +292,8 @@ public class AdvancedPredictiveService(
             "temperature" => flatHistoricalData.Select(t => t.Temperature).ToArray(),
             "vibration" => flatHistoricalData.Select(t => t.Vibration).ToArray(),
             "pressure" => flatHistoricalData.Where(t => t.Pressure.HasValue)
-                .Select(t =>
-                {
-                    Debug.Assert(t.Pressure != null);
-                    return t.Pressure.Value;
-                }).ToArray(),
+                .Select(t => t.Pressure!.Value)
+                .ToArray(),
             _ => throw new ArgumentException($"Unsupported metric: {metric}")
         };
 
@@ -377,11 +373,7 @@ public class AdvancedPredictiveService(
     {
         var temperatures = telemetry.Select(t => t.Temperature).ToArray();
         var vibrations = telemetry.Select(t => t.Vibration).ToArray();
-        var pressures = telemetry.Where(t => t.Pressure.HasValue).Select(t =>
-        {
-            Debug.Assert(t.Pressure != null);
-            return t.Pressure.Value;
-        }).ToArray();
+        var pressures = telemetry.Where(t => t.Pressure.HasValue).Select(t => t.Pressure!.Value).ToArray();
 
         return new Dictionary<string, double>
         {

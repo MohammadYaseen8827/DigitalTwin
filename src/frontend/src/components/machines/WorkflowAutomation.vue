@@ -603,67 +603,8 @@ const machineTypes = [
 const loadWorkflows = async () => {
   try {
     loading.value = true
-    // Mock workflows - in real implementation, this would come from API
-    workflows.value = [
-      {
-        id: 'wf_1',
-        name: 'Monthly Maintenance Reminder',
-        description: 'Sends maintenance reminders for all machines monthly',
-        type: 'maintenance',
-        status: 'active',
-        enabled: true,
-        trigger: {
-          type: 'schedule',
-          cronExpression: '0 0 9 1 * *'
-        },
-        actions: [
-          {
-            type: 'notification',
-            recipients: 'maintenance@company.com',
-            subject: 'Monthly Maintenance Reminder',
-            message: 'Review maintenance schedules for all machines'
-          }
-        ],
-        target: {
-          type: 'all'
-        },
-        tags: ['maintenance', 'reminder'],
-        createdAt: new Date(Date.now() - 86400000).toISOString(),
-        updatedAt: new Date().toISOString(),
-        lastRun: new Date(Date.now() - 3600000).toISOString(),
-        nextRun: new Date(Date.now() + 86400000).toISOString()
-      },
-      {
-        id: 'wf_2',
-        name: 'Critical Machine Alert',
-        description: 'Alerts when machines reach critical status',
-        type: 'alerting',
-        status: 'active',
-        enabled: true,
-        trigger: {
-          type: 'condition',
-          conditionField: 'status',
-          conditionOperator: 'equals',
-          conditionValue: 'critical'
-        },
-        actions: [
-          {
-            type: 'notification',
-            recipients: 'alerts@company.com, supervisor@company.com',
-            subject: 'Critical Machine Alert - {{machine.name}}',
-            message: 'Machine {{machine.name}} has reached critical status'
-          }
-        ],
-        target: {
-          type: 'all'
-        },
-        tags: ['alerting', 'critical'],
-        createdAt: new Date(Date.now() - 172800000).toISOString(),
-        updatedAt: new Date().toISOString(),
-        lastRun: null,
-        nextRun: null
-      }
-    ]
+    // In real implementation, this would come from API
+    workflows.value = []
   } catch (error) {
     console.error('Failed to load workflows:', error)
     toast.error('Unable to load workflows')

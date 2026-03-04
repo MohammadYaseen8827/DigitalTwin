@@ -7,7 +7,7 @@ export class SearchService {
    * POST /api/Search
    */
   static async search(request: SearchRequestDto): Promise<SearchResultDto> {
-    const response = await axiosClient.post<SearchResultDto>('/Search', request)
+    const response = await axiosClient.post<SearchResultDto>('Search', request)
     return response.data
   }
 

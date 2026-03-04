@@ -182,12 +182,7 @@ async function fetchHealthData() {
         healthData.value = response.data
     } catch (error) {
         console.error('Error fetching health trend data:', error)
-        // Only show mock data in development; in production show empty state
-        if (import.meta.env.DEV) {
-            generateMockData()
-        } else {
-            healthData.value = []
-        }
+        healthData.value = []
     } finally {
         isLoading.value = false
     }
@@ -202,34 +197,6 @@ async function fetchMaintenanceEvents() {
     }
 }
 
-/** Set to true when showing fallback sample data (no real API data). */
-const isSampleData = ref(false)
-
-function generateMockData() {
-    isSampleData.value = true
-    const now = new Date()
-    const data: HealthTrendDataPoint[] = []
-    let health = 95
-
-    for (let i = props.days * 24; i >= 0; i--) {
-        const timestamp = new Date(now.getTime() - i * 3600000)
-        health = Math.max(30, Math.min(100, health + (Math.random() - 0.5) * 5))
-        
-        if (i % 168 === 0) {
-            health = Math.min(100, health + 10)
-        } else if (i % 72 === 0) {
-            health = health - 5
-        }
-        
-        data.push({
-            timestamp,
-            healthScore: Math.round(health),
-            machineId: props.machineId
-        })
-    }
-    
-    healthData.value = data
-}
 
 onMounted(() => {
     fetchHealthData()
@@ -251,10 +218,6 @@ onMounted(() => {
             :options="chartOptions"
             :series="series"
         />
-
-        <p v-if="isSampleData && !isLoading" class="mt-2 text-xs text-gray-500 italic">
-            Sample data — no API data available
-        </p>
 
         <div v-if="maintenanceEvents.length > 0" class="mt-4 flex gap-4 text-sm">
             <div class="flex items-center">

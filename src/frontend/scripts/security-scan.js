@@ -13,12 +13,12 @@ const path = require('path');
 function safePathJoin(baseDir, ...segments) {
   // Normalize and resolve the path
   const resolvedPath = path.resolve(baseDir, ...segments);
-  
+
   // Ensure the resolved path is within the base directory
   if (!resolvedPath.startsWith(path.resolve(baseDir))) {
     throw new Error('Path traversal detected');
   }
-  
+
   return resolvedPath;
 }
 
@@ -26,7 +26,7 @@ function safePathJoin(baseDir, ...segments) {
 const CONFIG = {
   targets: [
     'http://localhost:5173',  // Frontend
-    'http://localhost:5000'   // Backend API
+    'http://localhost:7300'   // Backend API
   ],
   scanTypes: {
     nmap: true,
@@ -45,7 +45,7 @@ class SecurityScanner {
       targets: CONFIG.targets,
       scans: {}
     };
-    
+
     // Create output directory
     if (!fs.existsSync(CONFIG.outputDir)) {
       fs.mkdirSync(CONFIG.outputDir, { recursive: true });
@@ -54,66 +54,66 @@ class SecurityScanner {
 
   async runFullScan() {
     console.log('🔒 Starting Security Vulnerability Assessment...\n');
-    
+
     for (const target of CONFIG.targets) {
       console.log(`🔍 Scanning target: ${target}`);
       this.results.scans[target] = {};
-      
+
       if (CONFIG.scanTypes.nmap) {
         await this.runNmapScan(target);
       }
-      
+
       if (CONFIG.scanTypes.nikto && target.includes('http')) {
         await this.runNiktoScan(target);
       }
-      
+
       if (CONFIG.scanTypes.ssl && target.includes('https')) {
         await this.runSSLScan(target);
       }
     }
-    
+
     // Run ZAP scan for comprehensive web application security
     if (CONFIG.scanTypes.zap) {
       await this.runZAPScan();
     }
-    
+
     this.generateReport();
     this.printSummary();
   }
 
   async runNmapScan(target) {
     console.log('   📡 Running Nmap port scan...');
-    
+
     return new Promise((resolve) => {
       const host = target.replace('http://', '').replace('https://', '').split(':')[0];
       const nmap = spawn('nmap', ['-sV', '-O', '--script', 'vuln', host]);
-      
+
       let output = '';
       let errors = '';
-      
+
       nmap.stdout.on('data', (data) => {
         output += data.toString();
       });
-      
+
       nmap.stderr.on('data', (data) => {
         errors += data.toString();
       });
-      
+
       nmap.on('close', (code) => {
         this.results.scans[target].nmap = {
           output,
           errors,
           exitCode: code
         };
-        
+
         // Save detailed output
         const outputPath = safePathJoin(CONFIG.outputDir, `nmap-${this.sanitizeFilename(target)}.txt`);
         fs.writeFileSync(outputPath, output);
-        
+
         console.log(`   📡 Nmap scan completed for ${target}`);
         resolve();
       });
-      
+
       // Timeout after configured time
       setTimeout(() => {
         nmap.kill();
@@ -125,36 +125,36 @@ class SecurityScanner {
 
   async runNiktoScan(target) {
     console.log('   🕵️ Running Nikto web scanner...');
-    
+
     return new Promise((resolve) => {
       const nikto = spawn('nikto', ['-h', target, '-C', 'all']);
-      
+
       let output = '';
       let errors = '';
-      
+
       nikto.stdout.on('data', (data) => {
         output += data.toString();
       });
-      
+
       nikto.stderr.on('data', (data) => {
         errors += data.toString();
       });
-      
+
       nikto.on('close', (code) => {
         this.results.scans[target].nikto = {
           output,
           errors,
           exitCode: code
         };
-        
+
         // Save detailed output
         const outputPath = safePathJoin(CONFIG.outputDir, `nikto-${this.sanitizeFilename(target)}.txt`);
         fs.writeFileSync(outputPath, output);
-        
+
         console.log(`   🕵️ Nikto scan completed for ${target}`);
         resolve();
       });
-      
+
       // Timeout after configured time
       setTimeout(() => {
         nikto.kill();
@@ -166,39 +166,39 @@ class SecurityScanner {
 
   async runSSLScan(target) {
     console.log('   🔐 Running SSL/TLS security scan...');
-    
+
     return new Promise((resolve) => {
       const host = target.replace('https://', '').split(':')[0];
       const port = target.includes(':') ? target.split(':')[2] : '443';
-      
+
       const sslscan = spawn('sslscan', [`${host}:${port}`]);
-      
+
       let output = '';
       let errors = '';
-      
+
       sslscan.stdout.on('data', (data) => {
         output += data.toString();
       });
-      
+
       sslscan.stderr.on('data', (data) => {
         errors += data.toString();
       });
-      
+
       sslscan.on('close', (code) => {
         this.results.scans[target].ssl = {
           output,
           errors,
           exitCode: code
         };
-        
+
         // Save detailed output
         const outputPath = safePathJoin(CONFIG.outputDir, `sslscan-${this.sanitizeFilename(target)}.txt`);
         fs.writeFileSync(outputPath, output);
-        
+
         console.log(`   🔐 SSL scan completed for ${target}`);
         resolve();
       });
-      
+
       // Timeout after configured time
       setTimeout(() => {
         sslscan.kill();
@@ -210,22 +210,22 @@ class SecurityScanner {
 
   async runZAPScan() {
     console.log('   🕷️ Running OWASP ZAP web application scan...');
-    
+
     return new Promise((resolve) => {
       // Check if ZAP is installed and running
       const zap = spawn('zap-cli', ['quick-scan', 'http://localhost:5173']);
-      
+
       let output = '';
       let errors = '';
-      
+
       zap.stdout.on('data', (data) => {
         output += data.toString();
       });
-      
+
       zap.stderr.on('data', (data) => {
         errors += data.toString();
       });
-      
+
       zap.on('close', (code) => {
         this.results.scans.webapp = {
           zap: {
@@ -234,15 +234,15 @@ class SecurityScanner {
             exitCode: code
           }
         };
-        
+
         // Save detailed output
         const outputPath = path.join(CONFIG.outputDir, 'zap-scan.txt');
         fs.writeFileSync(outputPath, output);
-        
+
         console.log('   🕷️ ZAP scan completed');
         resolve();
       });
-      
+
       // Timeout after configured time
       setTimeout(() => {
         zap.kill();
@@ -262,7 +262,7 @@ class SecurityScanner {
     // Save JSON report
     const jsonReportPath = safePathJoin(CONFIG.outputDir, 'security-assessment.json');
     fs.writeFileSync(jsonReportPath, JSON.stringify(this.results, null, 2));
-    
+
     // Generate HTML report
     this.generateHtmlReport();
   }
@@ -312,7 +312,7 @@ class SecurityScanner {
                 <p><strong>Scan Types:</strong> ${Object.keys(CONFIG.scanTypes).filter(k => CONFIG.scanTypes[k]).length}</p>
                 <p><strong>Reports Generated:</strong> ${Object.keys(this.results.scans).length}</p>
             </div>
-            
+
             <div class="card">
                 <h3>🛡️ Security Posture</h3>
                 <p>This assessment identifies potential security vulnerabilities and provides recommendations for remediation.</p>

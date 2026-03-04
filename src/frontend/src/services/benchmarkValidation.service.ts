@@ -62,7 +62,7 @@ export interface ValidationReport {
 
 // Benchmark Validation Service Class
 class BenchmarkValidationService {
-  private baseUrl = '/BenchmarkValidation'
+  private baseUrl = 'BenchmarkValidation'
 
   async getAvailableDatasets(): Promise<BenchmarkDataset[]> {
     try {

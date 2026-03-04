@@ -1,42 +1,32 @@
 <template>
-  <div class="telemetry-dashboard space-y-10">
-    <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
-      <div>
-        <div class="flex items-center gap-2 mb-2">
-          <div class="w-8 h-1 bg-emerald-500 rounded-full"></div>
-          <p class="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-400">Live Sensory Network</p>
+  <div :class="styles['telemetry-dashboard']">
+    <header :class="styles['dashboard-header']">
+      <div :class="styles['header-main']">
+        <div :class="styles['header-indicator']">
+          <div :class="styles['pulse-dot']" />
+          <span :class="styles['indicator-label']">Neural Telemetry Stream</span>
         </div>
-        <h2 class="text-3xl font-black tracking-tighter text-primary">Real-time Telemetry</h2>
-        <p v-if="lastUpdated" class="text-xs font-bold text-secondary-alt mt-1">
-          Last synchronization {{ lastUpdatedLabel }}
+        <h2 :class="styles['header-title']">Telemetric Intelligence</h2>
+        <p v-if="lastUpdated" :class="styles['header-sub']">
+          Gateway synchronized <span :class="styles['time-accent']">{{ lastUpdatedLabel }}</span>
         </p>
       </div>
 
-      <div class="flex flex-wrap items-center gap-3 bg-white/5 p-2 rounded-2xl border border-white/10 w-full lg:w-auto">
-        <div class="relative flex-1 lg:flex-none min-w-[140px]">
-          <Clock class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary" />
-          <select 
-            v-model="timeRange" 
-            class="w-full bg-transparent border-none text-xs font-bold focus:ring-0 pl-10 pr-8 py-2 rounded-xl hover:bg-white/5 transition-colors cursor-pointer appearance-none"
-            @change="fetchTelemetryData"
-          >
-            <option value="1h">Last 1 Hour</option>
-            <option value="6h">Last 6 Hours</option>
-            <option value="12h">Last 12 Hours</option>
-            <option value="24h">Last 24 Hours</option>
+      <div :class="styles['header-controls']">
+        <div :class="styles['control-box']">
+          <Clock :width="14" :height="14" />
+          <select v-model="timeRange" @change="fetchTelemetryData">
+            <option value="1h">Last Hour</option>
+            <option value="6h">6 Hours</option>
+            <option value="12h">12 Hours</option>
+            <option value="24h">24 Hours</option>
           </select>
         </div>
         
-        <div class="w-px h-6 bg-white/10 hidden lg:block"></div>
-
-        <div class="relative flex-1 lg:flex-none min-w-[200px]">
-          <Cpu class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary" />
-          <select 
-            v-model="selectedMachineId" 
-            class="w-full bg-transparent border-none text-xs font-bold focus:ring-0 pl-10 pr-8 py-2 rounded-xl hover:bg-white/5 transition-colors cursor-pointer appearance-none"
-            @change="fetchTelemetryData"
-          >
-            <option value="">All Machines</option>
+        <div :class="styles['control-box']">
+          <Cpu :width="14" :height="14" />
+          <select v-model="selectedMachineId" @change="fetchTelemetryData">
+            <option value="">Global Fleet</option>
             <option v-for="machine in machines" :key="machine.id" :value="machine.id">
               {{ machine.name }}
             </option>
@@ -45,85 +35,111 @@
       </div>
     </header>
 
-    <div v-if="!loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <StatCard label="Telemetry Points" variant="glass" transition>
-        <MetricValue :value="telemetryData.length" />
-        <template #icon><Activity class="text-emerald-500" /></template>
-      </StatCard>
-      
-      <StatCard label="Active Nodes" variant="glass">
-        <MetricValue :value="reportingMachineCount" />
-        <template #icon><Layers class="text-indigo-500" /></template>
-      </StatCard>
-
-      <StatCard label="Network Health" variant="glass" intent="success">
-        <div class="text-xs font-black uppercase tracking-widest text-emerald-400">Stable</div>
-        <template #icon><Zap class="text-amber-500" /></template>
-      </StatCard>
-
-      <StatCard label="Sync Latency" variant="glass">
-        <div class="flex items-baseline gap-1">
-          <MetricValue :value="12" />
-          <span class="text-xs font-bold text-secondary">ms</span>
-        </div>
-        <template #icon><History class="text-cyan-500" /></template>
-      </StatCard>
-    </div>
-
-    <div v-if="!loading && !hasTelemetry" class="py-24 text-center space-y-6 bg-white/[0.02] border-2 border-dashed border-white/5 rounded-[40px]">
-      <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto">
-        <Radio class="w-10 h-10 text-secondary opacity-20" />
-      </div>
-      <div class="max-w-xs mx-auto space-y-2">
-        <h3 class="text-xl font-bold">Signal Lost</h3>
-        <p class="text-secondary text-sm">No telemetry packets found for the current selection. Adjusted search parameters may be required.</p>
-      </div>
-    </div>
-
-    <div v-else class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-      <BaseCard v-for="chart in chartConfigs" :key="chart.type" class="p-8 overflow-hidden group hover:border-white/10 transition-colors">
-        <div class="flex justify-between items-start mb-8">
-          <div>
-            <h4 class="text-sm font-black uppercase tracking-widest text-secondary mb-1">{{ chart.label }}</h4>
-            <p class="text-[10px] font-bold text-secondary-alt">{{ chart.description }}</p>
+    <!-- KPI Bento Grid -->
+    <div v-if="!loading" :class="styles['kpi-grid']">
+      <UiCard variant="glass" padding="md" hover :class="[styles['kpi-item'], styles['kpi-item--primary']]">
+        <div :class="styles['kpi-inner']">
+          <div :class="[styles['kpi-icon'], styles['kpi-icon--emerald']]"><Activity :width="18" :height="18" /></div>
+          <div :class="styles['kpi-data']">
+            <MetricValue :value="telemetryData.length" :class="styles['kpi-value']" />
+            <span :class="styles['kpi-label']">Data Packets / Period</span>
           </div>
-          <div class="p-2 transition-transform group-hover:scale-110" :style="{ color: chart.color, backgroundColor: `${chart.color}15`, borderRadius: '12px' }">
-            <component :is="chart.icon" class="w-5 h-5" />
+          <div :class="styles['kpi-trend']">
+            <TrendingUp :width="12" :height="12" />
+            <span>+12.4%</span>
+          </div>
+        </div>
+      </UiCard>
+      
+      <UiCard variant="glass" padding="md" hover :class="styles['kpi-item']">
+        <div :class="styles['kpi-inner']">
+          <div :class="[styles['kpi-icon'], styles['kpi-icon--indigo']]"><Layers :width="18" :height="18" /></div>
+          <div :class="styles['kpi-data']">
+            <MetricValue :value="reportingMachineCount" :class="styles['kpi-value']" />
+            <span :class="styles['kpi-label']">Active Cluster Nodes</span>
+          </div>
+        </div>
+      </UiCard>
+
+      <UiCard variant="glass" padding="md" hover :class="styles['kpi-item']">
+        <div :class="styles['kpi-inner']">
+          <div :class="[styles['kpi-icon'], styles['kpi-icon--success']]"><Zap :width="18" :height="18" /></div>
+          <div :class="styles['kpi-data']">
+            <span :class="[styles['kpi-value'], styles['kpi-value--success']]">Optimal</span>
+            <span :class="styles['kpi-label']">Link Stability</span>
+          </div>
+        </div>
+      </UiCard>
+
+      <UiCard variant="glass" padding="md" hover :class="styles['kpi-item']">
+        <div :class="styles['kpi-inner']">
+          <div :class="[styles['kpi-icon'], styles['kpi-icon--cyan']]"><History :width="18" :height="18" /></div>
+          <div :class="styles['kpi-data']">
+            <div :class="styles['latency-box']">
+              <MetricValue :value="12" :class="styles['kpi-value']" />
+              <span :class="styles['unit']">ms</span>
+            </div>
+            <span :class="styles['kpi-label']">End-to-End Latency</span>
+          </div>
+        </div>
+      </UiCard>
+    </div>
+
+    <div v-if="!loading && !hasTelemetry" :class="styles['empty-stage']">
+      <div :class="styles['empty-icon-wrap']">
+        <Radio :width="40" :height="40" />
+      </div>
+      <h3>Signal Lost</h3>
+      <p>No telemetry packets found. Adjusted search parameters may be required.</p>
+      <UiButton variant="outline" size="sm" @click="fetchTelemetryData">Re-scan Gateway</UiButton>
+    </div>
+
+    <div v-else :class="styles['chart-grid']">
+      <UiCard v-for="chart in chartConfigs" :key="chart.type" variant="default" padding="lg" hover :class="styles['chart-item']">
+        <div :class="styles['chart-header-wrap']">
+          <div :class="styles['chart-copy']">
+            <h4 :class="styles['chart-title']">{{ chart.label }}</h4>
+            <p :class="styles['chart-desc']">{{ chart.description }}</p>
+          </div>
+          <div :class="styles['chart-icon-box']" :style="{ color: chart.color, backgroundColor: `color-mix(in srgb, ${chart.color} 10%, transparent)` }">
+            <component :is="chart.icon" :width="16" :height="16" />
           </div>
         </div>
         
-        <div v-if="loading" class="h-64 flex items-center justify-center">
-           <div class="w-8 h-8 border-2 border-white/10 border-t-secondary animate-spin rounded-full"></div>
+        <div v-if="loading" :class="styles['chart-loader']">
+           <div :class="styles['spinner']" />
         </div>
-        <div v-else :ref="el => setChartRef(el, chart.type)" class="w-full h-64"></div>
-      </BaseCard>
+        <div v-else :ref="el => setChartRef(el, chart.type)" :class="styles['chart-canvas']"></div>
+      </UiCard>
     </div>
 
-    <div class="pt-12 border-t border-white/5">
-       <div class="flex items-center gap-3 mb-8">
-          <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center border border-white/10">
-             <Plus class="w-5 h-5 text-secondary" />
-          </div>
-          <div>
-             <h3 class="text-lg font-bold">Manual Injection</h3>
-             <p class="text-xs text-secondary-alt">Manually record sensor data for legacy untracked assets.</p>
+    <!-- Manual Injection -->
+    <div :class="styles['injection-section']">
+       <div :class="styles['section-header']">
+          <div :class="styles['header-icon']"><Plus :width="18" :height="18" /></div>
+          <div :class="styles['header-text']">
+             <h3>Data Ingestion Gateway</h3>
+             <p>Asynchronous manual record injection for untracked hardware components.</p>
           </div>
        </div>
-       <ManualTelemetryForm class="max-w-4xl" />
+       <UiCard variant="default" padding="lg" :class="styles['injection-card']">
+         <ManualTelemetryForm />
+       </UiCard>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch, computed, shallowRef } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, computed, shallowRef, useCssModule } from 'vue'
 import { useToast } from '@/composables/useToast'
 import * as echarts from 'echarts/core'
 import { LineChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent, TitleComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 
-import BaseCard from '../base/BaseCard.vue'
-import StatCard from '../base/StatCard.vue'
+import UiCard from '../ui/UiCard.vue'
+import UiButton from '../ui/UiButton.vue'
+import UiBadge from '../ui/UiBadge.vue'
 import MetricValue from '../base/MetricValue.vue'
 import ManualTelemetryForm from './ManualTelemetryForm.vue'
 import { 
@@ -139,7 +155,8 @@ import {
   Zap as Power, 
   Boxes, 
   Target,
-  Plus
+  Plus,
+  TrendingUp
 } from 'lucide-vue-next'
 
 import { fetchMachines } from '@/services/machines.service'
@@ -168,14 +185,15 @@ const loading = ref(false)
 const machines = computed(() => computedMachines.value)
 const chartInstances = shallowRef<Record<string, echarts.ECharts>>({})
 const chartRefs = ref<Record<string, HTMLElement>>({})
+const styles = useCssModule()
 
 const chartConfigs = [
-  { type: 'pressure', label: 'Hydraulic Pressure', description: 'Internal system PSI stability', icon: Boxes, color: '#3b82f6' },
-  { type: 'humidity', label: 'Ambient Humidity', description: 'Relative environment % moisture', icon: Wind, color: '#06b6d4' },
-  { type: 'power_consumption', label: 'Energy Load', description: 'Active kilowatt draw footprint', icon: Power, color: '#f59e0b' },
-  { type: 'temperature', label: 'Core Temperature', description: 'Machine thermal equilibrium °C', icon: Thermometer, color: '#ef4444' },
-  { type: 'vibration', label: 'Acoustic Vibration', description: 'Harmonic resonance in mm/s', icon: Activity, color: '#8b5cf6' },
-  { type: 'production_count', label: 'Unit Throughput', description: 'Total cycles per interval', icon: Target, color: '#10b981' },
+  { type: 'pressure', label: 'Hydraulic Pressure', description: 'PSI stability metrics', icon: Boxes, color: 'var(--color-primary)' },
+  { type: 'humidity', label: 'Ambient Humidity', description: 'Relative environment %', icon: Wind, color: 'var(--color-cyan)' },
+  { type: 'power_consumption', label: 'Energy Load', description: 'Active kilowatt footprint', icon: Power, color: 'var(--color-warning)' },
+  { type: 'temperature', label: 'Core Temperature', description: 'Machine thermal equilibrium', icon: Thermometer, color: 'var(--color-danger)' },
+  { type: 'vibration', label: 'Acoustic Vibration', description: 'Harmonic resonance in mm/s', icon: Activity, color: 'var(--color-violet)' },
+  { type: 'production_count', label: 'Unit Throughput', description: 'Total cycles per interval', icon: Target, color: 'var(--color-success)' },
 ]
 
 const hasTelemetry = computed(() => telemetryData.value.length > 0)
@@ -225,7 +243,7 @@ const updateAllCharts = () => {
     if (!el) return
 
     if (!chartInstances.value[config.type]) {
-      chartInstances.value[config.type] = echarts.init(el)
+      chartInstances.value[config.type] = echarts.init(el, 'hub-dark')
     }
 
     const { timestamps, values } = processTelemetryData(config.type)
@@ -234,31 +252,38 @@ const updateAllCharts = () => {
       backgroundColor: 'transparent',
       tooltip: {
         trigger: 'axis',
-        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+        backgroundColor: 'rgba(5, 7, 10, 0.9)',
         borderColor: 'rgba(255, 255, 255, 0.1)',
-        textStyle: { color: '#fff' }
+        textStyle: { color: '#fff', fontSize: 11 },
+        borderWidth: 1,
+        padding: [8, 12]
       },
-      grid: { left: '3%', right: '3%', top: '5%', bottom: '5%', containLabel: true },
+      grid: { left: '2%', right: '2%', top: '5%', bottom: '5%', containLabel: true },
       xAxis: {
         type: 'category',
         data: timestamps,
-        axisLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } },
-        axisLabel: { color: 'rgba(255,255,255,0.4)', fontSize: 10 }
+        axisLine: { lineStyle: { color: 'rgba(255,255,255,0.04)' } },
+        axisLabel: { color: 'rgba(255,255,255,0.3)', fontSize: 10, interval: 'auto' },
+        axisTick: { show: false }
       },
       yAxis: {
         type: 'value',
-        splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)', type: 'dashed' } },
-        axisLabel: { color: 'rgba(255,255,255,0.4)', fontSize: 10 }
+        splitLine: { lineStyle: { color: 'rgba(255,255,255,0.04)', type: 'dashed' } },
+        axisLabel: { color: 'rgba(255,255,255,0.3)', fontSize: 10 },
+        axisLine: { show: false }
       },
       series: [{
         data: values,
         type: 'line',
-        smooth: true,
-        symbol: 'none',
+        smooth: 0.3,
+        symbol: 'circle',
+        symbolSize: 4,
+        showSymbol: false,
         lineStyle: { width: 3, color: config.color },
+        itemStyle: { color: config.color },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: `${config.color}25` },
+            { offset: 0, color: `${config.color.replace('var(', 'color-mix(in srgb, var(').replace(')', '), transparent 70%)')}` },
             { offset: 1, color: 'transparent' }
           ])
         }
@@ -301,14 +326,340 @@ watch(() => props.selectedMachineId, (id) => { if (id !== undefined) selectedMac
 watch(selectedMachineId, (id) => emit('machine-selected', id))
 </script>
 
-<style scoped>
-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.5rem center;
-  background-size: 0.8rem;
+<style module>
+.telemetry-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-32);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Header */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--space-24);
+  padding-bottom: var(--space-24);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.header-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin-bottom: var(--space-6);
+}
+
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--color-primary);
+  border-radius: 50%;
+  box-shadow: var(--glow-status);
+  position: relative;
+}
+
+.pulse-dot::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border: 1px solid var(--color-primary);
+  border-radius: 50%;
+  animation: pulse-out 2s infinite;
+}
+
+@keyframes pulse-out {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+.indicator-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-text-dim);
+}
+
+.header-title {
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.header-sub {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: var(--space-4) 0 0;
+}
+
+.time-accent {
+  color: var(--color-primary);
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+
+.header-controls {
+  display: flex;
+  gap: var(--space-12);
+}
+
+.control-box {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-6) var(--space-12);
+  background: var(--color-depth-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.control-box:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-muted);
+}
+
+.control-box select {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+  padding-right: var(--space-4);
+}
+
+/* KPI Bento Grid */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-16);
+}
+
+.kpi-item--primary {
+  grid-column: span 1;
+  background: radial-gradient(circle at top left, rgba(var(--color-primary-rgb), 0.05), transparent);
+}
+
+.kpi-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  height: 100%;
+  position: relative;
+}
+
+.kpi-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-depth-1);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.kpi-icon--emerald { color: var(--color-emerald); }
+.kpi-icon--indigo { color: var(--color-primary); }
+.kpi-icon--success { color: var(--color-success); }
+.kpi-icon--cyan { color: var(--color-cyan); }
+
+.kpi-data {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.kpi-value {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+}
+
+.kpi-value--success { color: var(--color-success); }
+
+.kpi-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kpi-trend {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-success);
+  background: var(--color-success-muted);
+  padding: 2px 6px;
+  border-radius: var(--radius-full);
+}
+
+/* Chart Grid */
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: var(--space-20);
+}
+
+.chart-item {
+  min-height: 320px;
+}
+
+.chart-header-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-24);
+}
+
+.chart-title {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.chart-desc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin: var(--space-2) 0 0;
+}
+
+.chart-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border-subtle);
+}
+
+.chart-canvas {
+  height: 200px;
+  width: 100%;
+}
+
+/* Empty State */
+.empty-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-64) var(--space-24);
+  text-align: center;
+  background: var(--color-depth-0);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-2xl);
+  gap: var(--space-16);
+}
+
+.empty-icon-wrap {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--color-depth-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-dim);
+  opacity: 0.5;
+}
+
+/* Injection Section */
+.injection-section {
+  margin-top: var(--space-48);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+}
+
+.header-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-lg);
+  background: var(--color-depth-1);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  box-shadow: var(--glow-sm);
+}
+
+.header-text h3 {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.header-text p {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: var(--space-2) 0 0;
+}
+
+.injection-card {
+  max-width: 900px;
+}
+
+/* Utils */
+.latency-box {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+}
+
+.unit {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 1200px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .dashboard-header { flex-direction: column; align-items: flex-start; }
+  .kpi-grid { grid-template-columns: 1fr; }
+  .chart-grid { grid-template-columns: 1fr; }
 }
 </style>
-
-```

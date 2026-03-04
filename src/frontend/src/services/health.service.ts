@@ -21,7 +21,7 @@ export interface HealthCheckEntry {
  */
 export async function getHealthStatus(): Promise<HealthCheckResult> {
   try {
-    const response = await axiosClient.get<HealthCheckResult>('/health')
+    const response = await axiosClient.get<HealthCheckResult>('health')
     return response
   } catch (error) {
     errorReporter.error('Failed to get health status:', error)
@@ -78,7 +78,7 @@ export async function isSystemHealthy(): Promise<boolean> {
  */
 export async function getReadinessStatus(): Promise<{ ready: boolean; checks: Record<string, boolean> }> {
   try {
-    const response = await axiosClient.get<{ ready: boolean; checks: Record<string, boolean> }>('/Health/ready')
+    const response = await axiosClient.get<{ ready: boolean; checks: Record<string, boolean> }>('Health/ready')
     return response
   } catch (error) {
     errorReporter.error('Failed to get readiness status:', error)

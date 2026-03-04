@@ -6,7 +6,7 @@ import type {
 } from '@/api/types/index'
 
 export async function planMaintenance(request: PlanMaintenanceRequest): Promise<MaintenanceRecordDto> {
-    return axiosClient.post('/Maintenance/plan', request) as any
+    return axiosClient.post('Maintenance/plan', request) as any
 }
 
 export async function startMaintenance(id: string): Promise<MaintenanceRecordDto> {
@@ -26,14 +26,14 @@ export async function fetchMaintenanceHistory(machineId: string): Promise<Mainte
 }
 
 export async function fetchActiveMaintenance(): Promise<MaintenanceRecordDto[]> {
-    return axiosClient.get('/Maintenance/active') as any
+    return axiosClient.get('Maintenance/active') as any
 }
 
 /**
  * Search maintenance records
  */
 export async function searchMaintenance(query: string): Promise<MaintenanceRecordDto[]> {
-    return axiosClient.get('/Maintenance/search', { params: { query } }) as any
+    return axiosClient.get('Maintenance/search', { params: { query } }) as any
 }
 
 // Export service object for convenience

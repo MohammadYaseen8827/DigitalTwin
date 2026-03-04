@@ -42,7 +42,7 @@ export default defineConfig({
       openMode: 0
     },
     env: {
-      apiUrl: 'http://localhost:5000',
+      apiUrl: 'http://localhost:7300',
       testUser: 'test@example.com',
       testPassword: 'password123'
     }

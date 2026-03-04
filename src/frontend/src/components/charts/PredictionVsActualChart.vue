@@ -70,40 +70,12 @@ async function fetchPredictionData() {
         predictionData.value = response.data
     } catch (error) {
         console.error('Error fetching prediction data:', error)
-        // Only show mock data in development; in production show empty state
-        if (import.meta.env.DEV) {
-            generateMockData()
-        } else {
-            predictionData.value = []
-        }
+        predictionData.value = []
     } finally {
         isLoading.value = false
     }
 }
 
-/** True when showing fallback sample data (no real API data). */
-const isSampleData = ref(false)
-
-function generateMockData() {
-    isSampleData.value = true
-    const now = new Date()
-    const data: PredictionDataPoint[] = []
-    let predicted = 1000
-    let observed = 1000
-    for (let i = 30; i >= 0; i--) {
-        const timestamp = new Date(now.getTime() - i * 86400000)
-        predicted = Math.max(100, predicted - 10 + (Math.random() - 0.5) * 5)
-        observed = Math.max(80, observed - 10 + (Math.random() - 0.5) * 15)
-        data.push({
-            timestamp,
-            predicted: Math.round(predicted),
-            observed: Math.round(observed),
-            confidenceLower: Math.round(predicted - 20),
-            confidenceUpper: Math.round(predicted + 20)
-        })
-    }
-    predictionData.value = data
-}
 
 watch(() => predictionsStore.rulPredictions[props.machineId], (newPrediction) => {
     if (newPrediction) {
@@ -128,9 +100,6 @@ onMounted(() => { fetchPredictionData() })
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
         </div>
         <VueApexCharts v-else type="line" :height="height" :width="width" :options="chartOptions" :series="series" />
-        <p v-if="isSampleData && !isLoading" class="mt-2 text-xs text-gray-500 italic">
-            Sample data — no API data available
-        </p>
         <div v-if="predictionData.length > 0" class="mt-4 grid grid-cols-4 gap-4 text-center">
             <div class="p-3 bg-gray-50 rounded-lg">
                 <div class="text-xs text-gray-500">Mean Prediction Error</div>

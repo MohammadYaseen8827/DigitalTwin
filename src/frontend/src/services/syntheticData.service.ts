@@ -82,7 +82,7 @@ export interface GetStatisticsRequest {
  * Generate synthetic telemetry data
  */
 export async function generateSyntheticData(request: GenerateDataRequest): Promise<SyntheticDataGenerationResult> {
-  const response = await axiosClient.post<SyntheticDataGenerationResult>('/SyntheticData/generate', request)
+  const response = await axiosClient.post<SyntheticDataGenerationResult>('SyntheticData/generate', request)
   return response.data
 }
 
@@ -90,7 +90,7 @@ export async function generateSyntheticData(request: GenerateDataRequest): Promi
  * Validate synthetic data against benchmarks
  */
 export async function validateSyntheticData(request: ValidateDataRequest): Promise<DataValidationReport> {
-  const response = await axiosClient.post<DataValidationReport>('/SyntheticData/validate', request)
+  const response = await axiosClient.post<DataValidationReport>('SyntheticData/validate', request)
   return response.data
 }
 
@@ -126,7 +126,7 @@ export async function getGenerationStatisticsByType(machineType: string): Promis
  * Get all generation statistics across all machine types
  */
 export async function getAllGenerationStatistics(): Promise<GenerationStatistics[]> {
-  const response = await axiosClient.get<GenerationStatistics[]>('/SyntheticData/statistics')
+  const response = await axiosClient.get<GenerationStatistics[]>('SyntheticData/statistics')
   return response.data || []
 }
 

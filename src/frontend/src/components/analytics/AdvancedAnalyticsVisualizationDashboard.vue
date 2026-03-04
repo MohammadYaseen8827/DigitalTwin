@@ -71,33 +71,11 @@ let healthChart: echarts.ECharts | null = null
 let efficiencyChart: echarts.ECharts | null = null
 let distributionChart: echarts.ECharts | null = null
 
-// Mock analytics data
+// Empty analytics data, backend endpoints not implemented
 const analyticsData = ref({
-  rulData: [
-    { date: '2024-01-15', value: 180 },
-    { date: '2024-01-16', value: 178 },
-    { date: '2024-01-17', value: 175 },
-    { date: '2024-01-18', value: 172 },
-    { date: '2024-01-19', value: 169 },
-    { date: '2024-01-20', value: 167 },
-    { date: '2024-01-21', value: 164 }
-  ],
-  healthData: [
-    { date: '2024-01-15', healthy: 85, normal: 10, degraded: 5 },
-    { date: '2024-01-16', healthy: 82, normal: 12, degraded: 6 },
-    { date: '2024-01-17', healthy: 78, normal: 15, degraded: 7 },
-    { date: '2024-01-18', healthy: 75, normal: 18, degraded: 7 },
-    { date: '2024-01-19', healthy: 72, normal: 20, degraded: 8 },
-    { date: '2024-01-20', healthy: 68, normal: 22, degraded: 10 },
-    { date: '2024-01-21', healthy: 65, normal: 25, degraded: 10 }
-  ],
-  efficiencyData: [
-    { machine: 'CNC #1', efficiency: 87 },
-    { machine: 'CNC #2', efficiency: 92 },
-    { machine: 'Molder #1', efficiency: 78 },
-    { machine: 'Molder #2', efficiency: 85 },
-    { machine: 'Conveyor #1', efficiency: 95 }
-  ]
+  rulData: [] as any[],
+  healthData: [] as any[],
+  efficiencyData: [] as any[]
 })
 
 // Computed

@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useToast } from '@/composables/useToast'
+
+const toast = useToast()
 
 // Notification preferences
 const emailNotifications = ref(true)
@@ -39,7 +42,7 @@ function toggleNotificationType(typeId: string) {
 
 // Save preferences
 function savePreferences() {
-    // In production, call API to persist preferences
+    // TODO: Persist via user-preferences API when backend endpoint is available.
     if (import.meta.env.DEV) {
         console.debug('Saving notification preferences:', {
             emailNotifications: emailNotifications.value,
@@ -54,8 +57,7 @@ function savePreferences() {
         selectedNotificationTypes: selectedNotificationTypes.value
         })
     }
-    // Show success message
-    alert('Notification preferences saved!')
+    toast.success('Preferences saved (API persistence coming soon)')
 }
 
 // Reset to defaults

@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import BaseCard from '@/components/base/BaseCard.vue'
-import BaseButton from '@/components/base/BaseButton.vue'
-import BaseInput from '@/components/base/BaseInput.vue'
-import BaseSelect from '@/components/base/BaseSelect.vue'
-import BaseModal from '@/components/base/BaseModal.vue'
+import { ref, computed, onMounted, useCssModule } from 'vue'
+import UiCard from '@/components/ui/UiCard.vue'
+import UiButton from '@/components/ui/UiButton.vue'
+import UiInput from '@/components/ui/UiInput.vue'
+import UiSelect from '@/components/ui/UiSelect.vue'
+import UiBadge from '@/components/ui/UiBadge.vue'
+import UiModal from '@/components/ui/UiModal.vue'
+import UiTable from '@/components/ui/UiTable.vue'
+import UiSlideOver from '@/components/ui/UiSlideOver.vue'
 import { useToast } from '@/composables/useToast'
 import { 
   fetchMachines, 
@@ -12,16 +15,26 @@ import {
   updateMachine, 
   deleteMachine 
 } from '@/services/machines.service'
-import type { MachineDto, MachineCreateDto, MachineUpdateDto } from '@/api/types'
+import type { MachineDto, MachineCreateDto } from '@/api/types'
 import { 
   Plus, 
   Edit, 
   Trash2, 
   Activity,
   Search,
-  RefreshCw
+  RefreshCw,
+  Server,
+  MapPin,
+  Cpu,
+  Filter,
+  Layers,
+  Terminal,
+  Eye,
+  Info,
+  ShieldAlert
 } from 'lucide-vue-next'
 
+const styles = useCssModule()
 const toast = useToast()
 
 // State
@@ -33,443 +46,641 @@ const typeFilter = ref('all')
 
 // Modal state
 const isModalOpen = ref(false)
+const isPanelOpen = ref(false)
 const selectedMachine = ref<MachineDto | null>(null)
+const focusedMachine = ref<MachineDto | null>(null)
 
 // Form state
 const machineForm = ref<MachineCreateDto>({
-  name: '',
-  serialNumber: '',
-  type: '',
-  manufacturer: '',
-  model: '',
-  status: 'operational',
-  criticality: 3,
-  location: '',
-  installationDate: '',
-  warrantyExpiry: '',
-  lastMaintenance: '',
-  nextMaintenance: '',
-  maintenanceInterval: 30,
-  degradationModel: 'linear',
-  threshold: 80,
-  isActive: true,
-  metadata: {}
+  name: '', serialNumber: '', type: '', manufacturer: '', model: '',
+  status: 'operational', criticality: 3, location: '', installationDate: '',
+  warrantyExpiry: '', lastMaintenance: '', nextMaintenance: '',
+  maintenanceInterval: 30, degradationModel: 'linear', threshold: 80,
+  isActive: true, metadata: {}
 })
 
 // Computed
 const filteredMachines = computed(() => {
-  let filtered = [...machines.value]
-  
-  // Apply search filter
+  const currentMachines = Array.isArray(machines.value) ? machines.value : []
+  let filtered = [...currentMachines]
   if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(machine => 
-      machine.name.toLowerCase().includes(query) ||
-      machine.serialNumber?.toLowerCase().includes(query) ||
-      machine.manufacturer?.toLowerCase().includes(query) ||
-      machine.location.toLowerCase().includes(query)
-    )
+    const q = searchQuery.value.toLowerCase()
+    filtered = filtered.filter(m => m.name.toLowerCase().includes(q) || m.serialNumber?.toLowerCase().includes(q) || m.location.toLowerCase().includes(q))
   }
-  
-  // Apply status filter
-  if (statusFilter.value !== 'all') {
-    filtered = filtered.filter(machine => 
-      machine.status.toString().toLowerCase() === statusFilter.value.toLowerCase()
-    )
-  }
-  
-  // Apply type filter
-  if (typeFilter.value !== 'all') {
-    filtered = filtered.filter(machine => machine.type === typeFilter.value)
-  }
-  
+  if (statusFilter.value !== 'all') filtered = filtered.filter(m => m.status.toString().toLowerCase() === statusFilter.value.toLowerCase())
+  if (typeFilter.value !== 'all') filtered = filtered.filter(m => m.type === typeFilter.value)
   return filtered
 })
 
-const machineTypes = computed(() => {
-  const types = [...new Set(machines.value.map(m => m.type))]
-  return types.sort()
+const typeOptions = computed(() => {
+  const currentMachines = Array.isArray(machines.value) ? machines.value : []
+  return [
+    { label: 'ALL NODE TYPES', value: 'all' },
+    ...[...new Set(currentMachines.map(m => m.type))].sort().map(t => ({ label: t.toUpperCase(), value: t }))
+  ]
 })
 
 const statusOptions = [
-  { label: 'All Statuses', value: 'all' },
-  { label: 'Operational', value: 'operational' },
-  { label: 'Warning', value: 'warning' },
-  { label: 'Critical', value: 'critical' },
-  { label: 'Maintenance', value: 'maintenance' },
-  { label: 'Offline', value: 'offline' }
+  { label: 'ALL STATUSES', value: 'all' },
+  { label: 'OPERATIONAL', value: 'operational' },
+  { label: 'WARNING', value: 'warning' },
+  { label: 'CRITICAL', value: 'critical' },
+  { label: 'MAINTENANCE', value: 'maintenance' }
 ]
 
-const typeOptions = computed(() => [
-  { label: 'All Types', value: 'all' },
-  ...machineTypes.value.map(type => ({ label: type, value: type }))
-])
+const columns = [
+  { key: 'status', label: 'Status', width: '120px', sortable: true },
+  { key: 'name', label: 'Node Identifier', sortable: true },
+  { key: 'type', label: 'Kinematic Class', sortable: true },
+  { key: 'location', label: 'Deployment Point', sortable: true },
+  { key: 'criticality', label: 'Risk', width: '80px', align: 'center' as const, sortable: true },
+  { key: 'actions', label: '', width: '160px', align: 'right' as const }
+]
 
 // Methods
 const loadMachines = async () => {
   try {
     loading.value = true
-    machines.value = await fetchMachines()
-  } catch (error) {
-    toast.error('Unable to load machines')
+    const data = await fetchMachines()
+    machines.value = Array.isArray(data) ? data : []
+  } catch (err) {
+    console.error('[MachineManagement] Failed to fetch machines:', err)
+    toast.error('Cluster resolution failed')
+    machines.value = []
   } finally {
     loading.value = false
   }
 }
 
-const refreshMachines = async () => {
-  await loadMachines()
-  toast.success('Machines refreshed')
-}
-
-const resetForm = () => {
-  machineForm.value = {
-    name: '',
-    serialNumber: '',
-    type: '',
-    manufacturer: '',
-    model: '',
-    status: 'operational',
-    criticality: 3,
-    location: '',
-    installationDate: '',
-    warrantyExpiry: '',
-    lastMaintenance: '',
-    nextMaintenance: '',
-    maintenanceInterval: 30,
-    degradationModel: 'linear',
-    threshold: 80,
-    isActive: true,
-    metadata: {}
-  }
-}
-
-const openCreateModal = () => {
-  selectedMachine.value = null
-  resetForm()
+const openEditModal = (m: MachineDto) => {
+  selectedMachine.value = m
+  Object.assign(machineForm.value, { ...m, status: typeof m.status === 'number' ? 'operational' : m.status })
   isModalOpen.value = true
 }
 
-const openEditModal = (machine: MachineDto) => {
-  selectedMachine.value = machine
-  machineForm.value = {
-    name: machine.name,
-    serialNumber: machine.serialNumber || '',
-    type: machine.type,
-    manufacturer: machine.manufacturer || '',
-    model: machine.model || '',
-    status: typeof machine.status === 'number' ? 'operational' : machine.status,
-    criticality: machine.criticality || 3,
-    location: machine.location,
-    installationDate: machine.installationDate || '',
-    warrantyExpiry: machine.warrantyExpiry || '',
-    lastMaintenance: machine.lastMaintenance || '',
-    nextMaintenance: machine.nextMaintenance || '',
-    maintenanceInterval: machine.maintenanceInterval || 30,
-    degradationModel: machine.degradationModel || 'linear',
-    threshold: machine.threshold || 80,
-    isActive: machine.isActive !== undefined ? machine.isActive : true,
-    metadata: machine.metadata || {}
-  }
-  isModalOpen.value = true
-}
-
-const closeModals = () => {
-  isModalOpen.value = false
-  selectedMachine.value = null
-  resetForm()
+const openForensics = (m: MachineDto) => {
+  focusedMachine.value = m
+  isPanelOpen.value = true
 }
 
 const handleSubmit = async () => {
   try {
-    if (selectedMachine.value) {
-      await updateMachine(selectedMachine.value.id, machineForm.value)
-      toast.success('Machine updated successfully')
-    } else {
-      await createMachine(machineForm.value)
-      toast.success('Machine created successfully')
-    }
-    
-    closeModals()
+    if (selectedMachine.value) await updateMachine(selectedMachine.value.id, machineForm.value)
+    else await createMachine(machineForm.value)
+    toast.success('Asset registry synchronized')
+    isModalOpen.value = false
     await loadMachines()
-  } catch (error) {
-    toast.error('Failed to save machine')
-  }
+  } catch { toast.error('Registry update failed') }
 }
 
-const handleDelete = async (machine: MachineDto) => {
-  if (!confirm(`Are you sure you want to delete machine "${machine.name}"?`)) {
-    return
-  }
-  
+const handleDelete = async (m: MachineDto) => {
+  if (!confirm(`Decommission asset "${m.name}"?`)) return
   try {
-    await deleteMachine(machine.id)
-    machines.value = machines.value.filter(m => m.id !== machine.id)
-    toast.success('Machine deleted successfully')
-  } catch (error) {
-    toast.error('Failed to delete machine')
-  }
+    await deleteMachine(m.id)
+    machines.value = machines.value.filter(x => x.id !== m.id)
+    toast.success('Asset decommissioned')
+  } catch { toast.error('Decommission failure') }
 }
 
-const getStatusColor = (status: string | number): string => {
-  const statusStr = typeof status === 'number' ? status.toString() : status
-  const colors: Record<string, string> = {
-    'operational': 'bg-green-500',
-    'warning': 'bg-yellow-500',
-    'critical': 'bg-red-500',
-    'maintenance': 'bg-blue-500',
-    'offline': 'bg-gray-500'
-  }
-  return colors[statusStr.toLowerCase()] || 'bg-gray-500'
-}
-
-const getStatusDisplay = (status: string | number): string => {
-  if (typeof status === 'number') {
-    const statusMap: Record<number, string> = {
-      0: 'Operational',
-      1: 'Warning',
-      2: 'Critical',
-      3: 'Maintenance',
-      4: 'Offline'
-    }
-    return statusMap[status] || status.toString()
-  }
-  return status.charAt(0).toUpperCase() + status.slice(1)
-}
-
-const formatTime = (dateString?: string): string => {
-  if (!dateString) return 'N/A'
-  return new Date(dateString).toLocaleDateString()
-}
-
-// Lifecycle
-onMounted(async () => {
-  await loadMachines()
-})
+onMounted(loadMachines)
 </script>
 
 <template>
-  <div class="machine-management space-y-6 p-4">
+  <div :class="styles['mgmt-container']">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900">Machine Management</h1>
-        <p class="text-gray-600 mt-2">Monitor and manage all equipment</p>
+    <header :class="styles['page-header']">
+      <div :class="styles['header-main']">
+        <div :class="styles['eyebrow']">
+          <Layers :width="14" :height="14" />
+          <span>Asset Orchestration</span>
+        </div>
+        <h1 :class="styles['title']">Infrastructure Registry</h1>
+        <p :class="styles['description']">Provisioning and lifecycle management for industrial digital clusters</p>
       </div>
-      <div class="flex gap-2">
-        <BaseButton variant="outline" @click="refreshMachines">
-          <RefreshCw class="w-4 h-4 mr-2" :class="{ 'animate-spin': loading }" />
-          Refresh
-        </BaseButton>
-        <BaseButton variant="primary" @click="openCreateModal">
-          <Plus class="w-4 h-4 mr-2" />
-          Add Machine
-        </BaseButton>
+      <div :class="styles['header-actions']">
+        <UiButton variant="secondary" @click="loadMachines" :loading="loading">
+          <RefreshCw :width="16" :height="16" />
+          Resync
+        </UiButton>
+        <UiButton variant="primary" @click="isModalOpen = true; selectedMachine = null">
+          <Plus :width="16" :height="16" />
+          Register Node
+        </UiButton>
       </div>
-    </div>
+    </header>
 
     <!-- Filters -->
-    <BaseCard>
-      <div class="p-4 flex flex-col sm:flex-row gap-4">
-        <div class="flex-1 relative">
-          <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <BaseInput
-            v-model="searchQuery"
-            placeholder="Search machines..."
-            class="pl-10"
-          />
+    <section :class="styles['filter-section']">
+      <UiCard variant="glass" padding="sm" :class="styles['filter-card']">
+        <div :class="styles['filter-grid']">
+          <div :class="styles['search-wrap']">
+            <Search :class="styles['search-icon']" :width="14" :height="14" />
+            <UiInput v-model="searchQuery" placeholder="Filter nodes by ID, name, or metadata..." :class="styles['search-input']" />
+          </div>
+          <UiSelect v-model="statusFilter">
+            <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+          </UiSelect>
+          <UiSelect v-model="typeFilter">
+            <option v-for="opt in typeOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+          </UiSelect>
         </div>
-        
-        <BaseSelect
-          v-slot:prefix
-          v-model="statusFilter"
-          :options="statusOptions"
-          class="w-full sm:w-48"
-        />
-        
-        <BaseSelect
-          v-model="typeFilter"
-          :options="typeOptions"
-          class="w-full sm:w-48"
-        />
-      </div>
-    </BaseCard>
+      </UiCard>
+    </section>
 
-    <!-- Machines List -->
-    <BaseCard>
-      <div class="p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold">
-            Machines ({{ filteredMachines.length }})
-          </h2>
-        </div>
-        
-        <div v-if="loading" class="text-center py-12">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
-          <p class="mt-4 text-gray-600 font-medium">Loading equipment data...</p>
-        </div>
-        
-        <div v-else-if="filteredMachines.length === 0" class="text-center py-12">
-          <Activity class="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p class="text-gray-600 text-lg font-medium">No machines found</p>
-          <p class="text-gray-500 mt-1">Try adjusting your search or filters to see results</p>
-        </div>
-        
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <BaseCard
-            v-for="machine in filteredMachines"
-            :key="machine.id"
-            class="hover:shadow-lg transition-all duration-200 border-l-4"
-            :class="[
-              machine.status === 'critical' ? 'border-red-500' : 
-              machine.status === 'warning' ? 'border-yellow-500' : 'border-transparent'
-            ]"
-          >
-            <div class="p-5">
-              <div class="flex justify-between items-start mb-4">
-                <div>
-                  <h3 class="text-lg font-bold text-gray-900 line-clamp-1">{{ machine.name }}</h3>
-                  <p class="text-xs text-gray-500 font-mono">{{ machine.serialNumber || 'No Serial' }}</p>
-                </div>
-                <span 
-                  class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold text-white shadow-sm"
-                  :class="getStatusColor(machine.status)"
-                >
-                  {{ getStatusDisplay(machine.status) }}
-                </span>
-              </div>
-              
-              <div class="space-y-3 text-sm">
-                <div class="flex justify-between items-center text-gray-600">
-                  <span class="flex items-center gap-2"><Filter class="w-3.5 h-3.5" /> Type</span>
-                  <span class="font-semibold text-gray-900">{{ machine.type }}</span>
-                </div>
-                <div class="flex justify-between items-center text-gray-600 border-t border-gray-50 pt-2">
-                  <span>Location</span>
-                  <span class="font-medium text-gray-800">{{ machine.location }}</span>
-                </div>
-                <div class="flex justify-between items-center text-gray-600 mt-1">
-                  <span>Next Maintenace</span>
-                  <span 
-                    class="font-medium"
-                    :class="new Date(machine.nextMaintenance) < new Date() ? 'text-red-600 font-bold' : 'text-gray-800'"
-                  >
-                    {{ formatTime(machine.nextMaintenance) }}
-                  </span>
-                </div>
-              </div>
-              
-              <div class="flex gap-3 mt-6 pt-4 border-t border-gray-100">
-                <BaseButton
-                  size="sm"
-                  variant="outline"
-                  class="flex-1"
-                  @click="openEditModal(machine)"
-                >
-                  <Edit class="w-4 h-4 mr-2" />
-                  Edit
-                </BaseButton>
-                <BaseButton
-                  size="sm"
-                  variant="outline"
-                  class="text-red-600 border-red-100 hover:bg-red-50 flex-1"
-                  @click="handleDelete(machine)"
-                >
-                  <Trash2 class="w-4 h-4 mr-2" />
-                  Delete
-                </BaseButton>
-              </div>
-            </div>
-          </BaseCard>
-        </div>
-      </div>
-    </BaseCard>
+    <!-- Asset Feed -->
+    <main :class="styles['asset-feed']">
+      <UiTable
+        :columns="columns"
+        :items="filteredMachines"
+        :loading="loading"
+      >
+        <template #cell-status="{ item }">
+          <UiBadge :variant="String(item.status).toLowerCase() as any" size="sm" dot>
+            {{ String(item.status).toUpperCase() }}
+          </UiBadge>
+        </template>
 
-    <!-- Create/Edit Modal -->
-    <BaseModal
-      v-model="isModalOpen"
-      :title="selectedMachine ? 'Edit Machine' : 'Add New Machine'"
-      size="lg"
+        <template #cell-name="{ item }">
+          <div :class="styles['asset-identity']">
+            <span :class="styles['asset-name-main']">{{ item.name }}</span>
+            <span :class="styles['asset-sn-sub']">{{ item.serialNumber || 'SN-UNKNOWN' }}</span>
+          </div>
+        </template>
+
+        <template #cell-criticality="{ item }">
+          <div :class="[styles['risk-indicator'], styles[`risk--${item.criticality}`]]">
+            {{ item.criticality }}
+          </div>
+        </template>
+
+        <template #cell-actions="{ item }">
+          <div :class="styles['action-group']">
+             <button :class="styles['icon-action']" @click="openForensics(item)" title="Forensic Insights">
+               <Eye :width="14" :height="14" />
+             </button>
+             <button :class="styles['icon-action']" @click="openEditModal(item)" title="Modify Protocol">
+               <Edit :width="14" :height="14" />
+             </button>
+             <button :class="[styles['icon-action'], styles['icon-action--danger']]" @click="handleDelete(item)" title="Decommission">
+               <Trash2 :width="14" :height="14" />
+             </button>
+          </div>
+        </template>
+      </UiTable>
+    </main>
+
+    <!-- Context Panel (Forensics) -->
+    <UiSlideOver
+      :is-open="isPanelOpen"
+      :title="focusedMachine?.name || 'Node Forensics'"
+      description="In-depth artifact analysis and neural drift diagnostics"
+      @close="isPanelOpen = false"
     >
-      <form id="machine-form" @submit.prevent="handleSubmit" class="space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <BaseInput
-            v-model="machineForm.name"
-            label="Machine Name"
-            placeholder="e.g. CNC Milling Machine A1"
-            required
-          />
-          
-          <BaseInput
-            v-model="machineForm.serialNumber"
-            label="Serial Number"
-            placeholder="e.g. SN-9842-XJ"
-          />
-          
-          <BaseInput
-            v-model="machineForm.type"
-            label="Equipment Type"
-            placeholder="e.g. Lathe, Press, Motor"
-            required
-          />
-          
-          <BaseInput
-            v-model="machineForm.manufacturer"
-            label="Manufacturer"
-            placeholder="e.g. Siemens, ABB"
-          />
-          
-          <BaseInput
-            v-model="machineForm.model"
-            label="Model Number"
-          />
-          
-          <BaseSelect
-            v-model="machineForm.status"
-            :options="statusOptions.filter(o => o.value !== 'all')"
-            label="Current Status"
-            required
-          />
-          
-          <BaseInput
-            v-model.number="machineForm.criticality"
-            label="Criticality Level (1-5)"
-            type="number"
-            min="1"
-            max="5"
-            helper-text="1 = Lowest, 5 = Mission Critical"
-          />
-          
-          <BaseInput
-            v-model="machineForm.location"
-            label="Installation Location"
-            required
-          />
-        </div>
-      </form>
+      <div v-if="focusedMachine" :class="styles['panel-body']">
+        <div :class="styles['forensic-grid']">
+          <UiCard variant="elevated" padding="md" dots>
+             <div :class="styles['f-header']">
+               <ShieldAlert :width="16" :height="16" :class="styles['f-icon']" />
+               <span :class="styles['f-label']">Integrity Score</span>
+             </div>
+             <div :class="styles['f-value']">{{ 100 - (focusedMachine.criticality * 5) }}%</div>
+             <div :class="styles['f-meta']">Neural verification 99.8% accurate</div>
+          </UiCard>
 
-      <template #footer>
-        <BaseButton variant="ghost" @click="closeModals">
-          Cancel
-        </BaseButton>
-        <BaseButton variant="primary" type="submit" form="machine-form">
-          {{ selectedMachine ? 'Save Changes' : 'Register Machine' }}
-        </BaseButton>
-      </template>
-    </BaseModal>
+          <UiCard variant="outline" padding="md">
+             <div :class="styles['f-header']">
+               <Cpu :width="16" :height="16" :class="styles['f-icon-alt']" />
+               <span :class="styles['f-label']">Deployment</span>
+             </div>
+             <div :class="styles['f-sub']">{{ focusedMachine.location }}</div>
+             <div :class="styles['f-tag']">{{ focusedMachine.type }}</div>
+          </UiCard>
+        </div>
+
+        <div :class="styles['f-section']">
+          <h4 :class="styles['f-section-title']">Lifecycle Manifest</h4>
+          <div :class="styles['f-manifest']">
+            <div :class="styles['f-manifest-item']">
+              <span>Installed</span>
+              <span>{{ new Date(focusedMachine.installationDate).toLocaleDateString() }}</span>
+            </div>
+            <div :class="styles['f-manifest-item']">
+              <span>Last Maintenance</span>
+              <span>{{ focusedMachine.lastMaintenance ? new Date(focusedMachine.lastMaintenance).toLocaleDateString() : 'NEVER' }}</span>
+            </div>
+            <div :class="styles['f-manifest-item']">
+              <span>Next Protocol Sync</span>
+              <span>{{ focusedMachine.nextMaintenance ? new Date(focusedMachine.nextMaintenance).toLocaleDateString() : 'TBD' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div :class="styles['f-section']">
+           <h4 :class="styles['f-section-title']">Neural Metadata</h4>
+           <div :class="styles['f-metadata']">
+             <div v-for="(val, key) in focusedMachine.metadata" :key="key" :class="styles['f-meta-tag']">
+               {{ key }}: {{ val }}
+             </div>
+             <div v-if="!Object.keys(focusedMachine.metadata || {}).length" :class="styles['f-empty']">
+               No extended metadata available for this node.
+             </div>
+           </div>
+        </div>
+
+        <div :class="styles['f-actions']">
+           <UiButton variant="primary" size="lg" @click="openEditModal(focusedMachine)">
+             Modify Node Registry
+           </UiButton>
+        </div>
+      </div>
+    </UiSlideOver>
+
+    <!-- Protocol Modal (Create/Edit) -->
+    <UiModal 
+      :is-open="isModalOpen" 
+      maxWidth="lg"
+      @close="isModalOpen = false"
+    >
+      <UiCard variant="glass" padding="xl">
+        <template #header>
+          <div :class="styles['modal-header']">
+             <div :class="styles['modal-title-group']">
+               <div :class="styles['modal-eyebrow']">SYSTEM PROTOCOL v2.0</div>
+               <h2 :class="styles['modal-title']">{{ selectedMachine ? 'Sync Asset Protocol' : 'Provision New Node' }}</h2>
+               <p :class="styles['modal-sub']">Artifact registry synchronization for digital twins</p>
+             </div>
+          </div>
+        </template>
+
+        <form @submit.prevent="handleSubmit" :class="styles['modal-form']">
+          <div :class="styles['form-grid']">
+            <UiInput v-model="machineForm.name" label="Node Identifier" placeholder="e.g., NODE-01-CNC" required />
+            <UiInput v-model="machineForm.serialNumber" label="Registry SN" placeholder="SN-XXXX-XXXX" />
+            <UiInput v-model="machineForm.type" label="System Type" placeholder="Kinematic Class" required />
+            <UiSelect v-model="machineForm.status" label="Protocol Status">
+              <option v-for="opt in statusOptions.slice(1)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+            </UiSelect>
+            <UiInput v-model="machineForm.location" label="Deployment Point" placeholder="Sector/Bay" required />
+            <UiInput v-model.number="machineForm.criticality" type="number" label="Risk Index (1-5)" min="1" max="5" />
+          </div>
+
+          <div :class="styles['modal-footer']">
+            <UiButton variant="ghost" @click="isModalOpen = false">Cancel Mission</UiButton>
+            <UiButton variant="primary" type="submit">
+              {{ selectedMachine ? 'Commit Synchronization' : 'Initialize Provisioning' }}
+            </UiButton>
+          </div>
+        </form>
+      </UiCard>
+    </UiModal>
   </div>
 </template>
 
-<style scoped>
-.machine-management {
+<style module>
+.mgmt-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-32);
   max-width: 1400px;
   margin: 0 auto;
 }
 
-.line-clamp-1 {
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;  
-  overflow: hidden;
+/* Forensic Panel Content */
+.panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-32);
+}
+
+.forensic-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-16);
+}
+
+.f-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin-bottom: var(--space-12);
+}
+
+.f-icon { color: var(--color-danger); }
+.f-icon-alt { color: var(--color-primary); }
+
+.f-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.f-value {
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+.f-meta {
+  font-size: 10px;
+  color: var(--color-text-dim);
+  margin-top: var(--space-8);
+}
+
+.f-sub {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.f-tag {
+  display: inline-block;
+  margin-top: var(--space-8);
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--color-primary);
+  background: var(--color-primary-muted);
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.f-section-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: var(--space-16);
+  padding-bottom: var(--space-8);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.f-manifest {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.f-manifest-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-sm);
+}
+
+.f-manifest-item span:first-child {
+  color: var(--color-text-dim);
+  font-weight: 500;
+}
+
+.f-manifest-item span:last-child {
+  color: var(--color-text-secondary);
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.f-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.f-meta-tag {
+  font-size: 10px;
+  background: var(--color-depth-0);
+  border: 1px solid var(--color-border);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+}
+
+.f-empty {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-dim);
+  font-style: italic;
+}
+
+.f-actions {
+  margin-top: var(--space-20);
+  padding-top: var(--space-32);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+/* Modal Styling */
+.modal-header {
+  margin-bottom: var(--space-24);
+}
+
+.modal-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--color-primary);
+  letter-spacing: 0.2em;
+  margin-bottom: var(--space-4);
+}
+
+.modal-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.modal-sub {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-top: var(--space-4);
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-32);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-20);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-12);
+  padding-top: var(--space-24);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+/* Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-bottom: var(--space-24);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--color-primary);
+  margin-bottom: var(--space-6);
+}
+
+.title {
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.header-actions {
+  display: flex;
+  gap: var(--space-12);
+}
+
+/* Filters */
+.filter-grid {
+  display: grid;
+  grid-template-columns: 1fr 200px 200px;
+  gap: var(--space-16);
+  align-items: center;
+}
+
+.search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: var(--space-12);
+  color: var(--color-text-dim);
+  z-index: 10;
+}
+
+.search-input :global(.input) {
+  padding-left: var(--space-32);
+}
+
+/* Table Enhancements */
+.asset-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.asset-name-main {
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: var(--font-tracking-tight);
+}
+
+.asset-sn-sub {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  font-family: var(--font-mono);
+}
+
+.risk-indicator {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  background: var(--color-depth-0);
+  border: 1px solid var(--color-border);
+}
+
+.risk--1, .risk--2 { color: var(--color-success); border-color: var(--color-success-muted); }
+.risk--3 { color: var(--color-warning); border-color: var(--color-warning-muted); }
+.risk--4, .risk--5 { color: var(--color-danger); border-color: var(--color-danger-muted); }
+
+.action-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-4);
+}
+
+.icon-action {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--color-text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.icon-action:hover {
+  background: var(--color-surface-elevated);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.icon-action--danger:hover {
+  background: var(--color-danger-muted);
+  color: var(--color-danger);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+/* States */
+.state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-64);
+  gap: var(--space-16);
+  color: var(--color-text-dim);
+  text-align: center;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 1024px) {
+  .filter-grid { grid-template-columns: 1fr; }
+  .asset-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 768px) {
+  .page-header { flex-direction: column; align-items: flex-start; gap: var(--space-20); }
+  .asset-grid { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
 }
 </style>

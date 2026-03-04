@@ -1,3 +1,4 @@
+
 using System.Text.Json;
 using DigitalTwinPlatform.Domain.Common;
 using DigitalTwinPlatform.Domain.Entities;
@@ -9,18 +10,24 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Microsoft.Extensions.Logging;
 
 namespace DigitalTwinPlatform.Infrastructure.Persistence;
 
 public class DigitalTwinDbContext : IdentityDbContext<ApplicationUser>
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ILogger<DigitalTwinDbContext> _logger;
+    private readonly ILoggerFactory _loggerFactory;
 
     public DigitalTwinDbContext(
         DbContextOptions<DigitalTwinDbContext> options,
-        IHttpContextAccessor httpContextAccessor) : base(options)
+        IHttpContextAccessor httpContextAccessor,
+        ILoggerFactory loggerFactory) : base(options)
     {
         _httpContextAccessor = httpContextAccessor;
+        _loggerFactory = loggerFactory;
+        _logger = loggerFactory.CreateLogger<DigitalTwinDbContext>();
     }
     public DbSet<Machine> Machines => Set<Machine>();
     public DbSet<ProductionLine> ProductionLines => Set<ProductionLine>();
@@ -49,7 +56,7 @@ public class DigitalTwinDbContext : IdentityDbContext<ApplicationUser>
     {
         var auditEntries = OnBeforeSaveChanges();
         var result = await base.SaveChangesAsync(cancellationToken);
-        await OnAfterSaveChanges(auditEntries);
+        await OnAfterSaveChanges(auditEntries, cancellationToken);
         return result;
     }
 
@@ -83,12 +90,27 @@ public class DigitalTwinDbContext : IdentityDbContext<ApplicationUser>
         return auditEntries;
     }
 
-    private async Task OnAfterSaveChanges(List<AuditLog> auditEntries)
+    private async Task OnAfterSaveChanges(List<AuditLog> auditEntries, CancellationToken cancellationToken)
     {
         if (auditEntries == null || auditEntries.Count == 0) return;
 
-        AuditLogs.AddRange(auditEntries);
-        await base.SaveChangesAsync();
+        try
+        {
+            // Use a separate context instance for audit logging to avoid concurrency conflicts
+            var auditContext = new DigitalTwinDbContext(
+                new DbContextOptionsBuilder<DigitalTwinDbContext>()
+                    .UseNpgsql(Database.GetConnectionString())
+                    .Options,
+                _httpContextAccessor,
+                _loggerFactory);
+            
+            auditContext.AuditLogs.AddRange(auditEntries);
+            await auditContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save audit entries");
+        }
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -134,11 +156,9 @@ public class DigitalTwinDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(x => x.IsActive).HasColumnName("IsActive");
             entity.Property(x => x.Status).HasConversion<string>();
             entity.Property(x => x.Configuration)
-                .HasColumnType("jsonb")
-                .HasDefaultValue(JsonDocument.Parse("{}"));
+                .HasColumnType("jsonb");
             entity.Property(x => x.Properties)
-                .HasColumnType("jsonb")
-                .HasDefaultValue(JsonDocument.Parse("{}"));
+                .HasColumnType("jsonb");
             entity.Property(x => x.RemainingUsefulLifeDays);
             entity.Property(x => x.FailureProbability);
             entity.Property(x => x.HealthStatus).HasConversion<string>();
@@ -171,8 +191,7 @@ public class DigitalTwinDbContext : IdentityDbContext<ApplicationUser>
         {
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Configuration)
-                .HasColumnType("jsonb")
-                .HasDefaultValue(JsonDocument.Parse("{}"));
+                .HasColumnType("jsonb");
         });
 
         modelBuilder.Entity<TelemetryData>(entity =>
@@ -180,8 +199,7 @@ public class DigitalTwinDbContext : IdentityDbContext<ApplicationUser>
             entity.HasKey(x => x.Id);
             entity.Property(x => x.DataType).HasMaxLength(50);
             entity.Property(x => x.Data)
-                .HasColumnType("jsonb")
-                .HasDefaultValue(JsonDocument.Parse("{}"));
+                .HasColumnType("jsonb");
             entity.Property(x => x.Timestamp).HasColumnType("timestamp with time zone").IsRequired();
             entity.Property(x => x.Temperature);
             entity.Property(x => x.Vibration);
@@ -292,11 +310,10 @@ public class DigitalTwinDbContext : IdentityDbContext<ApplicationUser>
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Status).HasConversion<string>();
             entity.Property(x => x.Parameters)
-                .HasColumnType("jsonb")
-                .HasDefaultValue(new Dictionary<string, object>());
+                .HasColumnType("jsonb");
             entity.Property(x => x.Metrics)
-                .HasColumnType("jsonb")
-                .HasDefaultValue(new Dictionary<string, object>());
+                .HasColumnType("jsonb");
+            entity.Property(x => x.RowVersion).IsRowVersion();
             entity.HasIndex(x => x.StartTime);
         });
 

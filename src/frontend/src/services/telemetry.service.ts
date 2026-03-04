@@ -58,7 +58,7 @@ export async function fetchTelemetryByMachine(
 export async function fetchRecentTelemetry(params: RecentTelemetryParams = {}): Promise<TelemetryDto[]> {
   const { range, machineId, limit = 100 } = params
 
-  return axiosClient.get<TelemetryDto[], TelemetryDto[]>('/Telemetry/recent', {
+  return axiosClient.get<TelemetryDto[], TelemetryDto[]>('Telemetry/recent', {
     params: {
       limit,
       range,
@@ -68,7 +68,7 @@ export async function fetchRecentTelemetry(params: RecentTelemetryParams = {}): 
 }
 
 export async function ingestTelemetry(payload: TelemetryIngestDto): Promise<void> {
-  await axiosClient.post('/Telemetry', payload)
+  await axiosClient.post('Telemetry', payload)
 }
 
 /**
@@ -109,7 +109,7 @@ export async function fetchLatestMetrics(machineId: string): Promise<TelemetryMe
  * Search telemetry data across all machines.
  */
 export async function searchTelemetry(params: TelemetrySearchParams): Promise<TelemetryDto[]> {
-  const response = await axiosClient.get<TelemetryDto[]>('/Telemetry/search', {
+  const response = await axiosClient.get<TelemetryDto[]>('Telemetry/search', {
     params: {
       query: params.query,
       range: params.range

@@ -23,7 +23,7 @@ export async function generateReport(
   request: ReportGenerationRequest
 ): Promise<ReportGenerationResponse> {
   return axiosClient.post<ReportGenerationResponse, ReportGenerationResponse>(
-    '/Reports/generate',
+    'Reports/generate',
     request
   )
 }
@@ -37,7 +37,7 @@ export async function exportData<T>(
   fileName?: string
 ): Promise<Blob> {
   const response = await axiosClient.post<Blob>(
-    '/Reports/export',
+    'Reports/export',
     {
       data,
       format,
@@ -55,7 +55,7 @@ export async function exportData<T>(
  */
 export async function getReportTemplates(): Promise<ReportTemplate[]> {
   return axiosClient.get<ReportTemplate[], ReportTemplate[]>(
-    '/Reports/templates'
+    'Reports/templates'
   )
 }
 
@@ -66,7 +66,7 @@ export async function scheduleReport(
   schedule: ReportSchedule
 ): Promise<ReportSchedule> {
   return axiosClient.post<ReportSchedule, ReportSchedule>(
-    '/Reports/schedule',
+    'Reports/schedule',
     schedule
   )
 }
@@ -79,7 +79,7 @@ export async function getReportHistory(
   pageSize: number = 20
 ): Promise<ReportHistoryResponse> {
   return axiosClient.get<ReportHistoryResponse, ReportHistoryResponse>(
-    `/Reports/history?page=${page}&pageSize=${pageSize}`
+    `Reports/history?page=${page}&pageSize=${pageSize}`
   )
 }
 
@@ -88,7 +88,7 @@ export async function getReportHistory(
  */
 export async function downloadReport(reportId: string): Promise<Blob> {
   const response = await axiosClient.get<Blob>(
-    `/Reports/download/${reportId}`,
+    `Reports/download/${reportId}`,
     {
       responseType: 'blob'
     }

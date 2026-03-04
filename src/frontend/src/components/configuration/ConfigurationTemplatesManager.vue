@@ -147,7 +147,7 @@ const loadTemplates = async () => {
       tags: config.tags || ['standard', config.machineType],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      usageCount: Math.floor(Math.random() * 50) // Mock usage count
+      usageCount: config.usageCount || 0
     }))
   } catch (error) {
     console.error('Failed to load templates:', error)

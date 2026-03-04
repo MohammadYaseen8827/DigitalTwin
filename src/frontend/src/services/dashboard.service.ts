@@ -44,7 +44,7 @@ export interface DashboardOverview {
  * Get dashboard statistics
  */
 export async function getDashboardStats(): Promise<DashboardStatsDto> {
-  const response = await axiosClient.get<DashboardStatsDto>('/Dashboard/stats')
+  const response = await axiosClient.get<DashboardStatsDto>('Dashboard/stats')
   return response as unknown as DashboardStatsDto
 }
 

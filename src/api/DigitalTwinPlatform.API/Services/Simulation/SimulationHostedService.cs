@@ -1,10 +1,8 @@
-using DigitalTwinPlatform.API.Services.Core;
-using DigitalTwinPlatform.Domain.Enums;
 using DigitalTwinPlatform.Application.Abstractions.Repositories;
 using DigitalTwinPlatform.Application.Abstractions.Tenancy;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
-using DigitalTwinPlatform.Domain.Entities.Simulation;
+using DigitalTwinPlatform.Domain.Entities.Enums;
 
 namespace DigitalTwinPlatform.API.Services.Simulation;
 
@@ -76,7 +74,30 @@ public class SimulationHostedService : BackgroundService
                             }
 
                             // Run the next step of the simulation
-                            var result = await simulationService.RunSimulationAsync(simulationState.Id, stoppingToken);
+                            SimulationResult result;
+                            try
+                            {
+                                result = await simulationService.RunSimulationAsync(simulationState.Id, stoppingToken);
+                            }
+                            catch (KeyNotFoundException)
+                            {
+                                // Simulation was lost (app restart), recreate it
+                                _logger.LogWarning("Simulation {SimulationId} not found, recreating...", simulationState.Id);
+                                _activeSimulations.TryRemove(machine.Id, out _);
+                                
+                                var parameters = new Dictionary<string, object>
+                                {
+                                    ["machineId"] = machine.Id,
+                                    ["machineName"] = machine.Name.Value,
+                                    ["simulationType"] = "machine_health",
+                                    ["totalSteps"] = int.MaxValue,
+                                    ["intervalSeconds"] = _options.IntervalSeconds
+                                };
+                                
+                                simulationState = await simulationService.CreateSimulationAsync(parameters, stoppingToken);
+                                _activeSimulations[machine.Id] = simulationState;
+                                result = await simulationService.RunSimulationAsync(simulationState.Id, stoppingToken);
+                            }
                             
                             // Update machine status based on simulation result if needed
                             // You can add your custom logic here based on the simulation results

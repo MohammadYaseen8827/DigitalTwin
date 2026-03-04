@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
+import { useToast } from '@/composables/useToast'
+
+const toast = useToast()
 
 // Theme state
 type Theme = 'light' | 'dark' | 'system'
@@ -105,7 +108,7 @@ function saveSettings() {
     }
     
     localStorage.setItem('displaySettings', JSON.stringify(settings))
-    alert('Display settings saved!')
+    toast.success('Display settings saved!')
 }
 
 // Reset to defaults

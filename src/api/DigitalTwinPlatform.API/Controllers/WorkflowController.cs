@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
-using DigitalTwinPlatform.Application.Workflows.Models;
 using Microsoft.AspNetCore.Mvc;
+using DigitalTwinPlatform.Application.Workflows.Models;
 using DigitalTwinPlatform.Application.Workflows.Services;
 using DigitalTwinPlatform.Application.Workflows.Queries;
 using DigitalTwinPlatform.Application.Workflows.Commands;
@@ -95,9 +95,9 @@ namespace DigitalTwinPlatform.API.Controllers
                 var workflow = await _mediator.Send(command);
                 return CreatedAtAction(nameof(GetWorkflow), new { id = workflow.Id }, workflow);
             }
-            catch (ArgumentException)
+            catch (ArgumentException ex)
             {
-                return BadRequest(new { Message = "Invalid argument provided." });
+                return BadRequest(new { Message = ex.Message });
             }
             catch (Exception ex)
             {
@@ -130,9 +130,9 @@ namespace DigitalTwinPlatform.API.Controllers
                     
                 return Ok(workflow);
             }
-            catch (ArgumentException)
+            catch (ArgumentException ex)
             {
-                return BadRequest(new { Message = "Invalid argument provided." });
+                return BadRequest(new { Message = ex.Message });
             }
             catch (Exception ex)
             {
@@ -155,9 +155,9 @@ namespace DigitalTwinPlatform.API.Controllers
                 await _mediator.Send(command);
                 return NoContent();
             }
-            catch (ArgumentException)
+            catch (ArgumentException ex)
             {
-                return BadRequest(new { Message = "Invalid argument provided." });
+                return BadRequest(new { Message = ex.Message });
             }
             catch (Exception ex)
             {
@@ -206,13 +206,13 @@ namespace DigitalTwinPlatform.API.Controllers
                 var execution = await _workflowService.ExecuteWorkflow(id, request.Context);
                 return Ok(execution);
             }
-            catch (ArgumentException)
+            catch (ArgumentException ex)
             {
-                return BadRequest(new { Message = "Invalid argument provided." });
+                return BadRequest(new { Message = ex.Message });
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex)
             {
-                return BadRequest(new { Message = "Operation is not valid for the current state." });
+                return BadRequest(new { Message = ex.Message });
             }
             catch (KeyNotFoundException)
             {
@@ -294,9 +294,9 @@ namespace DigitalTwinPlatform.API.Controllers
                 var validationResult = await _workflowService.ValidateWorkflow(request.Definition);
                 return Ok(validationResult);
             }
-            catch (ArgumentException)
+            catch (ArgumentException ex)
             {
-                return BadRequest(new { Message = "Invalid argument provided." });
+                return BadRequest(new { Message = ex.Message });
             }
             catch (Exception ex)
             {
@@ -344,9 +344,9 @@ namespace DigitalTwinPlatform.API.Controllers
                 var workflow = await _mediator.Send(command);
                 return CreatedAtAction(nameof(GetWorkflow), new { id = workflow.Id }, workflow);
             }
-            catch (ArgumentException)
+            catch (ArgumentException ex)
             {
-                return BadRequest(new { Message = "Invalid argument provided." });
+                return BadRequest(new { Message = ex.Message });
             }
             catch (KeyNotFoundException)
             {
@@ -358,5 +358,25 @@ namespace DigitalTwinPlatform.API.Controllers
                 return StatusCode(500, new { Message = "Internal server error" });
             }
         }
+    }
+
+    // DTOs for the controller
+    public class ExecuteWorkflowDto
+    {
+        public Dictionary<string, object> Context { get; set; } = new();
+    }
+
+    public class DuplicateWorkflowDto
+    {
+        [Required]
+        public string NewName { get; set; } = string.Empty;
+        
+        public string? NewDescription { get; set; }
+    }
+
+    public class ValidateWorkflowDto
+    {
+        [Required]
+        public object Definition { get; set; } = new {};
     }
 }

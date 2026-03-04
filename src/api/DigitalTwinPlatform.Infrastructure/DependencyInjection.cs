@@ -8,6 +8,7 @@ using DigitalTwinPlatform.Infrastructure.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 
 namespace DigitalTwinPlatform.Infrastructure;
 
@@ -19,12 +20,17 @@ public static class DependencyInjection
         services.AddScoped<ITenantService, TenantService>();
         services.AddScoped<TenantSchemaInterceptor>();
 
+        // Build Npgsql data source with dynamic JSON enabled
+        var connectionString = configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("DefaultConnection missing");
+        
+        var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+        dataSourceBuilder.EnableDynamicJson();
+        var dataSource = dataSourceBuilder.Build();
+
         services.AddDbContext<DigitalTwinDbContext>((sp, options) =>
         {
-            var connectionString = configuration.GetConnectionString("DefaultConnection")
-                ?? throw new InvalidOperationException("DefaultConnection missing");
-
-            options.UseNpgsql(connectionString);
+            options.UseNpgsql(dataSource);
             options.AddInterceptors(sp.GetRequiredService<TenantSchemaInterceptor>());
             options.ConfigureWarnings(warnings => warnings.Ignore(
                 Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
@@ -41,6 +47,9 @@ public static class DependencyInjection
         services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
         services.AddScoped<IProductionLineRepository, ProductionLineRepository>();
         services.AddScoped<ISavedSearchRepository, SavedSearchRepository>();
+
+        // Register Demo Seeder
+        services.AddTransient<Persistence.SeedData.DemoDataSeeder>();
 
         return services;
     }

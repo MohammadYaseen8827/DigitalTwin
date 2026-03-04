@@ -15,7 +15,7 @@ import type {
 
 // Model CRUD Operations
 export async function fetchAllAIModels(): Promise<AIModelDto[]> {
-  const response = await axiosClient.get<AIModelDto[]>('/AIModel')
+  const response = await axiosClient.get<AIModelDto[]>('AIModel')
   return response.data || []
 }
 
@@ -71,7 +71,7 @@ export async function deployAIModel(modelData: {
   const blob = new Blob([modelData.modelFile], { type: 'application/octet-stream' })
   formData.append('ModelFile', blob, `${modelData.name}_${modelData.version}.model`)
   
-  const response = await axiosClient.post<AIModelDto>('/AIModel', formData, {
+  const response = await axiosClient.post<AIModelDto>('AIModel', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }

@@ -32,8 +32,6 @@ public static class DatabaseExtensions
         await serviceProvider.SeedIdentityAsync(logger, cancellationToken);
     }
 
-
-
     /// <summary>
     /// Applies migrations with retry logic for database connectivity issues.
     /// </summary>

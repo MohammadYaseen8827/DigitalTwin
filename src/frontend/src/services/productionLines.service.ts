@@ -6,7 +6,7 @@ import type {
 } from '@/api/types'
 
 export async function fetchProductionLines(): Promise<ProductionLineDto[]> {
-  return axiosClient.get<ProductionLineDto[], ProductionLineDto[]>('/ProductionLines')
+  return axiosClient.get<ProductionLineDto[], ProductionLineDto[]>('ProductionLines')
 }
 
 export async function fetchProductionLine(id: string): Promise<ProductionLineDto> {
@@ -14,7 +14,7 @@ export async function fetchProductionLine(id: string): Promise<ProductionLineDto
 }
 
 export async function createProductionLine(payload: ProductionLineCreateDto): Promise<ProductionLineDto> {
-  return axiosClient.post<ProductionLineDto, ProductionLineDto>('/ProductionLines', payload)
+  return axiosClient.post<ProductionLineDto, ProductionLineDto>('ProductionLines', payload)
 }
 
 export async function updateProductionLine(

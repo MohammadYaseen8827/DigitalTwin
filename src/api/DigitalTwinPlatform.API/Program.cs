@@ -12,11 +12,7 @@ using FluentValidation;
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure core services with camelCase JSON serialization
-builder.Services.AddControllers(options =>
-    {
-        // Global CSRF protection: validates antiforgery tokens on all POST/PUT/DELETE/PATCH requests
-        options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute());
-    })
+builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
@@ -47,16 +43,11 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 // Configure application-specific services
-builder.Services.AddApplicationServices(builder.Configuration, builder.Environment);
+builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration, builder.Environment);
 
 // Configure Swagger
 builder.Services.AddSwaggerDocumentation();
-
-builder.Services.Configure<HostOptions>(options =>
-{
-    options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
-});
 
 // Build the application
 var app = builder.Build();

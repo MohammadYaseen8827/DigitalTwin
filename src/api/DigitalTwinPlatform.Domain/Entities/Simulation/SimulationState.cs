@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-
+using System.ComponentModel.DataAnnotations;
 namespace DigitalTwinPlatform.Domain.Entities.Simulation
 {
     public class SimulationState
@@ -14,8 +12,12 @@ namespace DigitalTwinPlatform.Domain.Entities.Simulation
         public SimulationStatus Status { get; set; } = SimulationStatus.Pending;
         public int CurrentStep { get; set; }
         public int TotalSteps { get; set; }
-        public Dictionary<string, object> Parameters { get; set; } = new Dictionary<string, object>();
-        public Dictionary<string, object> Metrics { get; set; } = new Dictionary<string, object>();
+        
+        [Timestamp]
+        public uint  RowVersion { get; set; }
+        
+        public Dictionary<string, object> Parameters { get; set; } = new();
+        public Dictionary<string, object> Metrics { get; set; } = new();
     }
 
     public enum SimulationStatus

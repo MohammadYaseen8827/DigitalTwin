@@ -1,13 +1,15 @@
 <template>
-  <div class="dashboard-layout">
+  <div :class="styles['dashboard-layout']">
     <!-- Header -->
-    <header class="dashboard-layout__header">
-      <div class="dashboard-layout__header-left">
-        <h1 class="dashboard-layout__title">{{ title }}</h1>
-        <p v-if="subtitle" class="dashboard-layout__subtitle">{{ subtitle }}</p>
+    <header :class="styles['dashboard-layout__header']">
+      <div :class="styles['header-left']">
+        <div :class="styles['title-wrap']">
+           <h1 :class="styles['dashboard-layout__title']">{{ title }}</h1>
+           <p v-if="subtitle" :class="styles['dashboard-layout__subtitle']">{{ subtitle }}</p>
+        </div>
       </div>
 
-      <div class="dashboard-layout__header-right">
+      <div :class="styles['header-right']">
         <slot name="header-actions" />
         <ConnectionStatus
           :status="connectionStatus"
@@ -17,42 +19,45 @@
       </div>
     </header>
 
-    <!-- Alerts -->
-    <AlertBanner
-      v-if="alerts.length > 0"
-      :alerts="alerts"
-      :title="alertTitle"
-      :show-acknowledge="showAlertAcknowledge"
-      @acknowledge="handleAcknowledge"
-      @dismiss="dismissAlerts"
-    />
+    <!-- Alerts Layer -->
+    <Transition name="fade">
+      <AlertBanner
+        v-if="alerts.length > 0"
+        :alerts="alerts"
+        :title="alertTitle"
+        :show-acknowledge="showAlertAcknowledge"
+        @acknowledge="handleAcknowledge"
+        @dismiss="dismissAlerts"
+      />
+    </Transition>
 
-    <!-- Main grid -->
-    <div class="dashboard-layout__grid">
+    <!-- Neural Grid Matrix -->
+    <div :class="styles['dashboard-layout__grid']">
       <slot />
     </div>
 
-    <!-- Footer with data freshness -->
-    <footer v-if="showFooter" class="dashboard-layout__footer">
-      <span class="dashboard-layout__footer-item">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10" />
-          <polyline points="12 6 12 12 16 14" />
-        </svg>
-        Last updated: {{ formattedLastUpdate }}
-      </span>
-      <span v-if="totalMachines !== undefined" class="dashboard-layout__footer-item">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-        </svg>
-        {{ totalMachines }} machines monitored
-      </span>
+    <!-- Data Freshness Footer -->
+    <footer v-if="showFooter" :class="styles['dashboard-layout__footer']">
+      <div :class="styles['footer-group']">
+        <div :class="styles['footer-item']">
+          <Clock :width="12" :height="12" />
+          <span>Synchronized: {{ formattedLastUpdate }}</span>
+        </div>
+        <div v-if="totalMachines !== undefined" :class="styles['footer-item']">
+          <Activity :width="12" :height="12" />
+          <span>{{ totalMachines }} Active Node Clusters</span>
+        </div>
+      </div>
+      <div :class="styles['footer-meta']">
+        <span>Digital Twin OS v4.2.0</span>
+      </div>
     </footer>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useCssModule } from 'vue'
+import { Clock, Activity } from 'lucide-vue-next'
 import ConnectionStatus from './ConnectionStatus.vue'
 import AlertBanner, { type Alert } from './AlertBanner.vue'
 
@@ -71,10 +76,12 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   connectionStatus: 'connected',
   alerts: () => [],
-  alertTitle: 'Active Alerts',
+  alertTitle: 'ACTIVE ANOMALIES',
   showAlertAcknowledge: true,
   showFooter: true
 })
+
+const styles = useCssModule()
 
 const emit = defineEmits<{
   reconnect: []
@@ -83,30 +90,22 @@ const emit = defineEmits<{
 }>()
 
 const formattedLastUpdate = computed(() => {
-  if (!props.lastUpdate) return 'Never'
+  if (!props.lastUpdate) return 'PROTOCOL DESYNC'
   const d = props.lastUpdate instanceof Date ? props.lastUpdate : new Date(props.lastUpdate)
-  return d.toLocaleTimeString()
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 })
 
-function handleReconnect() {
-  emit('reconnect')
-}
-
-function handleAcknowledge(alerts: Alert[]) {
-  emit('acknowledgeAlerts', alerts)
-}
-
-function dismissAlerts() {
-  emit('dismissAlerts')
-}
+function handleReconnect() { emit('reconnect') }
+function handleAcknowledge(alerts: Alert[]) { emit('acknowledgeAlerts', alerts) }
+function dismissAlerts() { emit('dismissAlerts') }
 </script>
 
-<style scoped>
+<style module>
 .dashboard-layout {
   display: flex;
   flex-direction: column;
-  gap: var(--space-16);
-  padding: var(--space-24);
+  gap: var(--space-32);
+  padding: 0;
   min-height: 100%;
 }
 
@@ -114,60 +113,40 @@ function dismissAlerts() {
 .dashboard-layout__header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: var(--space-16);
+  align-items: flex-end;
+  padding-bottom: var(--space-24);
+  border-bottom: 1px solid var(--color-border-subtle);
+  gap: var(--space-24);
 }
 
-.dashboard-layout__header-left {
-  flex: 1;
-}
+.header-left { flex: 1; }
 
 .dashboard-layout__title {
   margin: 0;
-  font-size: var(--font-size-xl);
-  font-weight: 700;
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
   color: var(--color-text-primary);
+  letter-spacing: -0.03em;
 }
 
 .dashboard-layout__subtitle {
   margin: var(--space-4) 0 0;
   font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+  color: var(--color-text-muted);
+  font-weight: 500;
 }
 
-.dashboard-layout__header-right {
+.header-right {
   display: flex;
   align-items: center;
-  gap: var(--space-12);
+  gap: var(--space-16);
 }
 
 /* Grid */
 .dashboard-layout__grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  gap: var(--space-16);
-}
-
-/* Responsive grid */
-@media (max-width: 1280px) {
-  .dashboard-layout__grid {
-    grid-template-columns: repeat(6, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .dashboard-layout__grid {
-    grid-template-columns: 1fr;
-  }
-
-  .dashboard-layout__header {
-    flex-direction: column;
-  }
-
-  .dashboard-layout__header-right {
-    width: 100%;
-    justify-content: space-between;
-  }
+  gap: var(--space-24);
 }
 
 /* Footer */
@@ -175,20 +154,40 @@ function dismissAlerts() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: var(--space-16);
+  padding-top: var(--space-24);
+  margin-top: var(--space-12);
   border-top: 1px solid var(--color-border-subtle);
 }
 
-.dashboard-layout__footer-item {
+.footer-group {
   display: flex;
-  align-items: center;
-  gap: var(--space-6);
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
+  gap: var(--space-24);
 }
 
-.dashboard-layout__footer-item svg {
-  width: 14px;
-  height: 14px;
+.footer-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.footer-meta {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  opacity: 0.4;
+}
+
+@media (max-width: 1400px) {
+  .dashboard-layout__grid { grid-template-columns: repeat(12, 1fr); }
+}
+
+@media (max-width: 1024px) {
+  .dashboard-layout__grid { grid-template-columns: 1fr; }
+  .dashboard-layout__header { flex-direction: column; align-items: flex-start; }
 }
 </style>

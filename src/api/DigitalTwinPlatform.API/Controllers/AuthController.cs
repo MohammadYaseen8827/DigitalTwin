@@ -169,7 +169,7 @@ public class AuthController(
     /// <response code="500">Internal server error.</response>
     [HttpPost("refresh")]
     [Consumes("application/json")]
-    [AllowAnonymous]
+    [Authorize]
     [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -221,11 +221,10 @@ public class AuthController(
     /// <returns>The current user's profile details.</returns>
     /// <response code="200">Returns user profile successfully.</response>
     /// <response code="401">Unauthorized - Authentication required.</response>
-    [Authorize]
     [HttpGet("me")]
     [ProducesResponseType(typeof(CurrentUserResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetCurrentUser(CancellationToken ct = default)
+    public async Task<IActionResult> GetCurrentUser()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
@@ -348,7 +347,7 @@ public class AuthController(
     /// <returns>Success message.</returns>
     [HttpPost("forgot-password")]
     [Consumes("application/json")]
-    [AllowAnonymous]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
@@ -364,8 +363,7 @@ public class AuthController(
         var token = await userManager.GeneratePasswordResetTokenAsync(user);
         
         // In development/simulation, we log the token since we don't have an SMTP server
-        // Send email with token (mocked for now)
-        logger.LogInformation("Password reset requested for {Email}. Reset token generated.", request.Email);
+        logger.LogInformation("Password reset requested for {Email}. Token: {Token}", request.Email, token);
 
         // In production, send email with reset link
         _ = Task.Run(async () => {
@@ -391,7 +389,7 @@ public class AuthController(
     /// <returns>Success message.</returns>
     [HttpPost("reset-password")]
     [Consumes("application/json")]
-    [AllowAnonymous]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)

@@ -19,7 +19,7 @@ export interface ValidateTokenResponse {
  */
 export async function validateToken(request: ValidateTokenRequest): Promise<ValidateTokenResponse> {
   try {
-    await axiosClient.post('/AntiForgery/validate', request)
+    await axiosClient.post('AntiForgery/validate', request)
     return { valid: true }
   } catch (error: any) {
     return {

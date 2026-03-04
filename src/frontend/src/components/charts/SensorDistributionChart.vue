@@ -163,12 +163,7 @@ async function fetchSensorReadings() {
         updateSensorReadings()
     } catch (error) {
         console.error('Error fetching sensor readings:', error)
-        // Only show mock data in development; in production show empty state
-        if (import.meta.env.DEV) {
-            generateMockData()
-        } else {
-            sensorReadings.value = {}
-        }
+        sensorReadings.value = {}
     } finally {
         isLoading.value = false
     }
@@ -197,20 +192,6 @@ function updateSensorReadings() {
     }
 }
 
-/** True when showing fallback sample data (no real API data). */
-const isSampleData = ref(false)
-
-function generateMockData() {
-    isSampleData.value = true
-    const readings: Record<string, SensorReading> = {
-        temperature: { sensor: 'temperature', value: 65, min: 0, max: 150, threshold: 80, normalizedValue: 43 },
-        vibration: { sensor: 'vibration', value: 7.5, min: 0, max: 20, threshold: 10, normalizedValue: 38 },
-        pressure: { sensor: 'pressure', value: 6.5, min: 0, max: 10, threshold: 8, normalizedValue: 65 },
-        humidity: { sensor: 'humidity', value: 55, min: 0, max: 100, threshold: 70, normalizedValue: 55 },
-        rpm: { sensor: 'rpm', value: 3200, min: 0, max: 5000, threshold: 4000, normalizedValue: 64 }
-    }
-    sensorReadings.value = readings
-}
 
 function getMaxValue(sensorType: string): number {
     const maxValues: Record<string, number> = {
@@ -257,10 +238,6 @@ onMounted(() => {
             :options="chartOptionsWithThresholds"
             :series="series"
         />
-
-        <p v-if="isSampleData && !isLoading" class="mt-2 text-xs text-gray-500 italic">
-            Sample data — no API data available
-        </p>
 
         <!-- Legend with threshold status -->
         <div v-if="Object.keys(sensorReadings).length > 0" class="mt-4 flex flex-wrap gap-4 justify-center text-sm">

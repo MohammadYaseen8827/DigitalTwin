@@ -49,22 +49,25 @@ class ErrorReporter {
   }
 
   /**
-   * Log error to console (development only)
+   * Log error to console. In production, only log a generic message to avoid leaking context.
    */
   private logToConsole(report: ErrorReport): void {
-    const prefix = `[${report.severity.toUpperCase()}]${report.source ? ` [${report.source}]` : ''}`
-    
-    switch (report.severity) {
-      case ErrorSeverity.INFO:
-        console.log(prefix, report.message, report.context || '')
-        break
-      case ErrorSeverity.WARNING:
-        console.warn(prefix, report.message, report.error || '', report.context || '')
-        break
-      case ErrorSeverity.ERROR:
-      case ErrorSeverity.CRITICAL:
-        console.error(prefix, report.message, report.error || '', report.context || '')
-        break
+    if (this.isDevelopment) {
+      const prefix = `[${report.severity.toUpperCase()}]${report.source ? ` [${report.source}]` : ''}`
+      switch (report.severity) {
+        case ErrorSeverity.INFO:
+          console.log(prefix, report.message, report.context || '')
+          break
+        case ErrorSeverity.WARNING:
+          console.warn(prefix, report.message, report.error || '', report.context || '')
+          break
+        case ErrorSeverity.ERROR:
+        case ErrorSeverity.CRITICAL:
+          console.error(prefix, report.message, report.error || '', report.context || '')
+          break
+      }
+    } else if (report.severity === ErrorSeverity.ERROR || report.severity === ErrorSeverity.CRITICAL) {
+      console.error('[Error] An error occurred.')
     }
   }
 

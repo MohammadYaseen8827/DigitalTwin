@@ -1,7 +1,7 @@
 using DigitalTwinPlatform.Application.Abstractions.UnitOfWork;
 using DigitalTwinPlatform.Application.Machines.Models;
 using DigitalTwinPlatform.Domain.Entities;
-using DigitalTwinPlatform.Domain.Enums;
+using DigitalTwinPlatform.Domain.Entities.Enums;
 using DigitalTwinPlatform.Domain.ValueObjects;
 using MediatR;
 

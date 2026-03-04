@@ -70,7 +70,7 @@ export interface ODESolution {
  */
 export async function solveExponentialDegradation(request: ExponentialDegradationRequest): Promise<ODESolution> {
   try {
-    const response = await axiosClient.post('/DegradationModeling/solve/exponential', request)
+    const response = await axiosClient.post('DegradationModeling/solve/exponential', request)
     return response.data
   } catch (error) {
     errorReporter.error('Failed to solve exponential degradation:', error)
@@ -83,7 +83,7 @@ export async function solveExponentialDegradation(request: ExponentialDegradatio
  */
 export async function solvePowerLawDegradation(request: PowerLawDegradationRequest): Promise<ODESolution> {
   try {
-    const response = await axiosClient.post('/DegradationModeling/solve/powerlaw', request)
+    const response = await axiosClient.post('DegradationModeling/solve/powerlaw', request)
     return response.data
   } catch (error) {
     errorReporter.error('Failed to solve power-law degradation:', error)
@@ -96,7 +96,7 @@ export async function solvePowerLawDegradation(request: PowerLawDegradationReque
  */
 export async function solveMultiVariableDegradation(request: MultiVariableDegradationRequest): Promise<ODESolution> {
   try {
-    const response = await axiosClient.post('/DegradationModeling/solve/multivariable', request)
+    const response = await axiosClient.post('DegradationModeling/solve/multivariable', request)
     return response.data
   } catch (error) {
     errorReporter.error('Failed to solve multi-variable degradation:', error)
@@ -109,7 +109,7 @@ export async function solveMultiVariableDegradation(request: MultiVariableDegrad
  */
 export async function solveStochasticDegradation(request: StochasticDegradationRequest): Promise<any> {
   try {
-    const response = await axiosClient.post('/DegradationModeling/solve/stochastic', request)
+    const response = await axiosClient.post('DegradationModeling/solve/stochastic', request)
     return response.data
   } catch (error) {
     errorReporter.error('Failed to solve stochastic degradation:', error)
@@ -136,7 +136,7 @@ export interface ParameterEstimationResult {
  */
 export async function estimateExponentialParameters(request: ParameterEstimationRequest): Promise<ParameterEstimationResult> {
   try {
-    const response = await axiosClient.post('/DegradationModeling/estimate/exponential', request)
+    const response = await axiosClient.post('DegradationModeling/estimate/exponential', request)
     return response.data
   } catch (error) {
     errorReporter.error('Failed to estimate exponential parameters:', error)
@@ -149,7 +149,7 @@ export async function estimateExponentialParameters(request: ParameterEstimation
  */
 export async function estimatePowerLawParameters(request: ParameterEstimationRequest): Promise<ParameterEstimationResult> {
   try {
-    const response = await axiosClient.post('/DegradationModeling/estimate/powerlaw', request)
+    const response = await axiosClient.post('DegradationModeling/estimate/powerlaw', request)
     return response.data
   } catch (error) {
     errorReporter.error('Failed to estimate power-law parameters:', error)
@@ -166,7 +166,7 @@ export async function estimateMultiVariableParameters(request: {
   initialGuess?: Record<string, number>
 }): Promise<ParameterEstimationResult> {
   try {
-    const response = await axiosClient.post('/DegradationModeling/estimate/multivariable', request)
+    const response = await axiosClient.post('DegradationModeling/estimate/multivariable', request)
     return response.data
   } catch (error) {
     errorReporter.error('Failed to estimate multi-variable parameters:', error)
@@ -182,7 +182,7 @@ export async function compareModels(request: {
   modelTypes: string[]
 }): Promise<any> {
   try {
-    const response = await axiosClient.post('/DegradationModeling/compare', request)
+    const response = await axiosClient.post('DegradationModeling/compare', request)
     return response.data
   } catch (error) {
     errorReporter.error('Failed to compare models:', error)
@@ -199,7 +199,7 @@ export async function validateParameters(request: {
   folds?: number
 }): Promise<any> {
   try {
-    const response = await axiosClient.post('/DegradationModeling/validate', request)
+    const response = await axiosClient.post('DegradationModeling/validate', request)
     return response.data
   } catch (error) {
     errorReporter.error('Failed to validate parameters:', error)
@@ -215,7 +215,7 @@ export async function validateSolution(request: {
   validationParameters?: Record<string, number>
 }): Promise<any> {
   try {
-    const response = await axiosClient.post('/DegradationModeling/validate/solution', request)
+    const response = await axiosClient.post('DegradationModeling/validate/solution', request)
     return response.data
   } catch (error) {
     errorReporter.error('Failed to validate solution:', error)

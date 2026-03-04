@@ -20,7 +20,7 @@ export interface ArchivalStatus {
  * Archive old telemetry data
  */
 export async function archiveTelemetry(request: DataArchivalRequest): Promise<ArchivalStatus> {
-  const response = await axiosClient.post<ArchivalStatus>('/DataArchival', request)
+  const response = await axiosClient.post<ArchivalStatus>('DataArchival', request)
   return response.data
 }
 

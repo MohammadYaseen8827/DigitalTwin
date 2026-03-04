@@ -14,7 +14,7 @@ import type {
 
 // Workflow CRUD Operations
 export async function fetchAllWorkflows(): Promise<WorkflowDefinitionDto[]> {
-  const response = await axiosClient.get<WorkflowDefinitionDto[]>('/Workflow')
+  const response = await axiosClient.get<WorkflowDefinitionDto[]>('Workflow')
   return response.data || []
 }
 
@@ -33,7 +33,7 @@ export async function createWorkflow(workflowData: {
   tags: string[]
   createdBy: string
 }): Promise<WorkflowDefinitionDto> {
-  const response = await axiosClient.post<WorkflowDefinitionDto>('/Workflow', workflowData)
+  const response = await axiosClient.post<WorkflowDefinitionDto>('Workflow', workflowData)
   return response.data
 }
 

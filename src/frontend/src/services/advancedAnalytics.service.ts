@@ -204,7 +204,7 @@ export async function optimizeProductionSchedule(
   request: SchedulingOptimizationRequest
 ): Promise<SchedulingRecommendation> {
   return axiosClient.post<SchedulingRecommendation, SchedulingRecommendation>(
-    '/AdvancedAnalytics/prescriptive/scheduling',
+    'AdvancedAnalytics/'prescriptive/scheduling',
     request
   )
 }
@@ -216,7 +216,7 @@ export async function optimizeResourceAllocation(
   request: ResourceAllocationRequest
 ): Promise<ResourceAllocationPlan> {
   return axiosClient.post<ResourceAllocationPlan, ResourceAllocationPlan>(
-    '/AdvancedAnalytics/prescriptive/resource-allocation',
+    'AdvancedAnalytics/'prescriptive/resource-allocation',
     request
   )
 }
@@ -228,7 +228,7 @@ export async function optimizeMaintenanceCosts(
   request: CostOptimizationRequest
 ): Promise<CostOptimizationResult> {
   return axiosClient.post<CostOptimizationResult, CostOptimizationResult>(
-    '/AdvancedAnalytics/prescriptive/cost-optimization',
+    'AdvancedAnalytics/'prescriptive/cost-optimization',
     request
   )
 }

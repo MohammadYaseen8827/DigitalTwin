@@ -60,7 +60,7 @@ export interface ModelPerformanceSummary {
  */
 export async function registerModelVersion(request: RegisterModelVersionRequest): Promise<ModelVersionDto> {
   try {
-    const response = await axiosClient.post('/ModelLifecycle/register', request)
+    const response = await axiosClient.post('ModelLifecycle/register', request)
     toast.success('Model version registered successfully')
     return response.data
   } catch (error) {
@@ -91,7 +91,7 @@ export async function promoteModelVersion(modelId: string, request: PromoteModel
 export async function fetchModelLifecycles(modelType?: string): Promise<ModelVersionDto[]> {
   try {
     const params = modelType ? { modelType } : {}
-    const response = await axiosClient.get('/ModelLifecycle', { params })
+    const response = await axiosClient.get('ModelLifecycle', { params })
     return response.data
   } catch (error) {
     errorReporter.error('Failed to fetch model lifecycles:', error)
@@ -122,7 +122,7 @@ export async function getProductionVersion(modelType: string): Promise<ModelVers
  */
 export async function compareModelVersions(request: CompareModelsRequest): Promise<ModelComparisonResult> {
   try {
-    const response = await axiosClient.post('/ModelLifecycle/compare', request)
+    const response = await axiosClient.post('ModelLifecycle/compare', request)
     return response.data
   } catch (error) {
     errorReporter.error('Failed to compare models:', error)

@@ -1,6 +1,4 @@
-using DigitalTwinPlatform.Application.Analytics.Degradation.Models;
 using DigitalTwinPlatform.Application.Mathematics;
-using DigitalTwinPlatform.Application.ML.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
@@ -53,7 +51,7 @@ public class DegradationModelingController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to solve exponential degradation model");
-            return StatusCode(500, new { error = "Internal server error during exponential degradation analysis" });
+            return StatusCode(500, new { error = ex.Message });
         }
     }
 
@@ -86,7 +84,7 @@ public class DegradationModelingController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to solve power-law degradation model");
-            return StatusCode(500, new { error = "Internal server error during power-law degradation analysis" });
+            return StatusCode(500, new { error = ex.Message });
         }
     }
 
@@ -118,7 +116,7 @@ public class DegradationModelingController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to solve multi-variable degradation model");
-            return StatusCode(500, new { error = "Internal server error during multi-variable degradation analysis" });
+            return StatusCode(500, new { error = ex.Message });
         }
     }
 
@@ -170,7 +168,7 @@ public class DegradationModelingController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to solve stochastic degradation model");
-            return StatusCode(500, new { error = "Internal server error during stochastic simulation" });
+            return StatusCode(500, new { error = ex.Message });
         }
     }
 
@@ -200,7 +198,7 @@ public class DegradationModelingController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to estimate exponential parameters");
-            return StatusCode(500, new { error = "Internal server error during parameter estimation" });
+            return StatusCode(500, new { error = ex.Message });
         }
     }
 
@@ -230,7 +228,7 @@ public class DegradationModelingController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to estimate power-law parameters");
-            return StatusCode(500, new { error = "Internal server error during parameter estimation" });
+            return StatusCode(500, new { error = ex.Message });
         }
     }
 
@@ -261,7 +259,7 @@ public class DegradationModelingController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to estimate multi-variable parameters");
-            return StatusCode(500, new { error = "Internal server error during multi-variable estimation" });
+            return StatusCode(500, new { error = ex.Message });
         }
     }
 
@@ -290,7 +288,7 @@ public class DegradationModelingController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to compare degradation models");
-            return StatusCode(500, new { error = "Internal server error during model comparison" });
+            return StatusCode(500, new { error = ex.Message });
         }
     }
 
@@ -320,7 +318,7 @@ public class DegradationModelingController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to validate parameters");
-            return StatusCode(500, new { error = "Internal server error during parameter validation" });
+            return StatusCode(500, new { error = ex.Message });
         }
     }
 
@@ -352,7 +350,7 @@ public class DegradationModelingController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to validate ODE solution");
-            return StatusCode(500, new { error = "Internal server error during solution validation" });
+            return StatusCode(500, new { error = ex.Message });
         }
     }
 
@@ -401,3 +399,75 @@ public class DegradationModelingController(
 
     #endregion
 }
+
+#region Request/Response Models
+
+public record ExponentialDegradationRequest(
+    [Required] string MachineType,
+    [Range(0.1, 1000)] double InitialValue,
+    [Range(1e-6, 10)] double DegradationRate,
+    [Range(1, 365)] double TimeHorizon,
+    [Range(10, 10000)] int TimePoints = 100,
+    ODESolverMethod SolverMethod = ODESolverMethod.RungeKutta4);
+
+public record PowerLawDegradationRequest(
+    [Required] string MachineType,
+    [Range(0.1, 1000)] double InitialValue,
+    [Range(1e-6, 10)] double DegradationRate,
+    [Range(0.1, 10)] double Power,
+    [Range(1, 365)] double TimeHorizon,
+    [Range(10, 10000)] int TimePoints = 100,
+    ODESolverMethod SolverMethod = ODESolverMethod.RungeKutta4);
+
+public record MultiVariableDegradationRequest(
+    [Required] string MachineType,
+    [Required] double[] InitialValues,
+    [Required] Dictionary<string, double> Parameters,
+    [Range(1, 365)] double TimeHorizon,
+    [Range(10, 10000)] int TimePoints = 100,
+    ODESolverMethod SolverMethod = ODESolverMethod.RungeKutta4);
+
+public record StochasticDegradationRequest(
+    [Required] string MachineType,
+    [Required] string ModelType,
+    [Range(0.1, 1000)] double InitialValue,
+    [Range(1e-6, 10)] double DegradationRate,
+    [Range(1e-6, 1)] double DiffusionCoefficient,
+    [Range(0.1, 10)] double Power = 1.0,
+    [Range(1, 365)] double TimeHorizon = 30,
+    [Range(10, 10000)] int TimePoints = 100,
+    [Range(10, 10000)] int NumberOfSimulations = 100,
+    [Range(0.8, 0.99)] double ConfidenceLevel = 0.95);
+
+public record ParameterEstimationRequest(
+    [Required] List<SyntheticDataPoint> HistoricalData,
+    Dictionary<string, double>? InitialGuess = null);
+
+public record MultiVariableEstimationRequest(
+    [Required] List<SyntheticDataPoint> HistoricalData,
+    [Required] List<string> VariableNames,
+    Dictionary<string, double>? InitialGuess = null);
+
+public record ModelComparisonRequest(
+    [Required] List<SyntheticDataPoint> HistoricalData,
+    [Required] List<string> ModelTypes);
+
+public record ParameterValidationRequest(
+    [Required] ParameterEstimationResult EstimatedParameters,
+    [Required] List<SyntheticDataPoint> HistoricalData,
+    [Range(2, 10)] int Folds = 5);
+
+public record SolutionValidationRequest(
+    [Required] ODESolution Solution,
+    Dictionary<string, double>? ValidationParameters = null);
+
+public class StochasticSolutionResult
+{
+    public ODESolution MeanSolution { get; set; } = null!;
+    public Dictionary<string, ConfidenceInterval> ConfidenceIntervals { get; set; } = new();
+    public int NumberOfSimulations { get; set; }
+    public double ConfidenceLevel { get; set; }
+    public double DiffusionCoefficient { get; set; }
+}
+
+#endregion

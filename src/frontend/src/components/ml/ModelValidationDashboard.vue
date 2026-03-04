@@ -251,13 +251,10 @@ const renderComparisonChart = () => {
     comparisonChartInstance = echarts.init(comparisonChartRef.value)
   }
   
-  // Mock comparison data
-  const models = ['Current Model', 'Baseline', 'Industry Standard']
+  const models = ['Current Model']
   const scores = [
-    validationResult.value?.overallScore || 0,
-    Math.random() * 0.3 + 0.5, // 0.5 - 0.8
-    Math.random() * 0.2 + 0.6  // 0.6 - 0.8
-  ].map(score => score * 100)
+    (validationResult.value?.overallScore || 0) * 100
+  ]
   
   const option = {
     title: {

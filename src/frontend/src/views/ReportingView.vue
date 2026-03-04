@@ -72,7 +72,6 @@ const loadTemplates = async () => {
       selectedTemplateId.value = templates.value[0].id
     }
   } catch (error) {
-    console.error('Failed to load templates:', error)
     toast.error('Unable to load report templates')
   } finally {
     loading.value = false

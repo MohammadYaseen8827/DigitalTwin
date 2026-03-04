@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import BaseCard from '@/components/base/BaseCard.vue'
-import BaseButton from '@/components/base/BaseButton.vue'
-import BaseInput from '@/components/base/BaseInput.vue'
-import BaseSelect from '@/components/base/BaseSelect.vue'
+import { ref, computed, onMounted, useCssModule } from 'vue'
+import UiCard from '@/components/ui/UiCard.vue'
+import UiButton from '@/components/ui/UiButton.vue'
+import UiInput from '@/components/ui/UiInput.vue'
+import UiSelect from '@/components/ui/UiSelect.vue'
+import UiBadge from '@/components/ui/UiBadge.vue'
 import { useToast } from '@/composables/useToast'
 import { requestPrediction, fetchPredictionHistory } from '@/services/predictions.service'
-import { TrendingUp, Clock, AlertTriangle, CheckCircle, BarChart3, Zap, Target, Calendar } from 'lucide-vue-next'
+import { TrendingUp, Clock, AlertTriangle, CheckCircle, BarChart3, Zap, Target, Calendar, BrainCircuit, Activity, ShieldCheck, Gauge } from 'lucide-vue-next'
+
+const styles = useCssModule()
 
 // Temporary interface for prediction data
 interface PredictionData {
@@ -160,61 +163,94 @@ const loadHistory = async () => {
   }
 }
 
+const historyRange = ref('50')
+
+const kpiCards = computed(() => [
+  { label: 'Avg. RUL Estimation', value: `${avgRul.value}h`, icon: Clock, variant: 'primary' },
+  { label: 'Forecast Confidence', value: `${avgConfidence.value}%`, icon: ShieldCheck, variant: 'success' },
+  { label: 'Anomaly Criticality', value: criticalPredictions.value, icon: AlertTriangle, variant: 'danger' },
+  { label: 'Processed Insights', value: predictionHistory.value.length, icon: BrainCircuit, variant: 'info' },
+])
+
+const predictionStatusVariant = computed(() => {
+  const status = predictionStatus.value
+  if (status === 'Critical') return 'danger'
+  if (status === 'Warning') return 'warning'
+  return 'success'
+})
+
+function getConfidenceLevel(conf: number) {
+  if (conf >= 0.8) return 'high'
+  if (conf >= 0.6) return 'med'
+  return 'low'
+}
+
+function normalizeStatus(rul: number) {
+  if (rul < 30) return 'Critical'
+  if (rul < 90) return 'Warning'
+  return 'Healthy'
+}
+
+function getStatusVariant(rul: number) {
+  if (rul < 30) return 'danger'
+  if (rul < 90) return 'warning'
+  return 'success'
+}
+
 const renderPredictionChart = () => {
   if (!predictionChartRef.value || !currentPrediction.value) return
   
   if (!predictionChartInstance) {
-    predictionChartInstance = echarts.init(predictionChartRef.value)
+    predictionChartInstance = echarts.init(predictionChartRef.value, 'hub-dark')
   }
-  
+
   const rul = currentPrediction.value.remainingUsefulLife
   const confidence = currentPrediction.value.confidence * 100
   
   const option = {
-    title: {
-      text: 'Current Prediction Analysis',
-      left: 'center'
-    },
+    backgroundColor: 'transparent',
     tooltip: {
       trigger: 'axis',
-      axisPointer: {
-        type: 'shadow'
-      }
+      backgroundColor: 'rgba(5, 7, 10, 0.9)',
+      borderColor: 'rgba(255, 255, 255, 0.1)',
+      textStyle: { color: '#F8FAFC' }
     },
     xAxis: {
       type: 'category',
-      data: ['RUL (Hours)', 'Confidence (%)']
+      data: ['RUL (Hours)', 'Confidence (%)'],
+      axisLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.1)' } }
     },
     yAxis: [
-      {
-        type: 'value',
-        name: 'Hours',
-        position: 'left'
-      },
-      {
-        type: 'value',
-        name: 'Percentage',
-        position: 'right',
-        min: 0,
-        max: 100
-      }
+      { type: 'value', splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.05)' } } },
+      { type: 'value', min: 0, max: 100, splitLine: { show: false } }
     ],
     series: [
       {
-        name: 'Value',
         type: 'bar',
+        barWidth: '40%',
         data: [
-          { value: rul, itemStyle: { color: rul < 30 ? '#ef4444' : rul < 90 ? '#f59e0b' : '#10b981' } },
-          { value: confidence, itemStyle: { color: confidence > 80 ? '#10b981' : confidence > 60 ? '#f59e0b' : '#ef4444' } }
-        ],
-        label: {
-          show: true,
-          position: 'top',
-          formatter: (params: any) => {
-            if (params.name === 'RUL (Hours)') return `${params.value}h`
-            return `${params.value.toFixed(1)}%`
+          { 
+            value: rul, 
+            itemStyle: { 
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: rul < 30 ? '#ef4444' : '#3b82f6' },
+                { offset: 1, color: 'rgba(59, 130, 246, 0.1)' }
+              ]),
+              borderRadius: [4, 4, 0, 0]
+            } 
+          },
+          { 
+            value: confidence, 
+            yAxisIndex: 1,
+            itemStyle: { 
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: '#10b981' },
+                { offset: 1, color: 'rgba(16, 185, 129, 0.1)' }
+              ]),
+              borderRadius: [4, 4, 0, 0]
+            } 
           }
-        }
+        ]
       }
     ]
   }
@@ -226,70 +262,43 @@ const renderHistoryChart = () => {
   if (!historyChartRef.value || predictionHistory.value.length === 0) return
   
   if (!historyChartInstance) {
-    historyChartInstance = echarts.init(historyChartRef.value)
+    historyChartInstance = echarts.init(historyChartRef.value, 'dark')
   }
   
-  const timestamps = predictionHistory.value.map((pred: PredictionData) => {
+  const timestamps = predictionHistory.value.slice(0, 20).reverse().map((pred: PredictionData) => {
     const date = new Date(pred.timestamp)
-    return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`
+    return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`
   })
   
-  const rulValues = predictionHistory.value.map((pred: PredictionData) => pred.remainingUsefulLife)
-  const confidenceValues = predictionHistory.value.map((pred: PredictionData) => pred.confidence * 100)
+  const rulValues = predictionHistory.value.slice(0, 20).reverse().map((pred: PredictionData) => pred.remainingUsefulLife)
   
   const option = {
-    title: {
-      text: 'Prediction History Trend',
-      left: 'center'
-    },
-    tooltip: {
-      trigger: 'axis'
-    },
-    legend: {
-      top: 30,
-      data: ['RUL (Hours)', 'Confidence (%)']
-    },
-    xAxis: {
-      type: 'category',
+    backgroundColor: 'transparent',
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    tooltip: { trigger: 'axis' },
+    xAxis: { 
+      type: 'category', 
       data: timestamps,
-      name: 'Timestamp'
+      axisLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.1)' } }
     },
-    yAxis: [
-      {
-        type: 'value',
-        name: 'RUL (Hours)',
-        position: 'left'
-      },
-      {
-        type: 'value',
-        name: 'Confidence (%)',
-        position: 'right',
-        min: 0,
-        max: 100
-      }
-    ],
-    dataZoom: [
-      {
-        type: 'inside',
-        start: 0,
-        end: 100
-      }
-    ],
+    yAxis: { 
+      type: 'value',
+      splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.05)' } }
+    },
     series: [
       {
-        name: 'RUL (Hours)',
+        name: 'RUL Trend',
         type: 'line',
         data: rulValues,
         smooth: true,
-        itemStyle: { color: '#3b82f6' }
-      },
-      {
-        name: 'Confidence (%)',
-        type: 'line',
-        yAxisIndex: 1,
-        data: confidenceValues,
-        smooth: true,
-        itemStyle: { color: '#10b981' }
+        showSymbol: false,
+        lineStyle: { width: 3, color: '#3b82f6' },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(59, 130, 246, 0.2)' },
+            { offset: 1, color: 'transparent' }
+          ])
+        }
       }
     ]
   }
@@ -301,47 +310,28 @@ const renderConfidenceChart = () => {
   if (!confidenceChartRef.value) return
   
   if (!confidenceChartInstance) {
-    confidenceChartInstance = echarts.init(confidenceChartRef.value)
+    confidenceChartInstance = echarts.init(confidenceChartRef.value, 'dark')
   }
   
-  // Distribution of confidence levels
   const highConf = predictionHistory.value.filter((p: PredictionData) => p.confidence >= 0.8).length
   const medConf = predictionHistory.value.filter((p: PredictionData) => p.confidence >= 0.6 && p.confidence < 0.8).length
   const lowConf = predictionHistory.value.filter((p: PredictionData) => p.confidence < 0.6).length
   
   const option = {
-    title: {
-      text: 'Prediction Confidence Distribution',
-      left: 'center'
-    },
-    tooltip: {
-      trigger: 'item',
-      formatter: '{a} <br/>{b}: {c} ({d}%)'
-    },
-    legend: {
-      orient: 'vertical',
-      left: 10,
-      top: 50,
-      data: ['High (>80%)', 'Medium (60-80%)', 'Low (<60%)']
-    },
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'item' },
     series: [
       {
-        name: 'Confidence',
         type: 'pie',
-        radius: ['40%', '70%'],
-        center: ['60%', '50%'],
+        radius: ['60%', '85%'],
+        avoidLabelOverlap: false,
+        itemStyle: { borderRadius: 10, borderColor: 'var(--color-depth-0)', borderWidth: 2 },
+        label: { show: false },
         data: [
-          { value: highConf, name: 'High (>80%)', itemStyle: { color: '#10b981' } },
-          { value: medConf, name: 'Medium (60-80%)', itemStyle: { color: '#f59e0b' } },
-          { value: lowConf, name: 'Low (<60%)', itemStyle: { color: '#ef4444' } }
-        ],
-        emphasis: {
-          itemStyle: {
-            shadowBlur: 10,
-            shadowOffsetX: 0,
-            shadowColor: 'rgba(0, 0, 0, 0.5)'
-          }
-        }
+          { value: highConf, name: 'High Confidence', itemStyle: { color: '#10b981' } },
+          { value: medConf, name: 'Standard', itemStyle: { color: '#f59e0b' } },
+          { value: lowConf, name: 'Low/Review', itemStyle: { color: '#ef4444' } }
+        ]
       }
     ]
   }
@@ -387,259 +377,584 @@ const cleanup = () => {
 </script>
 
 <template>
-  <BaseCard>
-    <div class="predictive-analytics space-y-6">
-      <!-- Header -->
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-900">Predictive Analytics</h1>
-          <p class="text-gray-600 mt-2">AI-powered equipment failure prediction and RUL estimation</p>
+  <div :class="styles['dashboard-container']">
+    <!-- Header Area -->
+    <header :class="styles['page-header']">
+      <div :class="styles['header-main']">
+        <div :class="styles['eyebrow']">
+          <BrainCircuit :width="14" :height="14" />
+          <span>Intelligence Engine</span>
         </div>
-        <div class="flex gap-2">
-          <BaseButton 
-            variant="primary" 
-            @click="makePrediction"
-            :disabled="predicting"
-          >
-            <Zap class="w-4 h-4 mr-2" :class="{ 'animate-spin': predicting }" />
-            {{ predicting ? 'Predicting...' : 'New Prediction' }}
-          </BaseButton>
-          
-          <BaseButton 
-            variant="outline" 
-            @click="loadHistory"
-            :disabled="loadingHistory"
-          >
-            <BarChart3 class="w-4 h-4 mr-2" />
-            Load History
-          </BaseButton>
-        </div>
+        <h1 :class="styles['title']">Predictive Analytics</h1>
+        <p :class="styles['description']">High-fidelity RUL estimation and failure probability modeling</p>
       </div>
+      <div :class="styles['header-actions']">
+        <UiButton 
+          variant="secondary" 
+          @click="loadHistory"
+          :disabled="loadingHistory"
+        >
+          <History :width="16" :height="16" />
+          Sync History
+        </UiButton>
+        <UiButton 
+          variant="primary" 
+          @click="makePrediction"
+          :loading="predicting"
+        >
+          <Zap :width="16" :height="16" />
+          Generate Forecast
+        </UiButton>
+      </div>
+    </header>
 
-      <!-- Machine Selection -->
-      <BaseCard>
-        <div class="p-6">
-          <h2 class="text-xl font-semibold mb-4">Target Equipment</h2>
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <BaseInput
-              v-model="machineId"
-              label="Machine ID"
-              placeholder="Enter machine UUID"
-            />
-            
-            <div class="flex items-end">
-              <BaseButton 
-                variant="outline" 
-                @click="loadHistory"
-                :disabled="loadingHistory"
-                class="w-full"
+    <div :class="styles['content-layout']">
+      <!-- Target Selection & Global Stats -->
+      <section :class="styles['top-strip']">
+        <UiCard variant="default" padding="md" :class="styles['selection-card']">
+          <div :class="styles['selection-content']">
+            <div :class="styles['selection-info']">
+              <h3 :class="styles['section-title']">Asset Targeting</h3>
+              <p :class="styles['section-sub']">Target machine for AI inference</p>
+            </div>
+            <div :class="styles['selection-form']">
+              <UiInput
+                v-model="machineId"
+                placeholder="Machine UUID (e.g. CNC-01...)"
+                :class="styles['target-input']"
               >
-                <Target class="w-4 h-4 mr-2" />
-                Load Machine History
-              </BaseButton>
+                <template #prefix><Target :width="14" :height="14" /></template>
+              </UiInput>
+              <UiButton variant="outline" @click="loadHistory" :disabled="!isValidMachineId">
+                Load History
+              </UiButton>
             </div>
           </div>
-        </div>
-      </BaseCard>
+        </UiCard>
 
-      <!-- Current Prediction -->
-      <div v-if="currentPrediction">
-        <BaseCard>
-          <div class="p-6">
-            <h2 class="text-xl font-semibold mb-4">Latest Prediction</h2>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <!-- Prediction Details -->
-              <div>
-                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg">
-                  <div class="flex items-start gap-4">
-                    <TrendingUp class="w-8 h-8 text-blue-600 mt-1" />
-                    <div class="flex-1">
-                      <h3 class="text-lg font-semibold mb-2">Remaining Useful Life</h3>
-                      <p class="text-3xl font-bold mb-2" :class="getRulColor(currentPrediction.remainingUsefulLife)">
-                        {{ currentPrediction.remainingUsefulLife }} hours
-                      </p>
-                      
-                      <div class="space-y-2 mt-4">
-                        <div class="flex justify-between">
-                          <span class="text-sm text-gray-600">Confidence</span>
-                          <span class="font-medium" :class="getConfidenceColor(currentPrediction.confidence)">
-                            {{ (currentPrediction.confidence * 100).toFixed(1) }}%
-                          </span>
-                        </div>
-                        
-                        <div class="flex justify-between">
-                          <span class="text-sm text-gray-600">Status</span>
-                          <span 
-                            class="px-2 py-1 rounded-full text-sm font-medium"
-                            :class="statusBgColor"
-                          >
-                            {{ predictionStatus }}
-                          </span>
-                        </div>
-                        
-                        <div class="flex justify-between">
-                          <span class="text-sm text-gray-600">Timestamp</span>
-                          <span class="text-sm">{{ formatDate(currentPrediction.timestamp) }}</span>
-                        </div>
-                      </div>
+        <!-- KPI Bento Grid -->
+        <div :class="styles['kpi-grid']">
+          <UiCard v-for="kpi in kpiCards" :key="kpi.label" variant="glass" padding="sm" :class="styles['kpi-card']">
+            <div :class="styles['kpi-inner']">
+              <div :class="[styles['kpi-icon'], styles[`kpi-icon--${kpi.variant}`]]">
+                <component :is="kpi.icon" :width="18" :height="18" />
+              </div>
+              <div :class="styles['kpi-data']">
+                <span :class="styles['kpi-value']">{{ kpi.value }}</span>
+                <span :class="styles['kpi-label']">{{ kpi.label }}</span>
+              </div>
+            </div>
+          </UiCard>
+        </div>
+      </section>
+
+      <!-- Main Stage -->
+      <main :class="styles['stage']">
+        <!-- Latest Prediction Spotlight -->
+        <div v-if="currentPrediction" :class="styles['viewport-stage']">
+          <UiCard variant="glass" padding="lg" :class="styles['spotlight-card']">
+            <template #header>
+              <div :class="styles['spotlight-header']">
+                <div :class="styles['spotlight-title-group']">
+                  <UiBadge variant="primary" dot>Live Forecast</UiBadge>
+                  <h2 :class="styles['spotlight-title']">Current System Integrity</h2>
+                </div>
+                <UiBadge :variant="predictionStatusVariant" outline>{{ predictionStatus }}</UiBadge>
+              </div>
+            </template>
+
+            <div :class="styles['spotlight-content']">
+              <div :class="styles['integrity-summary']">
+                <div :class="styles['main-metric']">
+                  <div :class="styles['metric-circle']">
+                    <div :class="styles['scanner-line']" v-if="predicting" />
+                    <span :class="[styles['metric-value'], styles[`status--${predictionStatus.toLowerCase()}`]]">
+                      {{ currentPrediction.remainingUsefulLife }}
+                    </span>
+                    <span :class="styles['metric-unit']">HOURS RUL</span>
+                  </div>
+                </div>
+
+                <div :class="styles['metric-details']">
+                  <div :class="styles['detail-row']">
+                    <span :class="styles['detail-label']">Confidence Interval</span>
+                    <span :class="[styles['detail-value'], styles[`conf--${getConfidenceLevel(currentPrediction.confidence)}`]]">
+                      {{ (currentPrediction.confidence * 100).toFixed(1) }}%
+                    </span>
+                  </div>
+                  <div :class="styles['detail-row']">
+                    <span :class="styles['detail-label']">Inference Model</span>
+                    <span :class="styles['detail-value']">XGBoost-V4-Hybrid</span>
+                  </div>
+                  <div :class="styles['detail-row']">
+                    <span :class="styles['detail-label']">Last Analysis</span>
+                    <span :class="styles['detail-value']">{{ formatDate(currentPrediction.timestamp) }}</span>
+                  </div>
+                  <div :class="styles['progress-bar-wrap']">
+                    <div :class="styles['progress-track']">
+                      <div 
+                        :class="[styles['progress-fill'], styles[`fill--${predictionStatus.toLowerCase()}`]]"
+                        :style="{ width: `${Math.min(100, (currentPrediction.remainingUsefulLife / 200) * 100)}%` }"
+                      />
                     </div>
                   </div>
                 </div>
               </div>
-              
-              <!-- Prediction Visualization -->
-              <div ref="predictionChartRef" class="w-full h-64"></div>
+
+              <!-- Live Prediction Chart -->
+              <div :class="styles['chart-container']">
+                <div ref="predictionChartRef" :class="styles['chart-canvas']" />
+              </div>
+            </div>
+          </UiCard>
+        </div>
+
+        <!-- Trend Analysis -->
+        <div :class="styles['trend-section']">
+          <div :class="styles['section-header']">
+            <h2 :class="styles['section-title']">Temporal Trend Analysis</h2>
+            <div :class="styles['section-controls']">
+              <UiSelect v-model="historyRange" size="sm" :class="styles['range-select']">
+                <option value="50">Last 50 Records</option>
+                <option value="100">Last 100 Records</option>
+                <option value="all">Full History</option>
+              </UiSelect>
             </div>
           </div>
-        </BaseCard>
-      </div>
 
-      <!-- Summary Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <BaseCard>
-          <div class="p-4 text-center">
-            <Clock class="w-8 h-8 text-blue-500 mx-auto mb-2" />
-            <p class="text-2xl font-bold">{{ avgRul }}</p>
-            <p class="text-sm text-gray-600">Avg. RUL (hours)</p>
+          <div :class="styles['trend-grid']">
+            <UiCard variant="default" padding="md" :class="styles['trend-main']">
+              <div ref="historyChartRef" :class="styles['history-canvas']" />
+            </UiCard>
+            <UiCard variant="default" padding="md" :class="styles['trend-side']">
+              <div ref="confidenceChartRef" :class="styles['confidence-canvas']" />
+            </UiCard>
           </div>
-        </BaseCard>
-        
-        <BaseCard>
-          <div class="p-4 text-center">
-            <CheckCircle class="w-8 h-8 text-green-500 mx-auto mb-2" />
-            <p class="text-2xl font-bold">{{ avgConfidence }}%</p>
-            <p class="text-sm text-gray-600">Avg. Confidence</p>
-          </div>
-        </BaseCard>
-        
-        <BaseCard>
-          <div class="p-4 text-center">
-            <AlertTriangle class="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-            <p class="text-2xl font-bold text-yellow-600">{{ criticalPredictions }}</p>
-            <p class="text-sm text-gray-600">Critical Warnings</p>
-          </div>
-        </BaseCard>
-        
-        <BaseCard>
-          <div class="p-4 text-center">
-            <BarChart3 class="w-8 h-8 text-purple-500 mx-auto mb-2" />
-            <p class="text-2xl font-bold">{{ predictionHistory.length }}</p>
-            <p class="text-sm text-gray-600">Total Predictions</p>
-          </div>
-        </BaseCard>
-      </div>
+        </div>
 
-      <!-- Historical Analysis -->
-      <div v-if="predictionHistory.length > 0">
-        <BaseCard>
-          <div class="p-6">
-            <h2 class="text-xl font-semibold mb-4">Historical Analysis</h2>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              <div ref="historyChartRef" class="w-full h-80"></div>
-              <div ref="confidenceChartRef" class="w-full h-80"></div>
-            </div>
-            
-            <!-- Recent Predictions Table -->
-            <div class="overflow-x-auto">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+        <!-- History Log -->
+        <div v-if="predictionHistory.length > 0" :class="styles['log-section']">
+          <UiCard variant="default" padding="none">
+            <div :class="styles['table-wrap']">
+              <table :class="styles['table']">
+                <thead>
                   <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Timestamp
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      RUL (Hours)
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Confidence
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
+                    <th>Analysis Timestamp</th>
+                    <th>RUL Estimate</th>
+                    <th>Confidence</th>
+                    <th>Risk Profile</th>
+                    <th />
                   </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  <tr 
-                    v-for="(prediction, index) in predictionHistory.slice(0, 10)" 
-                    :key="index"
-                    class="hover:bg-gray-50"
-                  >
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {{ formatDate(prediction.timestamp) }}
+                <tbody>
+                  <tr v-for="prediction in predictionHistory.slice(0, 10)" :key="prediction.id">
+                    <td>
+                      <div :class="styles['cell-timestamp']">
+                        <Calendar :width="12" :height="12" />
+                        {{ formatDate(prediction.timestamp) }}
+                      </div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <span 
-                        class="font-medium"
-                        :class="getRulColor(prediction.remainingUsefulLife)"
-                      >
+                    <td>
+                      <span :class="[styles['cell-rul'], styles[`status--${normalizeStatus(prediction.remainingUsefulLife).toLowerCase()}`]]">
                         {{ prediction.remainingUsefulLife }}h
                       </span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <span 
-                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                        :class="getConfidenceColor(prediction.confidence)"
-                      >
-                        {{ (prediction.confidence * 100).toFixed(1) }}%
-                      </span>
+                    <td>
+                      <div :class="styles['cell-conf']">
+                        <div :class="styles['conf-bar-track']">
+                          <div :class="[styles['conf-bar-fill'], styles[`conf-bg--${getConfidenceLevel(prediction.confidence)}`]]" :style="{ width: `${prediction.confidence * 100}%` }" />
+                        </div>
+                        <span>{{ (prediction.confidence * 100).toFixed(0) }}%</span>
+                      </div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                      <span 
-                        class="px-2 py-1 rounded-full text-xs font-medium"
-                        :class="[
-                          prediction.remainingUsefulLife < 30 ? 'bg-red-100 text-red-800' :
-                          prediction.remainingUsefulLife < 90 ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-green-100 text-green-800'
-                        ]"
-                      >
-                        {{
-                          prediction.remainingUsefulLife < 30 ? 'Critical' :
-                          prediction.remainingUsefulLife < 90 ? 'Warning' :
-                          'Healthy'
-                        }}
-                      </span>
+                    <td>
+                      <UiBadge :variant="getStatusVariant(prediction.remainingUsefulLife)" size="sm">
+                        {{ normalizeStatus(prediction.remainingUsefulLife) }}
+                      </UiBadge>
+                    </td>
+                    <td :class="styles['cell-actions']">
+                      <UiButton variant="ghost" size="sm">Details</UiButton>
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
-          </div>
-        </BaseCard>
-      </div>
-
-      <!-- Empty State -->
-      <BaseCard v-if="predictionHistory.length === 0 && !loadingHistory">
-        <div class="p-12 text-center">
-          <TrendingUp class="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 class="text-lg font-medium text-gray-900 mb-2">No Prediction Data</h3>
-          <p class="text-gray-500 mb-6">Load historical predictions or generate a new prediction to see analytics.</p>
-          <div class="flex gap-3 justify-center">
-            <BaseButton @click="loadHistory" variant="outline">
-              Load History
-            </BaseButton>
-            <BaseButton @click="makePrediction" variant="primary">
-              Generate Prediction
-            </BaseButton>
-          </div>
+          </UiCard>
         </div>
-      </BaseCard>
+      </main>
     </div>
-  </BaseCard>
+  </div>
 </template>
 
-<style scoped>
-.predictive-analytics {
-  max-width: 1400px;
+<style module>
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24);
+  padding: var(--space-24);
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 1rem;
 }
 
-@media (max-width: 640px) {
-  .predictive-analytics {
-    padding: 0.5rem;
-  }
+/* Page Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--space-20);
+  padding-bottom: var(--space-24);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-primary);
+  margin-bottom: var(--space-4);
+}
+
+.title {
+  font-size: var(--font-size-4xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.description {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-4);
+}
+
+.header-actions {
+  display: flex;
+  gap: var(--space-12);
+}
+
+/* Layout Sections */
+.content-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24);
+}
+
+.top-strip {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: var(--space-20);
+}
+
+.selection-card {
+  height: 100%;
+}
+
+.selection-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.selection-form {
+  display: flex;
+  gap: var(--space-12);
+  align-items: flex-end;
+}
+
+.target-input {
+  flex: 1;
+}
+
+/* KPI Grid */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-12);
+}
+
+.kpi-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+}
+
+.kpi-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kpi-icon--primary { background: var(--color-primary-muted); color: var(--color-primary); }
+.kpi-icon--success { background: var(--color-success-muted); color: var(--color-success); }
+.kpi-icon--danger { background: var(--color-danger-muted); color: var(--color-danger); }
+.kpi-icon--info { background: var(--color-info-muted); color: var(--color-info); }
+
+.kpi-data {
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-value {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+.kpi-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+/* Spotlight Stage */
+.viewport-stage {
+  margin-bottom: var(--space-24);
+}
+
+.spotlight-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.spotlight-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.spotlight-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.spotlight-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-40);
+  align-items: center;
+}
+
+.integrity-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-32);
+}
+
+.main-metric {
+  display: flex;
+  justify-content: center;
+}
+
+.metric-circle {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  border: 4px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: radial-gradient(circle at center, rgba(var(--color-primary-rgb), 0.05) 0%, transparent 70%);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5);
+}
+
+.scanner-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--color-primary);
+  box-shadow: 0 0 15px var(--color-primary);
+  animation: scan 2s linear infinite;
+  z-index: 10;
+}
+
+@keyframes scan {
+  0% { top: 10%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 90%; opacity: 0; }
+}
+
+.metric-value {
+  font-size: 64px;
+  font-weight: 900;
+  line-height: 1;
+  font-family: var(--font-mono);
+  letter-spacing: -0.05em;
+}
+
+.metric-unit {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+.metric-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-8) 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.detail-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.detail-value {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.progress-bar-wrap {
+  margin-top: var(--space-8);
+}
+
+.progress-track {
+  height: 6px;
+  background: var(--color-depth-0);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 1s var(--ease-spring);
+}
+
+/* Status colors */
+.status--critical { color: var(--color-danger); text-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
+.status--warning { color: var(--color-warning); text-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
+.status--healthy { color: var(--color-success); text-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+
+.fill--critical { background: var(--color-danger); box-shadow: 0 0 10px var(--color-danger); }
+.fill--warning { background: var(--color-warning); box-shadow: 0 0 10px var(--color-warning); }
+.fill--healthy { background: var(--color-success); box-shadow: 0 0 10px var(--color-success); }
+
+/* Trend Analysis */
+.trend-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.trend-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--space-20);
+}
+
+.history-canvas, .confidence-canvas {
+  width: 100%;
+  height: 320px;
+}
+
+.chart-canvas {
+  width: 100%;
+  height: 300px;
+}
+
+/* Table */
+.table-wrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  text-align: left;
+  padding: var(--space-12) var(--space-20);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.table td {
+  padding: var(--space-16) var(--space-20);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.table tr:hover td {
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.cell-timestamp {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+}
+
+.cell-rul {
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.cell-conf {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  font-size: var(--font-size-xs);
+}
+
+.conf-bar-track {
+  width: 60px;
+  height: 4px;
+  background: var(--color-depth-0);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.conf-bar-fill {
+  height: 100%;
+}
+
+.conf-bg--high { background: var(--color-success); }
+.conf-bg--med { background: var(--color-warning); }
+.conf-bg--low { background: var(--color-danger); }
+
+@media (max-width: 1024px) {
+  .top-strip { grid-template-columns: 1fr; }
+  .spotlight-content { grid-template-columns: 1fr; gap: var(--space-24); }
+  .trend-grid { grid-template-columns: 1fr; }
 }
 </style>

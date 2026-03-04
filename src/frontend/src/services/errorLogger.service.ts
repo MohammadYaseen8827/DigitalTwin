@@ -62,10 +62,6 @@ class ErrorLogger {
     // })
 
     this.initialized = true
-    
-    if (this.config.debug) {
-      console.log('[ErrorLogger] Initialized', this.config)
-    }
   }
 
   /**
@@ -102,11 +98,6 @@ class ErrorLogger {
       return
     }
 
-    if (this.config.debug) {
-      const consoleMethod = level === 'warning' ? 'warn' : level === 'debug' ? 'log' : 'info'
-      console[consoleMethod]('[ErrorLogger]', message, context)
-    }
-
     // In production, send to Sentry:
     // Sentry.captureMessage(message, {
     //   level,
@@ -124,10 +115,6 @@ class ErrorLogger {
 
     // In production, set Sentry user:
     // Sentry.setUser({ id: userId, email, username })
-
-    if (this.config.debug) {
-      console.log('[ErrorLogger] User set:', { userId, email, username })
-    }
   }
 
   /**
@@ -140,10 +127,6 @@ class ErrorLogger {
 
     // In production:
     // Sentry.setUser(null)
-
-    if (this.config.debug) {
-      console.log('[ErrorLogger] User cleared')
-    }
   }
 
   /**
@@ -161,10 +144,6 @@ class ErrorLogger {
     //   data,
     //   level: 'info'
     // })
-
-    if (this.config.debug) {
-      console.log('[ErrorLogger] Breadcrumb:', { message, category, data })
-    }
   }
 
   /**

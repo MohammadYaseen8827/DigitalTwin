@@ -1,92 +1,81 @@
 <template>
-  <div class="shap-panel">
-    <div class="shap-panel__header">
-      <h3 class="shap-panel__title">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-          <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-          <line x1="12" y1="22.08" x2="12" y2="12" />
-        </svg>
-        ML Explainability
-      </h3>
-      <button class="shap-panel__toggle" @click="expanded = !expanded">
-        <svg :class="{ rotated: expanded }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
+  <UiCard variant="default" padding="none" hover :class="styles['shap-panel']">
+    <div :class="styles['shap-panel__header']">
+      <div :class="styles['title-group']">
+        <h3 :class="styles['shap-panel__title']">
+          <Binary :width="16" :height="16" :class="styles['title-icon']" />
+          Neural Feature Attribution
+        </h3>
+        <p :class="styles['shap-panel__subtitle']">SHAP-based model interpretability</p>
+      </div>
+      <button :class="styles['shap-panel__toggle']" @click="expanded = !expanded">
+        <component :is="expanded ? ChevronUp : ChevronDown" :width="16" :height="16" />
       </button>
     </div>
 
-    <div class="shap-panel__body">
-      <!-- Summary -->
-      <div class="shap-panel__summary">
-        <div class="shap-panel__prediction">
-          <span class="shap-panel__prediction-label">Prediction</span>
-          <span class="shap-panel__prediction-value" :class="predictionClass">
+    <div :class="styles['shap-panel__body']">
+      <!-- Summary Matrix -->
+      <div :class="styles['shap-panel__summary']">
+        <div :class="styles['summary-box']">
+          <span :class="styles['summary-label']">Target State</span>
+          <span :class="[styles['summary-val'], styles[`summary-val--${prediction}`]]">
             {{ predictionLabel }}
           </span>
         </div>
-        <div class="shap-panel__confidence">
-          <span class="shap-panel__confidence-label">Confidence</span>
-          <span class="shap-panel__confidence-value">{{ (confidence * 100).toFixed(1) }}%</span>
+        <div :class="styles['summary-box']">
+          <span :class="styles['summary-label']">Neural Confidence</span>
+          <span :class="styles['summary-val-mono']">{{ (confidence * 100).toFixed(1) }}%</span>
         </div>
       </div>
 
-      <!-- Expandable section -->
+      <!-- Expandable Forensic Depth -->
       <Transition name="expand">
-        <div v-show="expanded" class="shap-panel__details">
-          <!-- Feature importance chart -->
-          <div v-if="features.length > 0" class="shap-panel__chart">
-            <div class="shap-panel__chart-header">
-              <span class="shap-panel__chart-title">Feature Contributions</span>
-              <span class="shap-panel__chart-subtitle">SHAP values</span>
-            </div>
-            <div ref="chartRef" class="shap-panel__chart-container" />
+        <div v-show="expanded" :class="styles['shap-panel__details']">
+          <div v-if="features.length > 0" :class="styles['shap-panel__chart-wrap']">
+            <div ref="chartRef" :class="styles['shap-panel__chart-container']" />
           </div>
 
-          <!-- Why this prediction -->
-          <div v-if="topPositive.length > 0 || topNegative.length > 0" class="shap-panel__interpretation">
-            <div class="shap-panel__interpretation-section">
-              <h4 class="shap-panel__interpretation-title shap-panel__interpretation-title--positive">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="18 15 12 9 6 15" />
-                </svg>
-                Factors Increasing Failure Risk
+          <div v-if="topPositive.length > 0 || topNegative.length > 0" :class="styles['interpretation-grid']">
+            <div :class="styles['interpretation-col']">
+              <h4 :class="[styles['col-title'], styles['col-title--positive']]">
+                <TrendingUp :width="14" :height="14" />
+                Risk Escalation
               </h4>
-              <ul class="shap-panel__factor-list">
-                <li v-for="item in topPositive" :key="item.feature" class="shap-panel__factor-item">
-                  <span class="shap-panel__factor-name">{{ item.feature }}</span>
-                  <span class="shap-panel__factor-value shap-panel__factor-value--positive">
+              <div :class="styles['factor-list']">
+                <div v-for="item in topPositive" :key="item.feature" :class="styles['factor-item']">
+                  <span :class="styles['factor-name']">{{ item.feature }}</span>
+                  <span :class="[styles['factor-val'], styles['factor-val--positive']]">
                     +{{ item.value.toFixed(3) }}
                   </span>
-                </li>
-              </ul>
+                </div>
+              </div>
             </div>
 
-            <div class="shap-panel__interpretation-section">
-              <h4 class="shap-panel__interpretation-title shap-panel__interpretation-title--negative">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-                Factors Decreasing Failure Risk
+            <div :class="styles['interpretation-col']">
+              <h4 :class="[styles['col-title'], styles['col-title--negative']]">
+                <TrendingDown :width="14" :height="14" />
+                Risk Mitigation
               </h4>
-              <ul class="shap-panel__factor-list">
-                <li v-for="item in topNegative" :key="item.feature" class="shap-panel__factor-item">
-                  <span class="shap-panel__factor-name">{{ item.feature }}</span>
-                  <span class="shap-panel__factor-value shap-panel__factor-value--negative">
+              <div :class="styles['factor-list']">
+                <div v-for="item in topNegative" :key="item.feature" :class="styles['factor-item']">
+                  <span :class="styles['factor-name']">{{ item.feature }}</span>
+                  <span :class="[styles['factor-val'], styles['factor-val--negative']]">
                     {{ item.value.toFixed(3) }}
                   </span>
-                </li>
-              </ul>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </Transition>
     </div>
-  </div>
+  </UiCard>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, useCssModule } from 'vue'
+import UiCard from '../ui/UiCard.vue'
+import { Binary, ChevronUp, ChevronDown, TrendingUp, TrendingDown } from 'lucide-vue-next'
 import * as echarts from 'echarts'
 import { createSHAPChartOption } from '@/utils/echartsConfig'
 
@@ -102,109 +91,96 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-
+const styles = useCssModule()
 const chartRef = ref<HTMLElement>()
-const expanded = ref(false)
+const expanded = ref(true)
 
 const predictionLabel = computed(() => {
   switch (props.prediction) {
-    case 'failure': return 'Failure Predicted'
-    case 'healthy': return 'Healthy'
-    case 'degrading': return 'Degrading'
-    default: return 'Unknown'
+    case 'failure': return 'FAIL PREDICT'
+    case 'healthy': return 'NOMINAL'
+    case 'degrading': return 'DEGRADING'
+    default: return 'UNKNOWN'
   }
 })
 
-const predictionClass = computed(() => {
-  return `shap-panel__prediction-value--${props.prediction}`
-})
+const topPositive = computed(() => props.features.filter(f => f.value > 0).sort((a, b) => b.value - a.value).slice(0, 4))
+const topNegative = computed(() => props.features.filter(f => f.value < 0).sort((a, b) => a.value - b.value).slice(0, 4))
 
-const topPositive = computed(() => {
-  return props.features
-    .filter(f => f.value > 0)
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 5)
-})
-
-const topNegative = computed(() => {
-  return props.features
-    .filter(f => f.value < 0)
-    .sort((a, b) => a.value - b.value)
-    .slice(0, 5)
-})
-
-// Initialize chart
 let chart: echarts.ECharts | null = null
 
 function initChart() {
   if (!chartRef.value || props.features.length === 0) return
-
-  if (chart) {
-    chart.dispose()
-  }
-
-  chart = echarts.init(chartRef.value)
-
-  const option = createSHAPChartOption(props.features.slice(0, 10))
-  chart.setOption(option)
+  if (chart) chart.dispose()
+  chart = echarts.init(chartRef.value, 'hub-dark')
+  const option = createSHAPChartOption(props.features.slice(0, 8))
+  chart.setOption({
+    ...option,
+    backgroundColor: 'transparent',
+    grid: { left: '3%', right: '5%', top: '5%', bottom: '5%', containLabel: true }
+  })
 }
 
 watch(() => props.features, initChart, { deep: true })
 
 onMounted(() => {
   initChart()
-
-  if (chartRef.value) {
-    const resizeObserver = new ResizeObserver(() => {
-      chart?.resize()
-    })
-    resizeObserver.observe(chartRef.value)
-  }
+  const ro = new ResizeObserver(() => chart?.resize())
+  if (chartRef.value) ro.observe(chartRef.value)
 })
 </script>
 
-<style scoped>
+<style module>
 .shap-panel {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
+  position: relative;
 }
 
 .shap-panel__header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-16);
+  padding: var(--space-20) var(--space-24);
   border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.title-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 .shap-panel__title {
   display: flex;
   align-items: center;
-  gap: var(--space-8);
+  gap: var(--space-10);
   margin: 0;
-  font-size: var(--font-size-base);
-  font-weight: 600;
+  font-size: var(--font-size-md);
+  font-weight: 700;
   color: var(--color-text-primary);
+  letter-spacing: -0.01em;
 }
 
-.shap-panel__title svg {
-  width: 18px;
-  height: 18px;
-  color: var(--color-primary);
+.title-icon { color: var(--color-primary); }
+
+.shap-panel__subtitle {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .shap-panel__toggle {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: var(--color-depth-1);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text-muted);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -214,96 +190,61 @@ onMounted(() => {
   color: var(--color-text-primary);
 }
 
-.shap-panel__toggle svg {
-  width: 16px;
-  height: 16px;
-  transition: transform var(--transition-normal);
-}
-
-.shap-panel__toggle svg.rotated {
-  transform: rotate(180deg);
-}
-
 .shap-panel__body {
-  padding: var(--space-16);
+  padding: var(--space-24);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24);
 }
 
-/* Summary section */
 .shap-panel__summary {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: var(--space-16);
 }
 
-.shap-panel__prediction,
-.shap-panel__confidence {
-  flex: 1;
-  text-align: center;
-  padding: var(--space-12);
-  background: var(--color-surface-elevated);
+.summary-box {
+  padding: var(--space-12) var(--space-16);
+  background: var(--color-depth-1);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  text-align: center;
 }
 
-.shap-panel__prediction-label,
-.shap-panel__confidence-label {
-  display: block;
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
+.summary-label {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--color-text-dim);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: var(--space-4);
 }
 
-.shap-panel__prediction-value {
-  font-size: var(--font-size-lg);
-  font-weight: 700;
-}
+.summary-val { font-size: var(--font-size-sm); font-weight: 800; }
+.summary-val--failure { color: var(--color-danger); }
+.summary-val--degrading { color: var(--color-warning); }
+.summary-val--healthy { color: var(--color-success); }
 
-.shap-panel__prediction-value--failure {
-  color: var(--color-danger);
-}
-
-.shap-panel__prediction-value--healthy {
-  color: var(--color-success);
-}
-
-.shap-panel__prediction-value--degrading {
-  color: var(--color-warning);
-}
-
-.shap-panel__confidence-value {
+.summary-val-mono {
   font-family: var(--font-mono);
-  font-size: var(--font-size-lg);
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
-
-/* Details section */
-.shap-panel__details {
-  margin-top: var(--space-16);
-}
-
-/* Chart */
-.shap-panel__chart {
-  margin-bottom: var(--space-16);
-}
-
-.shap-panel__chart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: var(--space-8);
-}
-
-.shap-panel__chart-title {
   font-size: var(--font-size-sm);
-  font-weight: 600;
+  font-weight: 800;
   color: var(--color-text-primary);
 }
 
-.shap-panel__chart-subtitle {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
+.shap-panel__details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24);
+}
+
+.shap-panel__chart-wrap {
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
 }
 
 .shap-panel__chart-container {
@@ -311,93 +252,66 @@ onMounted(() => {
   height: 200px;
 }
 
-/* Interpretation */
-.shap-panel__interpretation {
+.interpretation-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-16);
+  gap: var(--space-24);
 }
 
-.shap-panel__interpretation-section {
-  padding: var(--space-12);
-  background: var(--color-surface-elevated);
-  border-radius: var(--radius-md);
+.interpretation-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
 }
 
-.shap-panel__interpretation-title {
+.col-title {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
-  margin: 0 0 var(--space-8);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-}
-
-.shap-panel__interpretation-title svg {
-  width: 14px;
-  height: 14px;
-}
-
-.shap-panel__interpretation-title--positive {
-  color: var(--color-shap-positive);
-}
-
-.shap-panel__interpretation-title--negative {
-  color: var(--color-shap-negative);
-}
-
-.shap-panel__factor-list {
-  list-style: none;
+  gap: var(--space-8);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   margin: 0;
-  padding: 0;
 }
 
-.shap-panel__factor-item {
+.col-title--positive { color: #f97316; }
+.col-title--negative { color: var(--color-success); }
+
+.factor-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.factor-item {
   display: flex;
   justify-content: space-between;
-  padding: var(--space-4) 0;
+  align-items: center;
+  padding-bottom: var(--space-8);
   border-bottom: 1px solid var(--color-border-subtle);
 }
 
-.shap-panel__factor-item:last-child {
-  border-bottom: none;
-}
-
-.shap-panel__factor-name {
-  font-size: var(--font-size-sm);
+.factor-name {
+  font-size: 11px;
   color: var(--color-text-secondary);
-}
-
-.shap-panel__factor-value {
-  font-family: var(--font-mono);
-  font-size: var(--font-size-sm);
   font-weight: 600;
 }
 
-.shap-panel__factor-value--positive {
-  color: var(--color-shap-positive);
+.factor-val {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
 }
 
-.shap-panel__factor-value--negative {
-  color: var(--color-shap-negative);
+.factor-val--positive { color: #f97316; }
+.factor-val--negative { color: var(--color-success); }
+
+@keyframes expand {
+  from { max-height: 0; opacity: 0; }
+  to { max-height: 800px; opacity: 1; }
 }
 
-/* Expand transition */
-.expand-enter-active,
-.expand-leave-active {
-  transition: all 0.3s ease;
-  overflow: hidden;
-}
-
-.expand-enter-from,
-.expand-leave-to {
-  opacity: 0;
-  max-height: 0;
-}
-
-.expand-enter-to,
-.expand-leave-from {
-  opacity: 1;
-  max-height: 600px;
-}
+.expand-enter-active { animation: expand 0.4s var(--ease-premium); overflow: hidden; }
+.expand-leave-active { animation: expand 0.4s var(--ease-premium) reverse; overflow: hidden; }
 </style>

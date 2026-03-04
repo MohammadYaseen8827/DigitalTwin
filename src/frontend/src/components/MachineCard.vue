@@ -1,225 +1,434 @@
-<template>
-  <BaseCard class="machine-card group overflow-hidden" variant="glass" hoverable>
-    <div class="card-inner p-6">
-      <div class="flex justify-between items-start mb-6">
-        <div class="flex gap-4 items-center">
-          <div class="machine-icon-wrapper p-3 rounded-2xl bg-white/5 border border-white/10 group-hover:border-indigo-500/50 transition-all duration-500">
-            <Cpu class="w-6 h-6 text-indigo-400 group-hover:scale-110 transition-transform" />
-          </div>
-          <div>
-            <h3 class="text-lg font-black tracking-tight text-primary leading-tight">{{ machine.name }}</h3>
-            <p class="text-[10px] uppercase font-bold tracking-[0.2em] text-secondary mt-0.5">{{ machine.type }}</p>
-          </div>
-        </div>
-        <BaseBadge :variant="statusBadgeVariant" class="uppercase font-bold tracking-widest text-[10px]">
-          {{ statusLabel }}
-        </BaseBadge>
-      </div>
-
-      <!-- Health Visualization -->
-      <div class="health-section flex items-center gap-6 mb-8 mt-2">
-        <div class="relative w-20 h-20 shrink-0">
-          <svg class="w-full h-full -rotate-90">
-            <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="6" />
-            <circle cx="40" cy="40" r="34" fill="none" 
-                    :stroke="healthColor" 
-                    stroke-width="6" 
-                    stroke-dasharray="213.6" 
-                    :stroke-dashoffset="213.6 * (1 - healthPercentage / 100)"
-                    stroke-linecap="round"
-                    class="transition-all duration-[1500ms] ease-out" />
-          </svg>
-          <div class="absolute inset-0 flex flex-col items-center justify-center">
-            <span class="text-xl font-black leading-none" :style="{ color: healthColor }">{{ healthPercentage }}%</span>
-            <span class="text-[8px] font-bold text-secondary uppercase tracking-tighter">Health</span>
-          </div>
-        </div>
-
-        <div class="flex-1 space-y-4">
-          <div class="prediction-snip">
-            <div class="text-[10px] uppercase font-black text-secondary tracking-widest mb-1 flex justify-between">
-              <span>Predicted RUL</span>
-              <span class="text-indigo-400 group-hover:translate-x-1 transition-transform">Details →</span>
-            </div>
-            <div class="flex items-baseline gap-1">
-              <span class="text-2xl font-black text-primary">{{ machine.remainingUsefulLifeDays ?? '--' }}</span>
-              <span class="text-xs font-bold text-secondary uppercase italic">Days</span>
-            </div>
-          </div>
-          <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-            <div class="h-full bg-gradient-to-r from-indigo-500/50 to-indigo-500" :style="{ width: Math.min(100, (machine.remainingUsefulLifeDays ?? 0) / 365 * 100) + '%' }"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-4 mb-8">
-        <div class="p-3 rounded-xl bg-white/5 border border-white/5 group-hover:bg-white/[0.08] transition-colors">
-          <div class="text-[9px] uppercase font-bold text-secondary tracking-wider mb-1">Last Event</div>
-          <div class="text-xs font-bold text-primary truncate">{{ machine.lastMaintenance ? formatDateShort(machine.lastMaintenance) : 'No Records' }}</div>
-        </div>
-        <div class="p-3 rounded-xl bg-white/5 border border-white/5 group-hover:bg-white/[0.08] transition-colors">
-          <div class="text-[9px] uppercase font-bold text-secondary tracking-wider mb-1">Line Location</div>
-          <div class="text-xs font-bold text-primary truncate">{{ machine.location }}</div>
-        </div>
-      </div>
-
-      <div class="flex gap-2">
-        <BaseButton variant="primary" size="sm" class="flex-1 font-bold text-[10px] uppercase tracking-widest h-10 shadow-lg shadow-indigo-500/10" @click="$emit('view-details', machine.id)">
-          View Analytics
-        </BaseButton>
-        <BaseButton variant="outline" size="sm" class="h-10 w-10 p-0 rounded-xl" @click="showSchedulerForm = !showSchedulerForm">
-          <Settings class="w-4 h-4" />
-        </BaseButton>
-      </div>
-
-      <!-- Expandable Scheduler -->
-      <transition 
-        enter-active-class="transition-[max-height,opacity,margin] duration-500 ease-out"
-        leave-active-class="transition-[max-height,opacity,margin] duration-300 ease-in"
-        enter-from-class="max-h-0 opacity-0 mt-0"
-        leave-to-class="max-h-0 opacity-0 mt-0"
-        enter-to-class="max-h-[300px] opacity-100 mt-6"
-      >
-        <div v-if="showSchedulerForm" class="scheduler-drawer space-y-4 pt-6 border-t border-white/10 overflow-hidden">
-          <div class="grid grid-cols-2 gap-4">
-            <div class="space-y-1.5">
-              <label class="text-[10px] uppercase font-black text-secondary tracking-widest pl-1">Interval (s)</label>
-              <input v-model="scheduleInterval" type="number" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm font-bold focus:ring-1 focus:ring-indigo-500 transition-all outline-none" />
-            </div>
-            <div class="space-y-1.5">
-              <label class="text-[10px] uppercase font-black text-secondary tracking-widest pl-1">Duration (m)</label>
-              <input v-model="scheduleDuration" type="number" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm font-bold focus:ring-1 focus:ring-indigo-500 transition-all outline-none" />
-            </div>
-          </div>
-          <BaseButton variant="primary" size="sm" class="w-full h-10 font-black uppercase tracking-widest text-[10px]" @click="saveSchedule">
-            Commit Simulation
-          </BaseButton>
-        </div>
-      </transition>
-    </div>
-  </BaseCard>
-</template>
-
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, useCssModule } from 'vue'
 import { useToast } from '@/composables/useToast'
 import { format } from 'date-fns'
 import axiosClient from '@/api/axiosClient'
 import type { MachineDto, EquipmentStatus } from '@/api/types'
+import { Cpu, Settings, ChevronDown, ChevronUp, MapPin, Clock, Activity, Box, Zap, Shield, Microscope } from 'lucide-vue-next'
+import UiButton from './ui/UiButton.vue'
+import UiBadge from './ui/UiBadge.vue'
+import UiCard from './ui/UiCard.vue'
 
-import BaseButton from './base/BaseButton.vue'
-import BaseCard from './base/BaseCard.vue'
-import BaseBadge from './base/BaseBadge.vue'
-import { Cpu, Settings, Thermometer, Zap, AlertTriangle } from 'lucide-vue-next'
-
-const props = defineProps<{
-  machine: MachineDto
-}>()
+const props = defineProps<{ machine: MachineDto }>()
 
 const emit = defineEmits<{
   'view-details': [string]
   'simulation-updated': []
+  'start-simulation': [string]
+  'stop-simulation': [string]
 }>()
 
+const styles = useCssModule()
 const toast = useToast()
-const showSchedulerForm = ref(false)
+const showScheduler = ref(false)
 const scheduleInterval = ref(60)
 const scheduleDuration = ref(120)
 
-const healthPercentage = computed(() => {
-  // Mock health calculation based on status and RUL
-  if (normalizeStatus(props.machine.status) === 'critical') return 18
-  if (normalizeStatus(props.machine.status) === 'warning') return 45
-  if (!props.machine.remainingUsefulLifeDays) return 92
-  
-  const rul = props.machine.remainingUsefulLifeDays
-  if (rul < 30) return 25
-  if (rul < 90) return 60
-  return 95
+/* ---- computed ---- */
+const healthScore = computed(() => {
+  const s = normalizeStatus(props.machine.status)
+  if (s === 'critical') return 18
+  if (s === 'warning') return 47
+  const rul = props.machine.remainingUsefulLifeDays ?? 0
+  if (rul < 30) return 28
+  if (rul < 90) return 62
+  return 94
 })
 
 const healthColor = computed(() => {
-  const h = healthPercentage.value
-  if (h < 30) return '#ef4444' // Red
-  if (h < 70) return '#f59e0b' // Amber
-  return '#10b981' // Emerald
+  const h = healthScore.value
+  if (h < 30) return 'var(--color-danger)'
+  if (h < 65) return 'var(--color-warning)'
+  return 'var(--color-success)'
 })
 
-const statusLabel = computed(() => formatStatus(props.machine.status))
-const statusBadgeVariant = computed(() => {
-  const s = normalizeStatus(props.machine.status)
-  if (s === 'operational') return 'success'
-  if (s === 'warning') return 'warning'
-  if (s === 'critical') return 'danger'
-  return 'default'
+const rulDays = computed(() => props.machine.remainingUsefulLifeDays ?? null)
+
+const lastMaint = computed(() => {
+  const d = props.machine.lastMaintenance
+  if (!d) return '—'
+  try { return format(new Date(d), 'MMM d') } catch { return '—' }
 })
 
-const formatDateShort = (value: string) => {
+/* ---- helpers ---- */
+function normalizeStatus(s: EquipmentStatus | undefined): string {
+  if (!s && s !== 0) return 'unknown'
+  if (typeof s === 'number') return 'unknown'
+  return s.toLowerCase()
+}
+
+async function saveSchedule() {
   try {
-    return format(new Date(value), 'MMM dd, HH:mm')
-  } catch {
-    return '—'
-  }
-}
-
-function formatStatus(status: EquipmentStatus | undefined): string {
-  if (!status && status !== 0) return 'Unknown'
-  if (typeof status === 'number') return `Status ${status}`
-  return status.toUpperCase()
-}
-
-function normalizeStatus(status: EquipmentStatus | undefined): string {
-  if (!status && status !== 0) return 'unknown'
-  if (typeof status === 'number') return 'unknown'
-  return status.toLowerCase()
-}
-
-const saveSchedule = async () => {
-  try {
-    const startTime = new Date().toISOString()
-    const endTime = new Date(Date.now() + scheduleDuration.value * 60000).toISOString()
+    const start = new Date().toISOString()
+    const end = new Date(Date.now() + scheduleDuration.value * 60000).toISOString()
     await axiosClient.post(`/SimulationScheduler/schedule/${props.machine.id}`, {
       machineName: props.machine.name,
       intervalSeconds: scheduleInterval.value,
-      startTime,
-      endTime,
+      startTime: start,
+      endTime: end,
       isActive: true,
       parameters: { degradationModel: 'wiener' }
     })
-    showSchedulerForm.value = false
-    toast.success('Simulation schedule updated')
+    showScheduler.value = false
+    toast.success('Simulation parameters committed.')
     emit('simulation-updated')
   } catch {
-    toast.error('Scheduling failed')
+    toast.error('Protocol sync failure.')
   }
 }
 </script>
 
-<style scoped>
+<template>
+  <UiCard variant="default" padding="none" hover :class="styles['machine-card']">
+    <!-- Visual Indicator Line -->
+    <div :class="[styles['status-indicator'], styles[`status-indicator--${normalizeStatus(machine.status)}`]]" />
+    
+    <!-- Pulse Effect on Hover -->
+    <div :class="styles['card-glow']" :style="{ '--glow-color': healthColor }" />
+
+    <div :class="styles['card-content']">
+      <!-- Top Section -->
+      <div :class="styles['card-header']">
+        <div :class="styles['machine-id-block']">
+          <div :class="styles['icon-container']">
+            <Box :width="18" :height="18" />
+          </div>
+          <div :class="styles['title-group']">
+            <h3 :class="styles['machine-name']">{{ machine.name }}</h3>
+            <span :class="styles['machine-type']">{{ machine.type }}</span>
+          </div>
+        </div>
+        <UiBadge :variant="normalizeStatus(machine.status) as any" size="sm" dot>
+          {{ normalizeStatus(machine.status) }}
+        </UiBadge>
+      </div>
+
+      <!-- Health Intelligence -->
+      <div :class="styles['health-intelligence']">
+        <div :class="styles['health-header']">
+          <div :class="styles['score-wrap']" :style="{ color: healthColor }">
+            <span :class="styles['score-num']">{{ healthScore }}</span>
+            <span :class="styles['score-unit']">%</span>
+          </div>
+          <div :class="styles['health-label-wrap']">
+             <span :class="styles['health-label']">Core Integrity</span>
+             <span :class="styles['health-desc']">Neural Assessment</span>
+          </div>
+        </div>
+        
+        <div :class="styles['health-meter']">
+          <div :class="styles['meter-track']">
+            <div 
+              :class="styles['meter-fill']" 
+              :style="{ width: healthScore + '%', backgroundColor: healthColor }"
+            >
+              <div :class="styles['meter-glow']" :style="{ backgroundColor: healthColor }" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Matrix -->
+      <div :class="styles['data-matrix']">
+        <div :class="styles['matrix-item']">
+          <span :class="styles['matrix-label']">Predictive RUL</span>
+          <div :class="styles['matrix-value-row']">
+            <Clock :width="12" :height="12" :class="styles['matrix-icon']" />
+            <span :class="styles['matrix-val']">{{ rulDays ?? '—' }}</span>
+            <span :class="styles['matrix-unit']">Days</span>
+          </div>
+        </div>
+        <div :class="styles['matrix-item']">
+          <span :class="styles['matrix-label']">Last Sync</span>
+          <div :class="styles['matrix-value-row']">
+            <Activity :width="12" :height="12" :class="styles['matrix-icon']" />
+            <span :class="styles['matrix-val']">{{ lastMaint }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Footer -->
+      <div :class="styles['card-footer']">
+        <div :class="styles['location-wrap']">
+          <MapPin :width="12" :height="12" />
+          <span>{{ machine.location || 'Distributed' }}</span>
+        </div>
+        <div :class="styles['action-group']">
+          <UiButton variant="ghost" size="sm" @click="showScheduler = !showScheduler" :class="styles['settings-btn']">
+            <Settings :width="14" :height="14" />
+          </UiButton>
+          <UiButton variant="primary" size="sm" @click="emit('view-details', machine.id)">
+            Initialize Forensic
+          </UiButton>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expansion Layer (Scheduler) -->
+    <Transition name="expand">
+      <div v-if="showScheduler" :class="styles['expansion-panel']">
+        <div :class="styles['expansion-inner']">
+          <div :class="styles['form-compact']">
+            <div :class="styles['input-field']">
+               <label>Frequency (s)</label>
+               <input v-model.number="scheduleInterval" type="number" />
+            </div>
+            <div :class="styles['input-field']">
+               <label>Epochs (m)</label>
+               <input v-model.number="scheduleDuration" type="number" />
+            </div>
+          </div>
+          <UiButton variant="secondary" size="sm" @click="saveSchedule" style="width: 100%;">
+            Commit Neural Model
+          </UiButton>
+        </div>
+      </div>
+    </Transition>
+  </UiCard>
+</template>
+
+<style module>
 .machine-card {
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+  position: relative;
+  overflow: hidden;
 }
 
-.machine-card:hover {
-  border-color: rgba(99, 102, 241, 0.3);
-  transform: translateY(-8px);
-  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.5);
+.status-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  z-index: 5;
 }
 
-.machine-icon-wrapper {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+.status-indicator--operational { background: var(--color-success); }
+.status-indicator--warning { background: var(--color-warning); }
+.status-indicator--critical { background: var(--color-danger); }
+.status-indicator--maintenance { background: var(--color-info); }
+
+.card-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, var(--glow-color), transparent 70%);
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+  pointer-events: none;
 }
 
-@keyframes dash {
-  from { stroke-dashoffset: 213.6; }
+.machine-card:hover .card-glow {
+  opacity: 0.04;
 }
 
-svg circle:last-child {
-  animation: dash 1.5s ease-out forwards;
+.card-content {
+  padding: var(--space-24);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24);
 }
 
-.StatCard:hover {
-  transform: translateY(-4px);
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
 }
+
+.machine-id-block {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.icon-container {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-lg);
+  background: var(--color-depth-1);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  transition: all var(--transition-fast);
+}
+
+.machine-card:hover .icon-container {
+  border-color: var(--color-primary-glow);
+  box-shadow: var(--glow-sm);
+  transform: scale(1.05);
+}
+
+.machine-name {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.machine-type {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Health Intelligence */
+.health-intelligence {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.health-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+}
+
+.score-wrap {
+  display: flex;
+  align-items: baseline;
+  line-height: 1;
+}
+
+.score-num { font-size: var(--font-size-3xl); font-weight: 800; font-family: var(--font-mono); }
+.score-unit { font-size: var(--font-size-sm); font-weight: 600; opacity: 0.6; margin-left: 2px; }
+
+.health-label-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.health-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-secondary); }
+.health-desc { font-size: 10px; color: var(--color-text-dim); font-weight: 600; }
+
+.health-meter {
+  height: 6px;
+  position: relative;
+}
+
+.meter-track {
+  height: 100%;
+  background: var(--color-depth-1);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+}
+
+.meter-fill {
+  height: 100%;
+  border-radius: inherit;
+  position: relative;
+  transition: width 1.2s var(--ease-premium);
+}
+
+.meter-glow {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40px;
+  height: 100%;
+  filter: blur(8px);
+  opacity: 0.5;
+}
+
+/* Data Matrix */
+.data-matrix {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-12);
+}
+
+.matrix-item {
+  padding: var(--space-12);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.matrix-label { font-size: 9px; font-weight: 700; text-transform: uppercase; color: var(--color-text-dim); letter-spacing: 0.05em; }
+.matrix-value-row { display: flex; align-items: center; gap: var(--space-6); }
+.matrix-icon { color: var(--color-primary); opacity: 0.7; }
+.matrix-val { font-size: var(--font-size-sm); font-weight: 700; color: var(--color-text-secondary); }
+.matrix-unit { font-size: 10px; color: var(--color-text-dim); font-weight: 600; }
+
+/* Footer */
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.location-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.action-group {
+  display: flex;
+  gap: var(--space-8);
+}
+
+.settings-btn {
+  color: var(--color-text-dim);
+}
+
+/* Expansion Panel */
+.expansion-panel {
+  background: var(--color-depth-1);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.expansion-inner {
+  padding: var(--space-16) var(--space-24);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.form-compact {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-12);
+}
+
+.input-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.input-field label { font-size: 9px; font-weight: 700; text-transform: uppercase; color: var(--color-text-dim); }
+.input-field input {
+  background: var(--color-depth-0);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-8) var(--space-10);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.input-field input:focus { border-color: var(--color-primary); }
+
+@keyframes expand {
+  from { max-height: 0; opacity: 0; }
+  to { max-height: 200px; opacity: 1; }
+}
+
+.expand-enter-active { animation: expand 0.3s var(--ease-premium); }
+.expand-leave-active { animation: expand 0.3s var(--ease-premium) reverse; }
 </style>

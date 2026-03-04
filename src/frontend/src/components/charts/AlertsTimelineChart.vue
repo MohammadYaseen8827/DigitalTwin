@@ -127,40 +127,12 @@ async function fetchAlerts() {
         alerts.value = response.data
     } catch (error) {
         console.error('Error fetching alerts:', error)
-        // Only show mock data in development; in production show empty state
-        if (import.meta.env.DEV) {
-            generateMockData()
-        } else {
-            alerts.value = []
-        }
+        alerts.value = []
     } finally {
         isLoading.value = false
     }
 }
 
-/** True when showing fallback sample data (no real API data). */
-const isSampleData = ref(false)
-
-function generateMockData() {
-    isSampleData.value = true
-    const now = new Date()
-    const mockAlerts: AlertTimelineItem[] = []
-    const severities: AlertTimelineItem['severity'][] = ['info', 'warning', 'critical', 'error']
-    const titles = ['Temperature High', 'Vibration Alert', 'Pressure Low', 'RPM Warning', 'Humidity High', 'Sensor Offline', 'Maintenance Due', 'Performance Degraded']
-
-    for (let i = 0; i < 15; i++) {
-        const timestamp = new Date(now.getTime() - Math.random() * props.days * 86400000)
-        mockAlerts.push({
-            id: `alert-${i}`,
-            timestamp,
-            severity: severities[Math.floor(Math.random() * severities.length)],
-            title: titles[Math.floor(Math.random() * titles.length)],
-            machineId: `machine-${Math.floor(Math.random() * 5) + 1}`,
-            acknowledged: Math.random() > 0.5
-        })
-    }
-    alerts.value = mockAlerts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-}
 
 onMounted(() => {
     fetchAlerts()
@@ -174,10 +146,6 @@ onMounted(() => {
         </div>
 
         <VueApexCharts v-else type="rangeBar" :height="height" :width="width" :options="chartOptions" :series="series" />
-
-        <p v-if="isSampleData && !isLoading" class="mt-2 text-xs text-gray-500 italic">
-            Sample data — no API data available
-        </p>
 
         <div v-if="alerts.length > 0" class="mt-4 grid grid-cols-4 gap-4 text-center">
             <div class="p-2 bg-blue-50 rounded-lg">

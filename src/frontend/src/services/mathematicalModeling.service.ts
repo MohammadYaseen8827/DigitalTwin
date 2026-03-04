@@ -108,7 +108,7 @@ export interface ParameterBound {
  * Solve ordinary differential equations
  */
 export async function solveOde(request: OdeSolveRequest): Promise<OdeSolution> {
-  const response = await axiosClient.post<OdeSolution>('/MathematicalModeling/ode/solve', request)
+  const response = await axiosClient.post<OdeSolution>('MathematicalModeling/ode/solve', request)
   return response.data
 }
 
@@ -116,7 +116,7 @@ export async function solveOde(request: OdeSolveRequest): Promise<OdeSolution> {
  * Solve system dynamics with derived quantities
  */
 export async function solveSystemDynamics(request: SystemDynamicsRequest): Promise<SystemDynamicsSolution> {
-  const response = await axiosClient.post<SystemDynamicsSolution>('/MathematicalModeling/system-dynamics/solve', request)
+  const response = await axiosClient.post<SystemDynamicsSolution>('MathematicalModeling/system-dynamics/solve', request)
   return response.data
 }
 
@@ -124,7 +124,7 @@ export async function solveSystemDynamics(request: SystemDynamicsRequest): Promi
  * Perform gradient-based optimization
  */
 export async function gradientOptimization(request: GradientOptimizationRequest): Promise<OptimizationResult> {
-  const response = await axiosClient.post<OptimizationResult>('/MathematicalModeling/optimization/gradient', request)
+  const response = await axiosClient.post<OptimizationResult>('MathematicalModeling/optimization/gradient', request)
   return response.data
 }
 
@@ -132,7 +132,7 @@ export async function gradientOptimization(request: GradientOptimizationRequest)
  * Perform genetic algorithm optimization
  */
 export async function geneticOptimization(request: GeneticOptimizationRequest): Promise<OptimizationResult> {
-  const response = await axiosClient.post<OptimizationResult>('/MathematicalModeling/optimization/genetic', request)
+  const response = await axiosClient.post<OptimizationResult>('MathematicalModeling/optimization/genetic', request)
   return response.data
 }
 
@@ -140,7 +140,7 @@ export async function geneticOptimization(request: GeneticOptimizationRequest): 
  * Perform multi-objective optimization
  */
 export async function multiObjectiveOptimization(request: MultiObjectiveOptimizationRequest): Promise<MultiObjectiveResult> {
-  const response = await axiosClient.post<MultiObjectiveResult>('/MathematicalModeling/optimization/multi-objective', request)
+  const response = await axiosClient.post<MultiObjectiveResult>('MathematicalModeling/optimization/multi-objective', request)
   return response.data
 }
 
@@ -148,7 +148,7 @@ export async function multiObjectiveOptimization(request: MultiObjectiveOptimiza
  * Get available system models
  */
 export async function getSystemModels(): Promise<string[]> {
-  const response = await axiosClient.get<string[]>('/MathematicalModeling/models')
+  const response = await axiosClient.get<string[]>('MathematicalModeling/models')
   return response.data || []
 }
 

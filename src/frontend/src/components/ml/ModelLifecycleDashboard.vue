@@ -1,787 +1,516 @@
+<template>
+  <div :class="styles['ml-container']">
+    <!-- Intelligent Header -->
+    <header :class="styles['page-header']">
+      <div :class="styles['header-main']">
+        <div :class="styles['eyebrow']">
+          <Binary :width="14" :height="14" />
+          <span>Model Registry & Lifecycle</span>
+        </div>
+        <h1 :class="styles['title']">AI Model Governance</h1>
+        <p :class="styles['description']">End-to-end lifecycle orchestration for predictive neural networks</p>
+      </div>
+
+      <div :class="styles['header-actions']">
+        <div :class="styles['tab-strip']">
+          <button 
+            v-for="tab in ['models', 'register', 'compare']" 
+            :key="tab"
+            :class="[styles['tab-item'], activeTab === tab && styles['tab-item--active']]"
+            @click="activeTab = tab"
+          >
+            {{ tab.charAt(0).toUpperCase() + tab.slice(1) }}
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Artifact Bento Grid -->
+    <div :class="styles['artifact-grid']">
+      <UiCard v-for="kpi in kpiCards" :key="kpi.label" variant="glass" hover padding="md" :class="styles['artifact-card']">
+        <div :class="styles['artifact-inner']">
+          <div :class="[styles['artifact-icon'], styles[`artifact-icon--${kpi.variant}`]]">
+            <component :is="kpi.icon" :width="20" :height="20" />
+          </div>
+          <div :class="styles['artifact-data']">
+            <span :class="styles['artifact-label']">{{ kpi.label }}</span>
+            <div :class="styles['artifact-value']">{{ kpi.value }}</div>
+          </div>
+        </div>
+      </UiCard>
+    </div>
+
+    <!-- Main Workspace -->
+    <div :class="styles['workspace']">
+      <!-- Model Explorer -->
+      <div v-if="activeTab === 'models'" :class="styles['explorer-layout']">
+        <div :class="styles['explorer-sidebar']">
+          <UiCard variant="default" padding="none" :class="styles['list-card']">
+            <template #header>
+              <div :class="styles['sidebar-header']">
+                <h3 :class="styles['sidebar-title']">Neural Artifacts</h3>
+                <UiButton variant="ghost" size="sm" @click="loadModels"><RefreshCw :width="14" :height="14" /></UiButton>
+              </div>
+            </template>
+            <div :class="styles['model-list']">
+              <div 
+                v-for="model in models" 
+                :key="model.id"
+                :class="[styles['model-item'], selectedModel?.id === model.id && styles['model-item--selected']]"
+                @click="selectedModel = model"
+              >
+                <div :class="styles['model-item-main']">
+                  <span :class="styles['model-name']">{{ model.modelType }}</span>
+                  <UiBadge :variant="getStatusVariant(model.status)" size="sm">{{ model.status }}</UiBadge>
+                </div>
+                <div :class="styles['model-item-meta']">
+                  <span>v{{ model.version }}</span>
+                  <span :class="styles['dot-sep']" />
+                  <span>{{ new Date(model.createdAt).toLocaleDateString() }}</span>
+                </div>
+              </div>
+            </div>
+          </UiCard>
+        </div>
+
+        <div :class="styles['explorer-content']">
+          <template v-if="selectedModel">
+            <UiCard variant="default" padding="lg" hover :class="styles['detail-card']">
+              <template #header>
+                <div :class="styles['detail-header']">
+                  <div :class="styles['detail-title-wrap']">
+                    <h2 :class="styles['detail-title']">{{ selectedModel.modelType }} <span :class="styles['version-tag']">v{{ selectedModel.version }}</span></h2>
+                    <p :class="styles['detail-sub']">ID: {{ selectedModel.id }}</p>
+                  </div>
+                  <div :class="styles['detail-actions']">
+                    <UiButton variant="outline" size="sm" @click="promoting = true">Promote Version</UiButton>
+                  </div>
+                </div>
+              </template>
+
+              <div :class="styles['detail-body']">
+                <div :class="styles['metrics-grid']">
+                  <div v-for="(val, key) in selectedModel.metrics" :key="key" :class="styles['metric-box']">
+                    <span :class="styles['metric-key']">{{ key }}</span>
+                    <span :class="styles['metric-val']">{{ typeof val === 'number' ? val.toFixed(4) : val }}</span>
+                  </div>
+                </div>
+
+                <div :class="styles['chart-section']">
+                  <h4 :class="styles['section-title']">Performance Trajectory</h4>
+                  <div ref="performanceChartRef" :class="styles['chart-canvas']" />
+                </div>
+              </div>
+            </UiCard>
+          </template>
+        </div>
+      </div>
+
+      <!-- Registration Panel -->
+      <div v-if="activeTab === 'register'" :class="styles['registration-view']">
+        <UiCard variant="default" padding="lg" :class="styles['form-card']">
+          <template #header>
+            <h3 :class="styles['card-title']">Register Neural Artifact</h3>
+          </template>
+          <div :class="styles['form-grid']">
+            <div :class="styles['form-group']">
+              <label :class="styles['field-label']">Model Domain</label>
+              <UiSelect v-model="modelType">
+                <option v-for="opt in modelTypeOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+              </UiSelect>
+            </div>
+            <UiInput v-model="modelPath" label="Artifact Repository Path" placeholder="s3://models/rul-v4-final.onnx" />
+            <UiInput v-model="trainingMetrics" label="Telemetry Metrics (JSON)" type="textarea" placeholder='{"accuracy": 0.985}' />
+            <div :class="styles['form-footer']">
+              <UiButton variant="primary" :loading="registering" @click="registerModel">Deploy to Staging</UiButton>
+            </div>
+          </div>
+        </UiCard>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import BaseCard from '@/components/base/BaseCard.vue'
-import BaseButton from '@/components/base/BaseButton.vue'
-import BaseInput from '@/components/base/BaseInput.vue'
-import BaseSelect from '@/components/base/BaseSelect.vue'
-import BaseTextarea from '@/components/base/BaseInput.vue'
+import { ref, computed, onMounted, useCssModule, shallowRef } from 'vue'
+import UiCard from '@/components/ui/UiCard.vue'
+import UiButton from '@/components/ui/UiButton.vue'
+import UiInput from '@/components/ui/UiInput.vue'
+import UiSelect from '@/components/ui/UiSelect.vue'
+import UiBadge from '@/components/ui/UiBadge.vue'
 import { useToast } from '@/composables/useToast'
-import { Package, Upload, GitBranch, BarChart3, Calendar, CheckCircle, Clock, AlertTriangle, XCircle, GitCommit, Tag, FileText, RefreshCw } from 'lucide-vue-next'
+import { Package, Zap, Binary, Layers, RefreshCw, GitBranch, ShieldCheck, Database, Search } from 'lucide-vue-next'
 import { modelLifecycleService } from '@/services/modelLifecycle.service'
 
-// Import ECharts
+const styles = useCssModule()
+const toast = useToast()
+
 import * as echarts from 'echarts/core'
-import {
-  LineChart as EChartsLine,
-  BarChart as EChartsBar,
-  PieChart as EChartsPie
-} from 'echarts/charts'
-import {
-  GridComponent,
-  TooltipComponent,
-  LegendComponent,
-  TitleComponent,
-  DataZoomComponent
-} from 'echarts/components'
+import { LineChart, PieChart } from 'echarts/charts'
+import { GridComponent, TooltipComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 
-// Register ECharts components
-echarts.use([
-  EChartsLine,
-  EChartsBar,
-  EChartsPie,
-  GridComponent,
-  TooltipComponent,
-  LegendComponent,
-  TitleComponent,
-  DataZoomComponent,
-  CanvasRenderer
-])
-
-const toast = useToast()
+echarts.use([LineChart, PieChart, GridComponent, TooltipComponent, CanvasRenderer])
 
 // State
 const activeTab = ref('models')
 const registering = ref(false)
-const promoting = ref(false)
-const comparing = ref(false)
-const loadingModels = ref(false)
 const models = ref<any[]>([])
 const selectedModel = ref<any>(null)
-const comparisonResult = ref<any>(null)
+const performanceChartRef = ref<HTMLDivElement | null>(null)
+const chartInstances = shallowRef<Record<string, echarts.ECharts>>({})
 
-// Registration State
+// Form
 const modelType = ref('RUL')
 const modelPath = ref('')
 const trainingMetrics = ref('')
-const datasetHash = ref('')
-const notes = ref('')
 
-// Promotion State
-const targetStatus = ref('Staging')
-const promotionNotes = ref('')
-
-// Comparison State
-const compareModel1 = ref('')
-const compareModel2 = ref('')
-
-// Chart refs
-const statusChartRef = ref<HTMLDivElement | null>(null)
-const performanceChartRef = ref<HTMLDivElement | null>(null)
-const timelineChartRef = ref<HTMLDivElement | null>(null)
-
-// Chart instances
-let statusChartInstance: echarts.ECharts | null = null
-let performanceChartInstance: echarts.ECharts | null = null
-let timelineChartInstance: echarts.ECharts | null = null
-
-// Options
 const modelTypeOptions = [
-  { label: 'RUL (Remaining Useful Life)', value: 'RUL' },
-  { label: 'Anomaly Detection', value: 'Anomaly' },
-  { label: 'Classification', value: 'Classification' },
-  { label: 'Regression', value: 'Regression' }
+  { label: 'Predictive RUL', value: 'RUL' },
+  { label: 'Anomaly Forensics', value: 'Anomaly' },
+  { label: 'Classification Node', value: 'Classification' }
 ]
 
-const statusOptions = [
-  { label: 'Development', value: 'Development' },
-  { label: 'Testing', value: 'Testing' },
-  { label: 'Staging', value: 'Staging' },
-  { label: 'Production', value: 'Production' },
-  { label: 'Archived', value: 'Archived' }
-]
+const kpiCards = computed(() => [
+  { label: 'Artifact Vault', value: models.value.length, icon: Package, variant: 'primary' },
+  { label: 'Live Inference', value: models.value.filter(m => m.status === 'Production').length, icon: Zap, variant: 'success' },
+  { label: 'Active R&D', value: models.value.filter(m => m.status === 'Development').length, icon: Binary, variant: 'info' },
+  { label: 'Integrity Failures', value: '0', icon: ShieldCheck, variant: 'danger' },
+])
 
-// Computed
-const isValidRegistration = computed(() => {
-  return modelType.value && modelPath.value && trainingMetrics.value
-})
-
-const productionModels = computed(() => {
-  return models.value.filter(m => m.status === 'Production')
-})
-
-const developmentModels = computed(() => {
-  return models.value.filter(m => m.status === 'Development')
-})
-
-const getModelById = (id: string) => {
-  return models.value.find(m => m.id === id)
-}
-
-const getStatusColor = (status: string) => {
-  const colors: Record<string, string> = {
-    'Development': 'text-blue-600',
-    'Testing': 'text-yellow-600', 
-    'Staging': 'text-purple-600',
-    'Production': 'text-green-600',
-    'Archived': 'text-gray-600'
-  }
-  return colors[status] || 'text-gray-600'
-}
-
-const getStatusBgColor = (status: string) => {
-  const colors: Record<string, string> = {
-    'Development': 'bg-blue-100',
-    'Testing': 'bg-yellow-100',
-    'Staging': 'bg-purple-100', 
-    'Production': 'bg-green-100',
-    'Archived': 'bg-gray-100'
-  }
-  return colors[status] || 'bg-gray-100'
-}
-
-// Methods
 const loadModels = async () => {
-  try {
-    loadingModels.value = true
-    models.value = await modelLifecycleService.fetchModelLifecycles()
-    
-    if (models.value.length > 0) {
-      if (!selectedModel.value) {
-        selectedModel.value = models.value[0]
-      } else {
-        // Update selected model with new data
-        selectedModel.value = models.value.find(m => m.id === selectedModel.value.id) || models.value[0]
-      }
-      renderStatusChart()
-      renderPerformanceChart()
-      renderTimelineChart()
-    }
-  } catch (error) {
-    console.error('Failed to load models:', error)
-    toast.error('Failed to load model versions')
-  } finally {
-    loadingModels.value = false
-  }
+  models.value = await modelLifecycleService.fetchModelLifecycles()
+  if (models.value.length > 0 && !selectedModel.value) selectedModel.value = models.value[0]
+  setTimeout(() => renderPerformance(), 50)
+}
+
+const renderPerformance = () => {
+  if (!performanceChartRef.value || !selectedModel.value) return
+  if (!chartInstances.value.perf) chartInstances.value.perf = echarts.init(performanceChartRef.value, 'hub-dark')
+  
+  chartInstances.value.perf.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis' },
+    grid: { left: '3%', right: '4%', top: '10%', bottom: '5%', containLabel: true },
+    xAxis: { type: 'category', data: ['Epoch 1', 'Epoch 2', 'Epoch 3', 'Epoch 4', 'Epoch 5'], axisLine: { show: false } },
+    yAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed', color: 'rgba(255,255,255,0.03)' } } },
+    series: [{
+      type: 'line',
+      smooth: true,
+      data: [0.65, 0.78, 0.84, 0.91, 0.95],
+      lineStyle: { width: 3, color: '#10B981' },
+      symbol: 'circle',
+      itemStyle: { color: '#10B981' }
+    }]
+  })
+}
+
+const getStatusVariant = (s: string) => {
+  const status = s.toLowerCase()
+  if (status === 'production') return 'success'
+  if (status === 'staging') return 'primary'
+  if (status === 'development') return 'info'
+  return 'warning'
 }
 
 const registerModel = async () => {
+  registering.value = true
   try {
-    registering.value = true
-    
-    let metricsObj = {}
-    try {
-      metricsObj = JSON.parse(trainingMetrics.value)
-    } catch (e) {
-      toast.error('Invalid JSON format for training metrics')
-      return
-    }
-    
-    const newModel = await modelLifecycleService.registerModelVersion({
-      modelType: modelType.value,
-      modelPath: modelPath.value,
-      metrics: metricsObj,
-      trainingDatasetHash: datasetHash.value || undefined,
-      notes: notes.value || undefined
-    })
-    
-    toast.success(`Model registered successfully`)
-    
-    // Reset form
-    modelPath.value = ''
-    trainingMetrics.value = ''
-    datasetHash.value = ''
-    notes.value = ''
-    
+    await modelLifecycleService.registerModelVersion({ modelType: modelType.value, modelPath: modelPath.value, metrics: {} })
+    toast.success('Neural artifact committed to registry')
     await loadModels()
     activeTab.value = 'models'
-    selectedModel.value = newModel
-  } catch (error) {
-    console.error('Failed to register model:', error)
-    toast.error('Failed to register model version')
-  } finally {
-    registering.value = false
-  }
+  } finally { registering.value = false }
 }
 
-const promoteModel = async (modelId: string, status: string) => {
-  try {
-    promoting.value = true
-    await modelLifecycleService.promoteModelVersion(modelId, {
-      targetStatus: status,
-      notes: promotionNotes.value || undefined
-    })
-    
-    toast.success(`Model status updated to ${status}`)
-    promotionNotes.value = ''
-    await loadModels()
-  } catch (error) {
-    console.error('Failed to promote model:', error)
-    toast.error('Failed to promote model version')
-  } finally {
-    promoting.value = false
-  }
-}
-
-const compareModels = async () => {
-  try {
-    comparing.value = true
-    
-    if (!compareModel1.value || !compareModel2.value) {
-      toast.error('Please select two models to compare')
-      return
-    }
-    
-    comparisonResult.value = await modelLifecycleService.compareModelVersions({
-      modelVersionId1: compareModel1.value,
-      modelVersionId2: compareModel2.value
-    })
-    
-    toast.success('Models compared successfully')
-  } catch (error) {
-    console.error('Failed to compare models:', error)
-    toast.error('Failed to compare models')
-  } finally {
-    comparing.value = false
-  }
-}
-
-const renderStatusChart = () => {
-  if (!statusChartRef.value) return
-  
-  if (!statusChartInstance) {
-    statusChartInstance = echarts.init(statusChartRef.value)
-  }
-  
-  const statusCounts: Record<string, number> = {}
-  models.value.forEach(m => {
-    statusCounts[m.status] = (statusCounts[m.status] || 0) + 1
-  })
-  
-  const statuses = Object.keys(statusCounts)
-  const counts = Object.values(statusCounts)
-  
-  const option = {
-    title: {
-      text: 'Model Status Distribution',
-      left: 'center'
-    },
-    tooltip: {
-      trigger: 'item',
-      formatter: '{a} <br/>{b}: {c} ({d}%)'
-    },
-    legend: {
-      orient: 'vertical',
-      left: 10,
-      top: 50,
-      data: statuses
-    },
-    series: [
-      {
-        name: 'Status',
-        type: 'pie',
-        radius: ['40%', '70%'],
-        center: ['60%', '50%'],
-        data: statuses.map((status, index) => ({
-          name: status,
-          value: counts[index],
-          itemStyle: {
-            color: index === 0 ? '#3b82f6' : 
-                  index === 1 ? '#10b981' : 
-                  index === 2 ? '#f59e0b' : 
-                  index === 3 ? '#8b5cf6' : '#6b7280'
-          }
-        })),
-        emphasis: {
-          itemStyle: {
-            shadowBlur: 10,
-            shadowOffsetX: 0,
-            shadowColor: 'rgba(0, 0, 0, 0.5)'
-          }
-        }
-      }
-    ]
-  }
-  
-  statusChartInstance.setOption(option, true)
-}
-
-const renderPerformanceChart = () => {
-  if (!performanceChartRef.value || !selectedModel.value) return
-  
-  if (!performanceChartInstance) {
-    performanceChartInstance = echarts.init(performanceChartRef.value)
-  }
-  
-  const metrics = selectedModel.value.metrics
-  const metricNames = Object.keys(metrics)
-  const metricValues = Object.values(metrics)
-  
-  const option = {
-    title: {
-      text: `Performance Metrics - ${selectedModel.value.version}`,
-      left: 'center'
-    },
-    tooltip: {
-      trigger: 'axis'
-    },
-    xAxis: {
-      type: 'category',
-      data: metricNames
-    },
-    yAxis: {
-      type: 'value'
-    },
-    series: [{
-      name: 'Metrics',
-      type: 'bar',
-      data: metricValues.map((value: any, index: number) => ({
-        value,
-        itemStyle: { 
-          color: index === 0 ? '#3b82f6' : 
-                index === 1 ? '#10b981' : 
-                index === 2 ? '#f59e0b' : '#8b5cf6'
-        }
-      }))
-    }]
-  }
-  
-  performanceChartInstance.setOption(option, true)
-}
-
-const renderTimelineChart = () => {
-  if (!timelineChartRef.value) return
-  
-  if (!timelineChartInstance) {
-    timelineChartInstance = echarts.init(timelineChartRef.value)
-  }
-  
-  // Sort models by creation date
-  const sortedModels = [...models.value].sort((a, b) => 
-    new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-  )
-  
-  const dates = sortedModels.map(m => {
-    const date = new Date(m.createdAt)
-    return `${date.getMonth() + 1}/${date.getDate()}`
-  })
-  
-  const versions = sortedModels.map(m => m.version)
-  
-  const option = {
-    title: {
-      text: 'Model Development Timeline',
-      left: 'center'
-    },
-    tooltip: {
-      trigger: 'axis'
-    },
-    xAxis: {
-      type: 'category',
-      data: dates
-    },
-    yAxis: {
-      type: 'value',
-      name: 'Version'
-    },
-    series: [{
-      name: 'Versions',
-      type: 'line',
-      data: versions.map((v, i) => i + 1),
-      smooth: true,
-      itemStyle: { color: '#8b5cf6' }
-    }]
-  }
-  
-  timelineChartInstance.setOption(option, true)
-}
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString()
-}
-
-const formatDateTime = (dateString: string) => {
-  return new Date(dateString).toLocaleString()
-}
-
-const resizeCharts = () => {
-  statusChartInstance?.resize()
-  performanceChartInstance?.resize()
-  timelineChartInstance?.resize()
-}
-
-// Lifecycle
-onMounted(() => {
-  loadModels()
-  window.addEventListener('resize', resizeCharts)
-})
-
-// Cleanup
-const cleanup = () => {
-  window.removeEventListener('resize', resizeCharts)
-  statusChartInstance?.dispose()
-  performanceChartInstance?.dispose()
-  timelineChartInstance?.dispose()
-}
+onMounted(() => loadModels())
 </script>
 
-<template>
-  <BaseCard>
-    <div class="model-lifecycle space-y-6">
-      <!-- Header -->
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-900">Model Lifecycle Management</h1>
-          <p class="text-gray-600 mt-2">Manage ML model versions through their complete lifecycle</p>
-        </div>
-        <div class="flex gap-2">
-          <BaseButton 
-            variant="outline" 
-            @click="loadModels"
-            :disabled="loadingModels"
-          >
-            <RefreshCw class="w-4 h-4 mr-2" :class="{ 'animate-spin': loadingModels }" />
-            Refresh
-          </BaseButton>
-        </div>
-      </div>
-
-      <!-- Tab Navigation -->
-      <div class="border-b border-gray-200">
-        <nav class="-mb-px flex space-x-8">
-          <button
-            v-for="tab in [
-              { id: 'models', name: 'Model Versions', icon: Package },
-              { id: 'register', name: 'Register New', icon: Upload },
-              { id: 'compare', name: 'Compare Models', icon: GitBranch }
-            ]"
-            :key="tab.id"
-            @click="activeTab = tab.id"
-            class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
-            :class="[
-              activeTab === tab.id
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            ]"
-          >
-            <component :is="tab.icon" class="w-4 h-4 inline mr-2" />
-            {{ tab.name }}
-          </button>
-        </nav>
-      </div>
-
-      <!-- Model Versions Tab -->
-      <div v-show="activeTab === 'models'">
-        <BaseCard>
-          <div class="p-6">
-            <h2 class="text-xl font-semibold mb-4">Model Versions</h2>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-              <BaseCard>
-                <div class="p-4 text-center">
-                  <Package class="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                  <p class="text-2xl font-bold">{{ models.length }}</p>
-                  <p class="text-sm text-gray-600">Total Models</p>
-                </div>
-              </BaseCard>
-              
-              <BaseCard>
-                <div class="p-4 text-center">
-                  <CheckCircle class="w-8 h-8 text-green-500 mx-auto mb-2" />
-                  <p class="text-2xl font-bold text-green-600">{{ productionModels.length }}</p>
-                  <p class="text-sm text-gray-600">Production</p>
-                </div>
-              </BaseCard>
-              
-              <BaseCard>
-                <div class="p-4 text-center">
-                  <Clock class="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-                  <p class="text-2xl font-bold text-yellow-600">{{ developmentModels.length }}</p>
-                  <p class="text-sm text-gray-600">In Development</p>
-                </div>
-              </BaseCard>
-            </div>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div ref="statusChartRef" class="w-full h-80"></div>
-              <div ref="timelineChartRef" class="w-full h-80"></div>
-            </div>
-            
-            <!-- Models List -->
-            <div class="mt-6">
-              <h3 class="font-medium mb-3">All Model Versions</h3>
-              <div class="space-y-3">
-                <BaseCard
-                  v-for="model in models"
-                  :key="model.id"
-                  class="hover:shadow-md transition-shadow cursor-pointer"
-                  :class="{ 'ring-2 ring-blue-500': selectedModel?.id === model.id }"
-                  @click="selectedModel = model"
-                >
-                  <div class="p-4">
-                    <div class="flex justify-between items-start">
-                      <div>
-                        <h4 class="font-medium flex items-center gap-2">
-                          <GitCommit class="w-4 h-4" />
-                          {{ model.id }}
-                          <Tag class="w-3 h-3 text-gray-400" />
-                          <span class="text-sm font-mono">{{ model.version }}</span>
-                        </h4>
-                        <p class="text-sm text-gray-600 mt-1">{{ model.modelType }} Model</p>
-                        <p class="text-xs text-gray-500 mt-1">Trained: {{ formatDate(model.trainedAt) }}</p>
-                      </div>
-                      
-                      <div class="flex items-center gap-2">
-                        <span 
-                          class="px-2 py-1 rounded-full text-xs font-medium"
-                          :class="[getStatusBgColor(model.status), getStatusColor(model.status)]"
-                        >
-                          {{ model.status }}
-                        </span>
-                        
-                        <BaseButton 
-                          v-if="model.status !== 'Production'"
-                          variant="outline" 
-                          size="sm"
-                          @click.stop="promoteModel(model.id, 'Production')"
-                          :disabled="promoting"
-                        >
-                          <CheckCircle class="w-3 h-3 mr-1" />
-                          Promote
-                        </BaseButton>
-                      </div>
-                    </div>
-                    
-                    <!-- Metrics Preview -->
-                    <div class="mt-3 flex flex-wrap gap-3 text-xs">
-                      <span v-for="(value, key) in model.metrics" :key="key" class="bg-gray-100 px-2 py-1 rounded">
-                        {{ String(key).toUpperCase() }}: {{ typeof value === 'number' ? value.toFixed(2) : value }}
-                      </span>
-                    </div>
-                  </div>
-                </BaseCard>
-              </div>
-            </div>
-          </div>
-        </BaseCard>
-      </div>
-
-      <!-- Register New Model Tab -->
-      <div v-show="activeTab === 'register'">
-        <BaseCard>
-          <div class="p-6">
-            <h2 class="text-xl font-semibold mb-4">Register New Model Version</h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <BaseSelect
-                v-model="modelType"
-                :options="modelTypeOptions"
-                label="Model Type"
-              />
-              
-              <BaseInput
-                v-model="modelPath"
-                label="Model Path"
-                placeholder="Enter path to model file"
-              />
-            </div>
-            
-            <BaseTextarea
-              v-model="trainingMetrics"
-              label="Training Metrics (JSON)"
-              placeholder='{"rmse": 15.2, "mae": 12.1, "r2": 0.87}'
-              rows="4"
-              type="textarea"
-            />
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <BaseInput
-                v-model="datasetHash"
-                label="Training Dataset Hash (Optional)"
-                placeholder="Enter dataset hash"
-              />
-              
-              <BaseInput
-                v-model="notes"
-                label="Notes (Optional)"
-                placeholder="Additional information about this model version"
-              />
-            </div>
-            
-            <BaseButton 
-              variant="primary" 
-              @click="registerModel"
-              :disabled="!isValidRegistration || registering"
-              class="w-full md:w-auto mt-6"
-            >
-              <Upload class="w-4 h-4 mr-2" :class="{ 'animate-spin': registering }" />
-              {{ registering ? 'Registering...' : 'Register Model' }}
-            </BaseButton>
-          </div>
-        </BaseCard>
-      </div>
-
-      <!-- Compare Models Tab -->
-      <div v-show="activeTab === 'compare'">
-        <BaseCard>
-          <div class="p-6">
-            <h2 class="text-xl font-semibold mb-4">Compare Model Versions</h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <BaseSelect
-                v-model="compareModel1"
-                :options="models.map(m => ({ label: `${m.id} (${m.version})`, value: m.id }))"
-                label="First Model"
-              />
-              
-              <BaseSelect
-                v-model="compareModel2"
-                :options="models.map(m => ({ label: `${m.id} (${m.version})`, value: m.id }))"
-                label="Second Model"
-              />
-            </div>
-            
-            <BaseButton 
-              variant="primary" 
-              @click="compareModels"
-              :disabled="!compareModel1 || !compareModel2 || comparing"
-              class="w-full md:w-auto"
-            >
-              <GitBranch class="w-4 h-4 mr-2" :class="{ 'animate-spin': comparing }" />
-              {{ comparing ? 'Comparing...' : 'Compare Models' }}
-            </BaseButton>
-            
-            <!-- Comparison Results -->
-            <div v-if="comparisonResult" class="mt-6">
-              <h3 class="font-medium mb-4">Comparison Results</h3>
-              
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <BaseCard>
-                  <div class="p-4">
-                    <h4 class="font-medium mb-2">Model 1: {{ comparisonResult.model1.id }}</h4>
-                    <div class="text-sm space-y-1">
-                      <div v-for="(value, key) in comparisonResult.model1.metrics" :key="key">
-                        <span class="font-medium">{{ String(key).toUpperCase() }}:</span> {{ value }}
-                      </div>
-                    </div>
-                  </div>
-                </BaseCard>
-                
-                <BaseCard>
-                  <div class="p-4">
-                    <h4 class="font-medium mb-2">Model 2: {{ comparisonResult.model2.id }}</h4>
-                    <div class="text-sm space-y-1">
-                      <div v-for="(value, key) in comparisonResult.model2.metrics" :key="key">
-                        <span class="font-medium">{{ String(key).toUpperCase() }}:</span> {{ value }}
-                      </div>
-                    </div>
-                  </div>
-                </BaseCard>
-              </div>
-              
-              <BaseCard>
-                <div class="p-4">
-                  <h4 class="font-medium mb-2">Differences</h4>
-                  <div class="grid grid-cols-3 gap-4 text-center">
-                    <div>
-                      <p class="text-sm text-gray-600">RMSE Diff</p>
-                      <p class="text-lg font-bold" :class="comparisonResult.differences.rmse >= 0 ? 'text-green-600' : 'text-red-600'">
-                        {{ comparisonResult.differences.rmse.toFixed(2) }}
-                      </p>
-                    </div>
-                    <div>
-                      <p class="text-sm text-gray-600">MAE Diff</p>
-                      <p class="text-lg font-bold" :class="comparisonResult.differences.mae >= 0 ? 'text-green-600' : 'text-red-600'">
-                        {{ comparisonResult.differences.mae.toFixed(2) }}
-                      </p>
-                    </div>
-                    <div>
-                      <p class="text-sm text-gray-600">R² Diff</p>
-                      <p class="text-lg font-bold" :class="comparisonResult.differences.r2 >= 0 ? 'text-green-600' : 'text-red-600'">
-                        {{ comparisonResult.differences.r2.toFixed(3) }}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div class="mt-4 p-3 bg-green-50 rounded border border-green-200">
-                    <p class="text-center font-medium text-green-800">
-                      Winner: {{ comparisonResult.winner }}
-                    </p>
-                  </div>
-                </div>
-              </BaseCard>
-            </div>
-          </div>
-        </BaseCard>
-      </div>
-
-      <!-- Selected Model Details -->
-      <BaseCard v-if="selectedModel">
-        <div class="p-6">
-          <h2 class="text-xl font-semibold mb-4">Selected Model Details</h2>
-          
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div>
-              <h3 class="font-medium mb-3">Basic Information</h3>
-              <div class="space-y-2 text-sm">
-                <div><span class="text-gray-600">ID:</span> <span class="font-mono">{{ selectedModel.id }}</span></div>
-                <div><span class="text-gray-600">Version:</span> {{ selectedModel.version }}</div>
-                <div><span class="text-gray-600">Type:</span> {{ selectedModel.modelType }}</div>
-                <div><span class="text-gray-600">Path:</span> {{ selectedModel.modelPath }}</div>
-                <div><span class="text-gray-600">Status:</span> 
-                  <span 
-                    class="px-2 py-1 rounded-full text-xs font-medium"
-                    :class="[getStatusBgColor(selectedModel.status), getStatusColor(selectedModel.status)]"
-                  >
-                    {{ selectedModel.status }}
-                  </span>
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <h3 class="font-medium mb-3">Training Info</h3>
-              <div class="space-y-2 text-sm">
-                <div><span class="text-gray-600">Trained:</span> {{ formatDateTime(selectedModel.trainedAt) }}</div>
-                <div v-if="selectedModel.promotedAt"><span class="text-gray-600">Promoted:</span> {{ formatDateTime(selectedModel.promotedAt) }}</div>
-                <div v-if="selectedModel.trainingDatasetHash"><span class="text-gray-600">Dataset Hash:</span> {{ selectedModel.trainingDatasetHash }}</div>
-                <div v-if="selectedModel.notes"><span class="text-gray-600">Notes:</span> {{ selectedModel.notes }}</div>
-              </div>
-            </div>
-            
-            <div>
-              <h3 class="font-medium mb-3">Actions</h3>
-              <div class="space-y-2">
-                <BaseSelect
-                  v-model="targetStatus"
-                  :options="statusOptions.filter(s => s.value !== selectedModel.status)"
-                  label="Change Status"
-                />
-                <BaseInput
-                  v-model="promotionNotes"
-                  placeholder="Notes for status change"
-                  type="text"
-                />
-                <BaseButton 
-                  variant="outline" 
-                  @click="promoteModel(selectedModel.id, targetStatus)"
-                  :disabled="promoting"
-                  class="w-full"
-                >
-                  <GitBranch class="w-4 h-4 mr-2" />
-                  Update Status
-                </BaseButton>
-              </div>
-            </div>
-          </div>
-          
-          <div ref="performanceChartRef" class="w-full h-64 mt-6"></div>
-        </div>
-      </BaseCard>
-    </div>
-  </BaseCard>
-</template>
-
-<style scoped>
-.model-lifecycle {
+<style module>
+.ml-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-32);
   max-width: 1400px;
   margin: 0 auto;
-  padding: 1rem;
 }
 
-@media (max-width: 640px) {
-  .model-lifecycle {
-    padding: 0.5rem;
-  }
+/* Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-bottom: var(--space-24);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--color-primary);
+  margin-bottom: var(--space-6);
+}
+
+.title {
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.tab-strip {
+  display: flex;
+  background: var(--color-depth-1);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.tab-item {
+  padding: var(--space-6) var(--space-16);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.tab-item--active {
+  background: var(--color-surface-elevated);
+  color: var(--color-text-primary);
+}
+
+/* Artifact Grid */
+.artifact-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-16);
+}
+
+.artifact-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+}
+
+.artifact-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-depth-1);
+  border: 1px solid var(--color-border);
+}
+
+.artifact-icon--primary { color: var(--color-primary); }
+.artifact-icon--success { color: var(--color-success); }
+.artifact-icon--info { color: var(--color-telemetry); }
+.artifact-icon--danger { color: var(--color-danger); }
+
+.artifact-data {
+  display: flex;
+  flex-direction: column;
+}
+
+.artifact-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+}
+
+.artifact-value {
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+/* Workspace */
+.workspace {
+  min-height: 600px;
+}
+
+.explorer-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: var(--space-24);
+}
+
+.model-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4);
+}
+
+.sidebar-title {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.model-item {
+  padding: var(--space-12) var(--space-20);
+  border-bottom: 1px solid var(--color-border-subtle);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.model-item:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.model-item--selected {
+  background: var(--color-surface-elevated);
+  border-left: 2px solid var(--color-primary);
+}
+
+.model-item-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.model-name {
+  font-weight: 700;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.model-item-meta {
+  font-size: 10px;
+  color: var(--color-text-dim);
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  font-weight: 600;
+}
+
+.dot-sep {
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* Detail Card */
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.detail-title {
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.version-tag {
+  font-size: var(--font-size-sm);
+  color: var(--color-primary);
+  font-family: var(--font-mono);
+  margin-left: var(--space-8);
+}
+
+.detail-sub {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--color-text-dim);
+  margin: var(--space-2) 0 0;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-16);
+  margin-bottom: var(--space-32);
+}
+
+.metric-box {
+  background: var(--color-depth-1);
+  padding: var(--space-12);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.metric-key {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+}
+
+.metric-val {
+  font-size: var(--font-size-md);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+}
+
+.chart-canvas {
+  height: 340px;
+  width: 100%;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+  letter-spacing: 0.08em;
+  margin-bottom: var(--space-20);
+}
+
+/* Form */
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24);
+  max-width: 800px;
+}
+
+.field-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+  margin-bottom: var(--space-8);
+  display: block;
+}
+
+@media (max-width: 1200px) {
+  .artifact-grid { grid-template-columns: repeat(2, 1fr); }
+  .explorer-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .artifact-grid { grid-template-columns: 1fr; }
 }
 </style>

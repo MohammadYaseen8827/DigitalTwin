@@ -87,7 +87,7 @@ export interface TrainModelRequest {
  * Get all predictions (paginated).
  */
 export async function getAllPredictions(params?: { page?: number; pageSize?: number }): Promise<PredictionSearchResult> {
-  const response = await axiosClient.get<PredictionSearchResult>('/Predictions', { params })
+  const response = await axiosClient.get<PredictionSearchResult>('Predictions', { params })
   return response as unknown as PredictionSearchResult
 }
 
@@ -119,7 +119,7 @@ export async function getRulSummary(machineId: string): Promise<RulSummaryDto> {
  * Get prediction model status.
  */
 export async function getModelStatus(): Promise<ModelStatusDto> {
-  const response = await axiosClient.get<ModelStatusDto>('/Predictions/status')
+  const response = await axiosClient.get<ModelStatusDto>('Predictions/status')
   return response as unknown as ModelStatusDto
 }
 
@@ -145,7 +145,7 @@ export async function getAnomalyDetection(machineId: string): Promise<AnomalyDet
  * Search predictions with filters.
  */
 export async function searchPredictions(params: PredictionSearchParams): Promise<PredictionSearchResult> {
-  const response = await axiosClient.get<PredictionSearchResult>('/Predictions/search', { params })
+  const response = await axiosClient.get<PredictionSearchResult>('Predictions/search', { params })
   return response as unknown as PredictionSearchResult
 }
 
@@ -153,7 +153,7 @@ export async function searchPredictions(params: PredictionSearchParams): Promise
  * Request a new generic prediction for a machine.
  */
 export async function requestPrediction(machineId: string): Promise<PredictionDto> {
-  const response = await axiosClient.post<PredictionDto>('/Predictions', { machineId })
+  const response = await axiosClient.post<PredictionDto>('Predictions', { machineId })
   return response as unknown as PredictionDto
 }
 
@@ -176,7 +176,7 @@ export async function requestEnsemblePrediction(machineId: string): Promise<Pred
  * Trigger AI model training.
  */
 export async function trainAIModel(forceRetrain = false, modelType = 'all'): Promise<{ success: boolean; message: string }> {
-  const response = await axiosClient.post('/Predictions/ai/train', {
+  const response = await axiosClient.post('Predictions/ai/train', {
     forceRetrain,
     modelType
   })
@@ -187,7 +187,7 @@ export async function trainAIModel(forceRetrain = false, modelType = 'all'): Pro
  * Trigger model retraining (legacy endpoint).
  */
 export async function retrainModels(forceRetrain = false, modelType = 'all'): Promise<{ success: boolean; message: string }> {
-  const response = await axiosClient.post('/Predictions/train', {
+  const response = await axiosClient.post('Predictions/train', {
     forceRetrain,
     modelType
   })

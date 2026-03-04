@@ -78,7 +78,7 @@ export async function generateTrajectories(
   request: GenerateTrajectoriesRequest
 ): Promise<DegradationTrajectory[]> {
   return axiosClient.post<DegradationTrajectory[], DegradationTrajectory[]>(
-    '/RunToFailure/generate-trajectories',
+    'RunToFailure/generate-trajectories',
     request
   )
 }
@@ -90,7 +90,7 @@ export async function generateTrajectoriesAlt(
   request: GenerateTrajectoriesRequest
 ): Promise<DegradationTrajectory[]> {
   return axiosClient.post<DegradationTrajectory[], DegradationTrajectory[]>(
-    '/RunToFailure/generate-trajectories',
+    'RunToFailure/generate-trajectories',
     request
   )
 }

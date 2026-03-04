@@ -19,10 +19,10 @@ class ApiConfiguration {
     // Determine environment
     const isDevelopment = import.meta.env.DEV;
     const isProduction = import.meta.env.PROD;
-
+    
     // Base URL configuration
     let baseUrl = import.meta.env.VITE_API_BASE_URL;
-
+    
     // Fallback logic based on environment
     if (!baseUrl) {
       if (isDevelopment) {
@@ -30,12 +30,10 @@ class ApiConfiguration {
         baseUrl = 'http://localhost:7000/api';
       } else {
         // Production: require explicit base URL via VITE_API_BASE_URL; fallback to /api with warning
-        if (!baseUrl) {
-          if (typeof console !== 'undefined' && console.warn) {
-            console.warn('[apiConfig] VITE_API_BASE_URL is not set in production. Using /api. Set VITE_API_BASE_URL for correct API base.');
-          }
-          baseUrl = '/api';
+        if (typeof console !== 'undefined' && console.warn) {
+          console.warn('[apiConfig] VITE_API_BASE_URL is not set in production. Using /api. Set VITE_API_BASE_URL for correct API base.');
         }
+        baseUrl = '/api';
       }
     }
 

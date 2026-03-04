@@ -100,7 +100,7 @@
     "name": "digital-twin-dashboard",
     "included_in_context": [
       "http://localhost:5173.*",
-      "http://localhost:5000.*"
+      "http://localhost:7300.*"
     ],
     "excluded_from_context": [
       ".*\\.jpg",

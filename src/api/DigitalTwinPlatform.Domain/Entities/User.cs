@@ -52,6 +52,8 @@ public class User : BaseEntity<Guid>
     public string LastName => _lastName;
     public string? PhoneNumber { get; private set; }
     public bool IsActive => _isActive;
+    public new DateTime CreatedAt { get; private set; }
+    public new DateTime UpdatedAt { get; private set; }
 
     // Navigation properties
     public ICollection<TenantUser> TenantUsers { get; private set; } = [];
@@ -127,11 +129,7 @@ public class User : BaseEntity<Guid>
             var addr = new System.Net.Mail.MailAddress(email);
             return addr.Address == email;
         }
-        catch (FormatException)
-        {
-            return false;
-        }
-        catch (ArgumentException)
+        catch
         {
             return false;
         }

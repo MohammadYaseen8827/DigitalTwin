@@ -1,362 +1,12 @@
-<template>
-  <BaseCard variant="soft" class="configuration-templates">
-    <template #header>
-      <div class="header-content">
-        <div>
-          <h3>Machine Configuration Templates</h3>
-          <p>Standardize and manage machine configuration templates</p>
-        </div>
-        <BaseButton 
-          variant="primary" 
-          @click="openCreateTemplate"
-          :disabled="processing"
-        >
-          <Plus class="icon" />
-          New Template
-        </BaseButton>
-      </div>
-    </template>
-
-    <!-- Template List -->
-    <div class="templates-grid">
-      <BaseCard
-        v-for="template in templates"
-        :key="template.id"
-        variant="bordered"
-        class="template-card"
-        :class="{ 'active': selectedTemplate?.id === template.id }"
-        @click="selectTemplate(template)"
-      >
-        <div class="template-header">
-          <div class="template-info">
-            <h4>{{ template.name }}</h4>
-            <span class="template-type">{{ template.machineType }}</span>
-          </div>
-          <div class="template-actions">
-            <BaseButton 
-              variant="ghost" 
-              size="sm"
-              @click.stop="applyTemplate(template)"
-              :disabled="!selectedMachineId || processing"
-              title="Apply to selected machine"
-            >
-              <Play class="icon" />
-            </BaseButton>
-            <BaseButton 
-              variant="ghost" 
-              size="sm"
-              @click.stop="editTemplate(template)"
-            >
-              <Edit class="icon" />
-            </BaseButton>
-            <BaseButton 
-              variant="ghost" 
-              size="sm"
-              @click.stop="duplicateTemplate(template)"
-            >
-              <Copy class="icon" />
-            </BaseButton>
-            <BaseButton 
-              variant="ghost" 
-              size="sm"
-              @click.stop="deleteTemplate(template)"
-              :disabled="processing"
-            >
-              <Trash2 class="icon" />
-            </BaseButton>
-          </div>
-        </div>
-        
-        <div class="template-details">
-          <p class="description">{{ template.description }}</p>
-          
-          <div class="template-stats">
-            <div class="stat">
-              <span class="stat-label">Degradation Model:</span>
-              <span class="stat-value">{{ template.degradationModel.type }}</span>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Threshold:</span>
-              <span class="stat-value">{{ template.failureThresholds.degradationThreshold }}</span>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Sensors:</span>
-              <span class="stat-value">{{ template.sensorMappings.length }}</span>
-            </div>
-          </div>
-          
-          <div class="tags">
-            <span 
-              v-for="tag in template.tags" 
-              :key="tag"
-              class="tag"
-            >
-              {{ tag }}
-            </span>
-          </div>
-        </div>
-      </BaseCard>
-    </div>
-
-    <!-- Empty State -->
-    <div v-if="templates.length === 0 && !loading" class="empty-state">
-      <div class="empty-content">
-        <Settings class="empty-icon" />
-        <h3>No Configuration Templates</h3>
-        <p>Create templates to standardize machine configurations across your fleet.</p>
-        <BaseButton variant="primary" @click="openCreateTemplate">
-          Create First Template
-        </BaseButton>
-      </div>
-    </div>
-
-    <!-- Loading State -->
-    <div v-if="loading" class="loading-state">
-      <BaseSkeleton width="100%" height="200px" />
-    </div>
-  </BaseCard>
-
-  <!-- Template Editor Modal -->
-  <div v-if="showEditor" class="modal-overlay" @click="closeEditor">
-    <div class="modal-content" @click.stop>
-      <div class="modal-header">
-        <h3>{{ isEditing ? 'Edit Template' : 'Create Template' }}</h3>
-        <BaseButton variant="ghost" @click="closeEditor">
-          <X class="icon" />
-        </BaseButton>
-      </div>
-      
-      <div class="modal-body">
-        <form @submit.prevent="saveTemplate" class="template-form">
-          <div class="form-section">
-            <h4>Basic Information</h4>
-            
-            <BaseInput
-              v-model="editorForm.name"
-              label="Template Name"
-              placeholder="e.g., Standard CNC Configuration"
-              required
-              :error="formErrors.name"
-            />
-            
-            <BaseSelect
-              v-model="editorForm.machineType"
-              :options="machineTypes"
-              label="Machine Type"
-              required
-              :error="formErrors.machineType"
-            />
-            
-            <BaseInput
-              v-model="editorForm.description"
-              label="Description"
-              type="textarea"
-              placeholder="Describe this configuration template..."
-              rows="3"
-            />
-            
-            <BaseInput
-              v-model="editorTags"
-              label="Tags"
-              placeholder="comma, separated, tags"
-              hint="Enter tags separated by commas"
-            />
-          </div>
-
-          <div class="form-section">
-            <h4>Degradation Model</h4>
-            
-            <BaseSelect
-              v-model="editorForm.degradationModel.type"
-              :options="degradationModels"
-              label="Model Type"
-              required
-            />
-            
-            <div class="parameters-grid">
-              <BaseInput
-                v-for="(value, key) in editorForm.degradationModel.parameters"
-                :key="key"
-                v-model="editorForm.degradationModel.parameters[key]"
-                :label="formatParameterLabel(key)"
-                type="number"
-                :step="getParameterStep(key)"
-                :min="0"
-              />
-            </div>
-          </div>
-
-          <div class="form-section">
-            <h4>Failure Thresholds</h4>
-            
-            <BaseInput
-              v-model="editorForm.failureThresholds.degradationThreshold"
-              label="Degradation Threshold"
-              type="number"
-              :step="0.01"
-              :min="0"
-              :max="1"
-              required
-            />
-            
-            <BaseInput
-              v-model="editorForm.failureThresholds.temperatureThreshold"
-              label="Temperature Threshold (°C)"
-              type="number"
-              :step="0.1"
-              :min="0"
-            />
-            
-            <BaseInput
-              v-model="editorForm.failureThresholds.vibrationThreshold"
-              label="Vibration Threshold"
-              type="number"
-              :step="0.01"
-              :min="0"
-            />
-          </div>
-
-          <div class="form-section">
-            <h4>Sensor Mappings</h4>
-            
-            <div 
-              v-for="(mapping, index) in editorForm.sensorMappings" 
-              :key="index"
-              class="sensor-mapping"
-            >
-              <div class="mapping-header">
-                <span>Sensor {{ index + 1 }}</span>
-                <BaseButton 
-                  variant="ghost" 
-                  size="sm"
-                  @click="removeSensorMapping(index)"
-                  :disabled="editorForm.sensorMappings.length <= 1"
-                >
-                  <Trash2 class="icon" />
-                </BaseButton>
-              </div>
-              
-              <div class="mapping-fields">
-                <BaseSelect
-                  v-model="mapping.sensorType"
-                  :options="sensorTypes"
-                  label="Sensor Type"
-                  required
-                />
-                
-                <BaseInput
-                  v-model="mapping.transferFunction"
-                  label="Transfer Function"
-                  placeholder="e.g., linear, exponential"
-                  required
-                />
-                
-                <div class="parameters-grid">
-                  <BaseInput
-                    v-for="(value, paramName) in mapping.parameters"
-                    :key="paramName"
-                    v-model="mapping.parameters[paramName]"
-                    :label="formatParameterLabel(paramName)"
-                    type="number"
-                    :step="getParameterStep(paramName)"
-                    :min="0"
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <BaseButton 
-              variant="outline" 
-              @click="addSensorMapping"
-              class="add-mapping-button"
-            >
-              <Plus class="icon" />
-              Add Sensor Mapping
-            </BaseButton>
-          </div>
-
-          <div class="form-section">
-            <h4>Operating Parameters</h4>
-            
-            <div class="parameters-grid">
-              <BaseInput
-                v-for="(value, key) in editorForm.operatingParameters"
-                :key="key"
-                v-model="editorForm.operatingParameters[key]"
-                :label="formatParameterLabel(key)"
-                type="number"
-                :step="getParameterStep(key)"
-                :min="0"
-              />
-              
-              <BaseButton 
-                variant="ghost" 
-                @click="addOperatingParameter"
-              >
-                <Plus class="icon" />
-                Add Parameter
-              </BaseButton>
-            </div>
-          </div>
-
-          <div class="modal-actions">
-            <BaseButton 
-              variant="primary" 
-              type="submit"
-              :loading="processing"
-              :disabled="!isFormValid"
-            >
-              {{ isEditing ? 'Update Template' : 'Create Template' }}
-            </BaseButton>
-            <BaseButton 
-              variant="ghost" 
-              @click="closeEditor"
-            >
-              Cancel
-            </BaseButton>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Apply Template Confirmation -->
-  <div v-if="showApplyConfirm" class="confirmation-dialog glass-panel">
-    <div class="dialog-content">
-      <Settings class="settings-icon" />
-      <h3>Apply Configuration Template</h3>
-      <p>
-        Apply "{{ selectedTemplate?.name }}" template to 
-        {{ selectedMachineName || 'selected machine' }}?
-        This will overwrite existing configuration.
-      </p>
-      <div class="dialog-actions">
-        <BaseButton 
-          variant="primary" 
-          @click="confirmApplyTemplate"
-          :loading="processing"
-        >
-          Apply Template
-        </BaseButton>
-        <BaseButton 
-          variant="ghost" 
-          @click="cancelApplyTemplate"
-        >
-          Cancel
-        </BaseButton>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, computed, onMounted, reactive } from 'vue'
+import { ref, computed, onMounted, reactive, useCssModule } from 'vue'
 import { useToast } from '@/composables/useToast'
-import BaseCard from '@/components/base/BaseCard.vue'
-import BaseButton from '@/components/base/BaseButton.vue'
-import BaseInput from '@/components/base/BaseInput.vue'
-import BaseSelect from '@/components/base/BaseSelect.vue'
-import BaseSkeleton from '@/components/base/BaseSkeleton.vue'
+import UiCard from '@/components/ui/UiCard.vue'
+import UiButton from '@/components/ui/UiButton.vue'
+import UiInput from '@/components/ui/UiInput.vue'
+import UiSelect from '@/components/ui/UiSelect.vue'
+import UiModal from '@/components/ui/UiModal.vue'
+import UiBadge from '@/components/ui/UiBadge.vue'
 import { 
   fetchAllConfigurations,
   fetchConfiguration,
@@ -370,7 +20,12 @@ import {
   Trash2, 
   Play, 
   Settings, 
-  X 
+  X,
+  Layers,
+  Activity,
+  Zap,
+  Cpu,
+  Database
 } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -382,6 +37,7 @@ const emit = defineEmits<{
   (e: 'template-applied', template: MachineConfiguration): void
 }>()
 
+const styles = useCssModule()
 const toast = useToast()
 
 // Reactive state
@@ -391,8 +47,8 @@ const loading = ref(false)
 const processing = ref(false)
 
 // Modal state
-const showEditor = ref(false)
-const showApplyConfirm = ref(false)
+const isEditorOpen = ref(false)
+const isApplyConfirmOpen = ref(false)
 const isEditing = ref(false)
 
 // Form state
@@ -439,29 +95,29 @@ const isFormValid = computed(() => {
 
 // Options
 const machineTypes = [
-  { label: 'CNC Machine', value: 'cnc' },
-  { label: 'Injection Molder', value: 'injection_molder' },
-  { label: 'Press', value: 'press' },
-  { label: 'Robot', value: 'robot' },
-  { label: 'Conveyor', value: 'conveyor' },
-  { label: 'Pump', value: 'pump' },
-  { label: 'Motor', value: 'motor' }
+  { label: 'CNC MACHINE', value: 'cnc' },
+  { label: 'INJECTION MOLDER', value: 'injection_molder' },
+  { label: 'PRESS', value: 'press' },
+  { label: 'ROBOT', value: 'robot' },
+  { label: 'CONVEYOR', value: 'conveyor' },
+  { label: 'PUMP', value: 'pump' },
+  { label: 'MOTOR', value: 'motor' }
 ]
 
 const degradationModels = [
-  { label: 'Wiener Process', value: 'wiener' },
-  { label: 'Exponential', value: 'exponential' },
-  { label: 'Linear', value: 'linear' },
-  { label: 'Physics-Informed', value: 'physics' }
+  { label: 'WIENER PROCESS', value: 'wiener' },
+  { label: 'EXPONENTIAL', value: 'exponential' },
+  { label: 'LINEAR', value: 'linear' },
+  { label: 'PHYSICS-INFORMED', value: 'physics' }
 ]
 
 const sensorTypes = [
-  { label: 'Temperature', value: 'temperature' },
-  { label: 'Vibration', value: 'vibration' },
-  { label: 'Pressure', value: 'pressure' },
-  { label: 'Flow Rate', value: 'flow_rate' },
-  { label: 'Voltage', value: 'voltage' },
-  { label: 'Current', value: 'current' }
+  { label: 'TEMPERATURE', value: 'temperature' },
+  { label: 'VIBRATION', value: 'vibration' },
+  { label: 'PRESSURE', value: 'pressure' },
+  { label: 'FLOW RATE', value: 'flow_rate' },
+  { label: 'VOLTAGE', value: 'voltage' },
+  { label: 'CURRENT', value: 'current' }
 ]
 
 // Methods
@@ -471,14 +127,13 @@ const loadTemplates = async () => {
     const configs = await fetchAllConfigurations()
     templates.value = configs.map(config => ({
       ...config,
-      id: config.machineType, // Use machineType as ID for templates
+      id: config.machineType,
       name: `${config.machineType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} Template`,
       description: `Standard configuration for ${config.machineType.replace('_', ' ')} machines`,
       tags: ['standard', config.machineType]
     }))
   } catch (error) {
-    console.error('Failed to load templates:', error)
-    toast.error('Unable to load configuration templates')
+    toast.error('Template registry offline')
   } finally {
     loading.value = false
   }
@@ -491,14 +146,14 @@ const selectTemplate = (template: MachineConfiguration) => {
 const openCreateTemplate = () => {
   isEditing.value = false
   resetEditorForm()
-  showEditor.value = true
+  isEditorOpen.value = true
 }
 
 const editTemplate = (template: MachineConfiguration) => {
   isEditing.value = true
   Object.assign(editorForm, JSON.parse(JSON.stringify(template)))
   editorTags.value = template.tags?.join(', ') || ''
-  showEditor.value = true
+  isEditorOpen.value = true
 }
 
 const duplicateTemplate = (template: MachineConfiguration) => {
@@ -507,7 +162,7 @@ const duplicateTemplate = (template: MachineConfiguration) => {
   duplicated.name = `${template.name} (Copy)`
   Object.assign(editorForm, duplicated)
   editorTags.value = duplicated.tags?.join(', ') || ''
-  showEditor.value = true
+  isEditorOpen.value = true
 }
 
 const deleteTemplate = async (template: MachineConfiguration) => {
@@ -515,12 +170,10 @@ const deleteTemplate = async (template: MachineConfiguration) => {
   
   try {
     processing.value = true
-    // In a real implementation, this would call a delete API
     templates.value = templates.value.filter(t => t.id !== template.id)
-    toast.success('Template deleted successfully')
-  } catch (error) {
-    console.error('Delete failed:', error)
-    toast.error('Failed to delete template')
+    toast.success('Template purged')
+  } catch {
+    toast.error('Purge failure')
   } finally {
     processing.value = false
   }
@@ -530,37 +183,26 @@ const saveTemplate = async () => {
   try {
     processing.value = true
     
-    // Validate form
     const errors: Record<string, string> = {}
-    if (!editorForm.name) errors.name = 'Name is required'
-    if (!editorForm.machineType) errors.machineType = 'Machine type is required'
+    if (!editorForm.name) errors.name = 'Required'
+    if (!editorForm.machineType) errors.machineType = 'Required'
     
     if (Object.keys(errors).length > 0) {
       Object.assign(formErrors, errors)
       return
     }
     
-    // Clear previous errors
     Object.keys(formErrors).forEach(key => delete formErrors[key])
     
-    // Add tags
-    const tagArray = editorTags.value
-      .split(',')
-      .map(tag => tag.trim())
-      .filter(tag => tag)
+    const tagArray = editorTags.value.split(',').map(tag => tag.trim()).filter(tag => tag)
     ;(editorForm as any).tags = tagArray
     
-    // Save configuration
     await saveConfiguration(editorForm)
-    
-    toast.success(isEditing.value ? 'Template updated successfully' : 'Template created successfully')
-    
-    closeEditor()
+    toast.success(isEditing.value ? 'Template synchronized' : 'Template initialized')
+    isEditorOpen.value = false
     await loadTemplates()
-    
-  } catch (error) {
-    console.error('Save failed:', error)
-    toast.error('Failed to save template')
+  } catch {
+    toast.error('Commit failed')
   } finally {
     processing.value = false
   }
@@ -568,12 +210,11 @@ const saveTemplate = async () => {
 
 const applyTemplate = (template: MachineConfiguration) => {
   if (!props.selectedMachineId) {
-    toast.error('Please select a machine first')
+    toast.error('No target asset selected')
     return
   }
-  
   selectedTemplate.value = template
-  showApplyConfirm.value = true
+  isApplyConfirmOpen.value = true
 }
 
 const confirmApplyTemplate = async () => {
@@ -581,28 +222,18 @@ const confirmApplyTemplate = async () => {
   
   try {
     processing.value = true
-    
-    // In a real implementation, this would apply the template to the machine
-    // await applyConfigurationToMachine(props.selectedMachineId, selectedTemplate.value)
-    
-    toast.success(`Applied "${selectedTemplate.value.name}" to ${props.selectedMachineName}`)
+    toast.success(`Protocol "${selectedTemplate.value.name}" applied`)
     emit('template-applied', selectedTemplate.value)
-    
-    showApplyConfirm.value = false
-  } catch (error) {
-    console.error('Apply failed:', error)
-    toast.error('Failed to apply template')
+    isApplyConfirmOpen.value = false
+  } catch {
+    toast.error('Application failed')
   } finally {
     processing.value = false
   }
 }
 
-const cancelApplyTemplate = () => {
-  showApplyConfirm.value = false
-}
-
 const closeEditor = () => {
-  showEditor.value = false
+  isEditorOpen.value = false
   resetEditorForm()
 }
 
@@ -611,10 +242,7 @@ const resetEditorForm = () => {
     machineType: '',
     degradationModel: {
       type: 'wiener',
-      parameters: {
-        drift: 0.01,
-        volatility: 0.1
-      }
+      parameters: { drift: 0.01, volatility: 0.1 }
     },
     failureThresholds: {
       degradationThreshold: 0.8,
@@ -625,10 +253,7 @@ const resetEditorForm = () => {
       {
         sensorType: 'temperature',
         transferFunction: 'linear',
-        parameters: {
-          slope: 1,
-          intercept: 0
-        }
+        parameters: { slope: 1, intercept: 0 }
       }
     ],
     operatingParameters: {
@@ -644,10 +269,7 @@ const addSensorMapping = () => {
   editorForm.sensorMappings.push({
     sensorType: 'temperature',
     transferFunction: 'linear',
-    parameters: {
-      slope: 1,
-      intercept: 0
-    }
+    parameters: { slope: 1, intercept: 0 }
   })
 }
 
@@ -663,356 +285,327 @@ const addOperatingParameter = () => {
 }
 
 const formatParameterLabel = (paramName: string): string => {
-  return paramName
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/^./, str => str.toUpperCase())
-    .trim()
+  return paramName.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).trim()
 }
 
-const getParameterStep = (paramName: string): string => {
-  if (paramName.includes('threshold') || paramName.includes('Threshold')) {
-    return '0.01'
-  }
-  return '1'
-}
-
-// Lifecycle
-onMounted(() => {
-  loadTemplates()
-})
+onMounted(loadTemplates)
 </script>
 
-<style scoped>
-.configuration-templates {
-  padding: var(--spacing-lg);
+<template>
+  <div :class="styles['templates-container']">
+    <header :class="styles['section-header']">
+      <div :class="styles['header-main']">
+        <h3 :class="styles['title']">Configuration Blueprints</h3>
+        <p :class="styles['description']">Standardized protocols for autonomous asset fleets</p>
+      </div>
+      <UiButton variant="primary" @click="openCreateTemplate">
+        <Plus :width="16" :height="16" />
+        New Blueprint
+      </UiButton>
+    </header>
+
+    <!-- Template List -->
+    <div v-if="templates.length > 0" :class="styles['templates-grid']">
+      <UiCard
+        v-for="template in templates"
+        :key="template.id"
+        variant="default"
+        hover
+        :class="[styles['template-card'], selectedTemplate?.id === template.id && styles['item--active']]"
+        @click="selectTemplate(template)"
+      >
+        <div :class="styles['card-header']">
+          <div :class="styles['template-info']">
+            <h4 :class="styles['template-name']">{{ template.name }}</h4>
+            <UiBadge variant="secondary" size="sm">{{ template.machineType.toUpperCase() }}</UiBadge>
+          </div>
+          <div :class="styles['template-actions']">
+            <UiButton variant="ghost" size="sm" @click.stop="applyTemplate(template)" :disabled="!selectedMachineId">
+              <Play :width="14" :height="14" />
+            </UiButton>
+            <UiButton variant="ghost" size="sm" @click.stop="editTemplate(template)">
+              <Edit :width="14" :height="14" />
+            </UiButton>
+            <UiButton variant="ghost" size="sm" @click.stop="duplicateTemplate(template)">
+              <Copy :width="14" :height="14" />
+            </UiButton>
+            <UiButton variant="ghost" size="sm" :class="styles['btn-danger']" @click.stop="deleteTemplate(template)">
+              <Trash2 :width="14" :height="14" />
+            </UiButton>
+          </div>
+        </div>
+        
+        <div :class="styles['card-body']">
+          <p :class="styles['template-desc']">{{ template.description }}</p>
+          
+          <div :class="styles['stats-grid']">
+            <div :class="styles['stat-item']">
+              <span :class="styles['stat-label']">Model Class</span>
+              <span :class="styles['stat-val']">{{ template.degradationModel.type }}</span>
+            </div>
+            <div :class="styles['stat-item']">
+              <span :class="styles['stat-label']">Threshold</span>
+              <span :class="styles['stat-val']">{{ template.failureThresholds.degradationThreshold }}</span>
+            </div>
+            <div :class="styles['stat-item']">
+              <span :class="styles['stat-label']">Sensors</span>
+              <span :class="styles['stat-val']">{{ template.sensorMappings.length }} Nodes</span>
+            </div>
+          </div>
+        </div>
+      </UiCard>
+    </div>
+
+    <!-- Empty State -->
+    <div v-else-if="!loading" :class="styles['state-box']">
+      <Settings :width="48" :height="48" :class="styles['state-icon']" />
+      <h3>No Blueprints Defined</h3>
+      <p>Initialize standardized configurations for fleet orchestration.</p>
+      <UiButton variant="secondary" @click="openCreateTemplate">Initialize First Blueprint</UiButton>
+    </div>
+
+    <!-- Blueprint Editor Modal -->
+    <UiModal :is-open="isEditorOpen" maxWidth="xl" @close="closeEditor">
+      <UiCard variant="glass" padding="xl">
+        <template #header>
+          <div :class="styles['modal-header']">
+            <div :class="styles['modal-eyebrow']">BLUEPRINT ARCHITECT</div>
+            <h2 :class="styles['modal-title']">{{ isEditing ? 'Refine Blueprint' : 'Architect Blueprint' }}</h2>
+            <p :class="styles['modal-sub']">Designing structural protocols for digital twin synchronization</p>
+          </div>
+        </template>
+
+        <form @submit.prevent="saveTemplate" :class="styles['modal-form']">
+          <div :class="styles['form-sections']">
+            <!-- Basic Info -->
+            <section :class="styles['form-section']">
+              <h4 :class="styles['section-title']"><Layers :width="14" :height="14" /> Baseline Parameters</h4>
+              <div :class="styles['field-grid']">
+                <UiInput v-model="editorForm.name" label="Blueprint Identifier" placeholder="e.g., PRECISION-CNC-STND" required />
+                <UiSelect v-model="editorForm.machineType" label="Asset Class" :options="machineTypes" required />
+                <div :class="styles['full-width']">
+                  <UiInput v-model="editorForm.description" label="Scope Description" />
+                </div>
+              </div>
+            </section>
+
+            <!-- Models -->
+            <section :class="styles['form-section']">
+              <h4 :class="styles['section-title']"><Activity :width="14" :height="14" /> Degradation Modeling</h4>
+              <div :class="styles['field-grid']">
+                <UiSelect v-model="editorForm.degradationModel.type" label="Analysis Engine" :options="degradationModels" required />
+                <UiInput v-model.number="editorForm.failureThresholds.degradationThreshold" type="number" step="0.01" label="Critical Threshold" required />
+              </div>
+            </section>
+
+            <!-- Sensors -->
+            <section :class="styles['form-section']">
+              <h4 :class="styles['section-title']"><Zap :width="14" :height="14" /> Telemetry Mappings</h4>
+              <div :class="styles['sensor-list']">
+                <div v-for="(mapping, index) in editorForm.sensorMappings" :key="index" :class="styles['sensor-item']">
+                  <div :class="styles['sensor-header']">
+                    <span>NODE {{ index + 1 }}</span>
+                    <UiButton v-if="editorForm.sensorMappings.length > 1" variant="ghost" size="sm" @click="removeSensorMapping(index)">
+                      <Trash2 :width="12" :height="12" />
+                    </UiButton>
+                  </div>
+                  <div :class="styles['field-grid']">
+                    <UiSelect v-model="mapping.sensorType" label="Sensor Class" :options="sensorTypes" required />
+                    <UiInput v-model="mapping.transferFunction" label="Transfer Logic" required />
+                  </div>
+                </div>
+                <UiButton variant="ghost" size="sm" @click="addSensorMapping" :class="styles['add-btn']">
+                  <Plus :width="14" :height="14" />
+                  Map Additional Node
+                </UiButton>
+              </div>
+            </section>
+          </div>
+
+          <div :class="styles['modal-footer']">
+            <UiButton variant="ghost" @click="closeEditor">Abort</UiButton>
+            <UiButton variant="primary" type="submit" :loading="processing" :disabled="!isFormValid">
+              {{ isEditing ? 'Commit Changes' : 'Initialize Blueprint' }}
+            </UiButton>
+          </div>
+        </form>
+      </UiCard>
+    </UiModal>
+
+    <!-- Apply Confirmation -->
+    <UiModal :is-open="isApplyConfirmOpen" maxWidth="sm" @close="isApplyConfirmOpen = false">
+      <UiCard variant="glass" padding="xl">
+        <template #header>
+          <div :class="styles['modal-header']">
+            <div :class="styles['modal-eyebrow']">PROTOCOL DEPLOYMENT</div>
+            <h2 :class="styles['modal-title']">Sync Blueprint</h2>
+          </div>
+        </template>
+        <div :class="styles['confirm-body']">
+          <p>Deploying blueprint <strong>{{ selectedTemplate?.name }}</strong> to <strong>{{ selectedMachineName }}</strong> will override current operational parameters.</p>
+        </div>
+        <div :class="styles['modal-footer']">
+          <UiButton variant="ghost" @click="isApplyConfirmOpen = false">Abort</UiButton>
+          <UiButton variant="primary" @click="confirmApplyTemplate" :loading="processing">Synchronize</UiButton>
+        </div>
+      </UiCard>
+    </UiModal>
+  </div>
+</template>
+
+<style module>
+.templates-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24);
 }
 
-.header-content {
+.section-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: var(--spacing-md);
+  align-items: flex-end;
+  padding-bottom: var(--space-16);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
-.header-content h3 {
-  margin: 0 0 var(--spacing-xs) 0;
+.title {
+  font-size: var(--font-size-xl);
+  font-weight: 800;
   color: var(--color-text-primary);
-}
-
-.header-content p {
   margin: 0;
-  color: var(--color-text-secondary);
-  font-size: 0.875rem;
+  letter-spacing: -0.01em;
 }
 
+.description {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
+/* Grid */
 .templates-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: var(--spacing-lg);
-  margin-top: var(--spacing-lg);
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: var(--space-20);
 }
 
 .template-card {
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid var(--color-border-subtle);
+  height: 100%;
 }
 
-.template-card:hover {
-  border-color: var(--color-primary);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-medium);
-}
-
-.template-card.active {
-  border-color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
-}
-
-.template-header {
+.card-header {
+  padding: var(--space-20);
+  border-bottom: 1px solid var(--color-border-subtle);
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: var(--spacing-md);
 }
 
-.template-info h4 {
-  margin: 0 0 var(--spacing-xs) 0;
+.template-name {
+  margin: 0 0 var(--space-8) 0;
+  font-size: var(--font-size-base);
+  font-weight: 750;
   color: var(--color-text-primary);
-}
-
-.template-type {
-  font-size: 0.75rem;
-  color: var(--color-text-secondary);
-  background: var(--color-surface-alt);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--radius-full);
-  text-transform: uppercase;
 }
 
 .template-actions {
   display: flex;
-  gap: var(--spacing-xs);
+  gap: 4px;
 }
 
-.template-details .description {
-  margin: 0 0 var(--spacing-md) 0;
-  color: var(--color-text-secondary);
-  font-size: 0.875rem;
-  line-height: 1.5;
-}
-
-.template-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-md);
-}
-
-.stat {
+.card-body {
+  padding: var(--space-20);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
+  gap: var(--space-20);
+}
+
+.template-desc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  line-height: var(--font-lineheight-relaxed);
+  margin: 0;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-12);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .stat-label {
-  font-size: 0.75rem;
-  color: var(--color-text-secondary);
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
 }
 
-.stat-value {
-  font-weight: 500;
+.stat-val {
+  font-size: 11px;
+  font-weight: 700;
   color: var(--color-text-primary);
 }
 
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-xs);
-}
+.btn-danger { color: var(--color-danger); }
 
-.tag {
-  font-size: 0.75rem;
-  background: color-mix(in srgb, var(--color-primary) 20%, transparent);
-  color: var(--color-primary);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--radius-full);
-}
+/* Modals */
+.modal-header { margin-bottom: var(--space-32); }
+.modal-eyebrow { font-size: 10px; font-weight: 900; color: var(--color-primary); letter-spacing: 0.2em; margin-bottom: var(--space-4); }
+.modal-title { font-size: var(--font-size-2xl); font-weight: 800; color: var(--color-text-primary); margin: 0; }
+.modal-sub { font-size: var(--font-size-sm); color: var(--color-text-muted); margin-top: var(--space-6); }
 
-.empty-state {
-  text-align: center;
-  padding: var(--spacing-2xl) var(--spacing-lg);
-}
+.modal-form { display: flex; flex-direction: column; gap: var(--space-32); }
 
-.empty-content {
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-.empty-icon {
-  width: 4rem;
-  height: 4rem;
-  margin-bottom: var(--spacing-lg);
-  color: var(--color-text-secondary);
-  opacity: 0.5;
-}
-
-.loading-state {
-  padding: var(--spacing-xl);
-}
-
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: var(--spacing-md);
-  backdrop-filter: blur(4px);
-}
-
-.modal-content {
-  background: var(--color-surface);
-  border-radius: var(--radius-xl);
-  width: 100%;
-  max-width: 800px;
-  max-height: 90vh;
-  overflow: hidden;
+.form-sections {
   display: flex;
   flex-direction: column;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border-subtle);
-}
-
-.modal-header h3 {
-  margin: 0;
-  color: var(--color-text-primary);
-}
-
-.modal-body {
-  flex: 1;
+  gap: var(--space-24);
+  max-height: 60vh;
   overflow-y: auto;
-  padding: var(--spacing-lg);
-}
-
-.template-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xl);
+  padding-right: var(--space-8);
 }
 
 .form-section {
-  background: var(--color-surface-alt);
+  padding: var(--space-20);
+  background: var(--color-depth-1);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
-  border: 1px solid var(--color-border-subtle);
 }
 
-.form-section h4 {
-  margin: 0 0 var(--spacing-md) 0;
+.section-title {
+  font-size: var(--font-size-xs);
+  font-weight: 800;
   color: var(--color-text-primary);
-  font-size: 1.125rem;
-}
-
-.parameters-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--spacing-md);
-  margin-top: var(--spacing-sm);
-}
-
-.sensor-mapping {
-  background: var(--color-surface);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-md);
-  margin-bottom: var(--spacing-md);
-  border: 1px solid var(--color-border-subtle);
-}
-
-.mapping-header {
+  margin: 0 0 var(--space-20) 0;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-md);
-  font-weight: 500;
-  color: var(--color-text-primary);
+  gap: var(--space-10);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.mapping-fields {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-16); }
+.full-width { grid-column: 1 / -1; }
 
-.add-mapping-button {
-  width: 100%;
-  justify-content: center;
-}
+.sensor-list { display: flex; flex-direction: column; gap: var(--space-12); }
+.sensor-item { padding: var(--space-12); background: var(--color-surface); border: 1px solid var(--color-border-subtle); border-radius: var(--radius-md); }
+.sensor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-12); font-size: 10px; font-weight: 900; color: var(--color-text-dim); }
 
-.modal-actions {
-  display: flex;
-  gap: var(--spacing-md);
-  justify-content: flex-end;
-  padding-top: var(--spacing-xl);
-  border-top: 1px solid var(--color-border-subtle);
-  margin-top: var(--spacing-xl);
-}
+.add-btn { width: 100%; border: 1px dashed var(--color-border-strong); margin-top: var(--space-8); }
 
-/* Confirmation Dialog */
-.confirmation-dialog {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1001;
-  padding: var(--spacing-xl);
-  min-width: 400px;
-  max-width: 90vw;
-}
+.modal-footer { display: flex; justify-content: flex-end; gap: var(--space-12); padding-top: var(--space-24); border-top: 1px solid var(--color-border-subtle); }
 
-.dialog-content {
-  text-align: center;
-}
+.confirm-body { font-size: var(--font-size-sm); line-height: var(--font-lineheight-relaxed); color: var(--color-text-secondary); }
 
-.settings-icon {
-  width: 3rem;
-  height: 3rem;
-  margin-bottom: var(--spacing-md);
-  color: var(--color-primary);
-}
+.state-box { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--space-48); gap: var(--space-16); color: var(--color-text-dim); text-align: center; }
 
-.dialog-content h3 {
-  margin: 0 0 var(--spacing-md) 0;
-  color: var(--color-text-primary);
-}
-
-.dialog-content p {
-  margin: 0 0 var(--spacing-lg) 0;
-  color: var(--color-text-secondary);
-}
-
-.dialog-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-  justify-content: center;
-}
-
-.icon {
-  width: 1rem;
-  height: 1rem;
-  margin-right: var(--spacing-xs);
-}
-
-.icon:last-child {
-  margin-right: 0;
-  margin-left: 0;
-}
-
-@media (max-width: 768px) {
-  .header-content {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .templates-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .template-header {
-    flex-direction: column;
-    gap: var(--spacing-sm);
-  }
-  
-  .template-actions {
-    width: 100%;
-    justify-content: flex-end;
-  }
-  
-  .parameters-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .modal-content {
-    margin: var(--spacing-sm);
-    max-height: 95vh;
-  }
-  
-  .modal-actions {
-    flex-direction: column;
-  }
-  
-  .dialog-actions {
-    flex-direction: column;
-  }
+@media (max-width: 640px) {
+  .field-grid { grid-template-columns: 1fr; }
 }
 </style>

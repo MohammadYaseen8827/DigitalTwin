@@ -3,10 +3,11 @@ using DigitalTwinPlatform.Application.Abstractions.UnitOfWork;
 using DigitalTwinPlatform.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 
 namespace DigitalTwinPlatform.Infrastructure.Persistence.UnitOfWork;
 
-public class UnitOfWork(DigitalTwinDbContext context) : IUnitOfWork
+public class UnitOfWork(DigitalTwinDbContext context, ILogger<UnitOfWork> logger) : IUnitOfWork
 {
     private readonly Dictionary<Type, object> _repositories = new();
     private IDbContextTransaction? _transaction;
@@ -27,18 +28,34 @@ public class UnitOfWork(DigitalTwinDbContext context) : IUnitOfWork
 
     public async Task<int> SaveChangesAsync(CancellationToken ct = default)
     {
-        try
+        const int maxRetries = 3;
+        int attempt = 0;
+
+        while (true)
         {
-            return await context.SaveChangesAsync(ct);
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            foreach (var entry in context.ChangeTracker.Entries()
-                .Where(e => e.State == EntityState.Modified || e.State == EntityState.Deleted))
+            try
             {
-                await entry.ReloadAsync(ct);
+                return await context.SaveChangesAsync(ct);
             }
-            throw;
+            catch (DbUpdateConcurrencyException ex)
+            {
+                attempt++;
+                if (attempt >= maxRetries)
+                {
+                    logger.LogWarning("Concurrency failed after {MaxRetries} attempts for entity: {EntityName}",
+                        maxRetries, ex.Entries.FirstOrDefault()?.Entity.GetType().Name);
+                    throw;
+                }
+
+                // Reload all modified entities from the database
+                foreach (var entry in ex.Entries)
+                {
+                    await entry.ReloadAsync(ct);
+                }
+
+                // Give a small delay before retrying
+                await Task.Delay(50 * attempt, ct);
+            }
         }
     }
 

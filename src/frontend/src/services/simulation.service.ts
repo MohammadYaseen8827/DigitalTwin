@@ -80,7 +80,7 @@ export async function createSimulation(
   try {
     const response = await withRetry<SimulationStateDto>(signal =>
       axiosClient.post(
-        '/Simulation',
+        'Simulation',
         parameters,
         {
           params: { machineId },
@@ -269,7 +269,7 @@ export async function listSimulations(
   try {
     const response = await withRetry<SimulationStateDto[]>(signal =>
       axiosClient.get(
-        '/Simulation',
+        'Simulation',
         {
           params: { machineId },
           signal
@@ -317,7 +317,7 @@ export async function getSimulationStatus(
 export async function getAllSimulationStatuses(): Promise<Record<string, SimulationStatusDto>> {
   try {
     const response = await withRetry<Record<string, SimulationStatusDto>>(signal =>
-      axiosClient.get('/Simulation/status', {
+      axiosClient.get('Simulation/status', {
         signal
       })
     )

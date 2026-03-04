@@ -7,7 +7,17 @@ import type {
 } from '@/api/types'
 
 export async function fetchMachines(): Promise<MachineDto[]> {
-  return axiosClient.get<MachineDto[], MachineDto[]>('/Machines')
+  const response = await axiosClient.get<MachineDto[] | PaginatedResponse<MachineDto>, MachineDto[] | PaginatedResponse<MachineDto>>('Machines')
+  
+  if (Array.isArray(response)) {
+    return response
+  }
+  
+  if (response && typeof response === 'object' && 'items' in response) {
+    return response.items as MachineDto[]
+  }
+
+  return []
 }
 
 export async function fetchMachinesPage(params: { page?: number; pageSize?: number } = {}): Promise<PaginatedResponse<MachineDto>> {
@@ -17,7 +27,7 @@ export async function fetchMachinesPage(params: { page?: number; pageSize?: numb
   }
 
   const response = await axiosClient.get<PaginatedResponse<MachineDto> | MachineDto[], PaginatedResponse<MachineDto> | MachineDto[]>(
-    '/Machines',
+    'Machines',
     {
       params: query
     }
@@ -42,7 +52,7 @@ export async function fetchMachine(id: string): Promise<MachineDto> {
 }
 
 export async function createMachine(payload: MachineCreateDto): Promise<MachineDto> {
-  return axiosClient.post<MachineDto, MachineDto>('/Machines', payload)
+  return axiosClient.post<MachineDto, MachineDto>('Machines', payload)
 }
 
 export async function updateMachine(id: string, payload: MachineUpdateDto): Promise<MachineDto> {
