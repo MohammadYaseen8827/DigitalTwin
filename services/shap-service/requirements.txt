@@ -2,5 +2,5 @@ flask==3.0.0
 flask-cors==4.0.0
 numpy==1.26.0
 shap==0.43.0
-onnxruntime==1.16.3
+onnxruntime>=1.17.1
 gunicorn==21.2.0
